@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1a0608">
+  <title>CantinApp — Accedi</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    .tabs {
+      display: flex;
+      background: var(--avorio-dk);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      color: var(--testo-2);
+      transition: all .2s;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+    }
+    .tab.tab-active {
+      background: var(--bianco);
+      color: var(--bordeaux);
+      border: 1px solid var(--bordo);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .password-wrap { position: relative; }
+    .password-wrap input { padding-right: 44px; }
+    .pwd-toggle {
+      position: absolute;
+      right: 12px; top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--testo-3);
+      font-size: 18px;
+      padding: 0;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div style="max-width: 480px; margin: 0 auto; padding: 0 20px 40px;">
+
+  <div class="login-logo">
+    <i class="ti ti-bottle-wine" aria-hidden="true"></i>
+    <h1>CantinApp</h1>
+    <p>La tua cantina digitale</p>
+  </div>
+
+  <div class="login-card">
+    <div class="tabs">
+      <button class="tab tab-active" id="tabLogin" onclick="showLogin()">Accedi</button>
+      <button class="tab" id="tabRegister" onclick="showRegister()">Registrati</button>
+    </div>
+
+    <!-- FORM LOGIN -->
+    <form id="formLogin" onsubmit="handleLogin(event)">
+      <label class="field-label" for="email-l">Email</label>
+      <input type="email" id="email" name="email" placeholder="tuo@email.com" autocomplete="email" required>
+
+      <label class="field-label" for="password-l" style="margin-top:14px">Password</label>
+      <div class="password-wrap">
+        <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+        <button type="button" class="pwd-toggle" onclick="togglePwd('password',this)" aria-label="Mostra password">
+          <i class="ti ti-eye"></i>
+        </button>
+      </div>
+
+      <div style="margin-top: 6px; text-align: right;">
+        <a href="#" style="font-size:13px; color:var(--bordeaux); text-decoration:none;" onclick="showForgot()">Password dimenticata?</a>
+      </div>
+
+      <div style="margin-top: 20px;">
+        <button type="submit" class="btn btn-primary" id="btnLogin">
+          <i class="ti ti-login" style="font-size:18px" aria-hidden="true"></i>
+          Accedi
+        </button>
+      </div>
+    </form>
+
+    <!-- FORM REGISTRAZIONE -->
+    <form id="formRegister" style="display:none" onsubmit="handleRegister(event)">
+      <label class="field-label">Nome utente</label>
+      <input type="text" id="username" name="username" placeholder="Come vuoi essere chiamato" autocomplete="username" required>
+
+      <label class="field-label" style="margin-top:14px">Email</label>
+      <input type="email" id="email" name="email" placeholder="tuo@email.com" autocomplete="email" required>
+
+      <label class="field-label" style="margin-top:14px">Password</label>
+      <div class="password-wrap">
+        <input type="password" id="password" name="password" placeholder="Minimo 6 caratteri" autocomplete="new-password" required>
+        <button type="button" class="pwd-toggle" onclick="togglePwd('password',this)" aria-label="Mostra password">
+          <i class="ti ti-eye"></i>
+        </button>
+      </div>
+
+      <label class="field-label" style="margin-top:14px">Conferma password</label>
+      <div class="password-wrap">
+        <input type="password" id="confirm" name="confirm" placeholder="Ripeti la password" autocomplete="new-password" required>
+        <button type="button" class="pwd-toggle" onclick="togglePwd('confirm',this)" aria-label="Mostra password">
+          <i class="ti ti-eye"></i>
+        </button>
+      </div>
+
+      <div style="margin-top: 20px;">
+        <button type="submit" class="btn btn-primary" id="btnRegister">
+          <i class="ti ti-user-plus" style="font-size:18px" aria-hidden="true"></i>
+          Crea account
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- FORGOT PASSWORD (hidden) -->
+  <div id="formForgot" style="display:none">
+    <div class="login-card">
+      <div style="margin-bottom:14px">
+        <div style="font-size:16px;font-weight:500;color:var(--testo);margin-bottom:4px">Reimposta password</div>
+        <div style="font-size:13px;color:var(--testo-2)">Ti mandiamo un link via email</div>
+      </div>
+      <label class="field-label">Email</label>
+      <input type="email" id="emailForgot" placeholder="tuo@email.com">
+      <div style="margin-top:16px;display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" style="width:auto;flex:1" onclick="showLogin()">Annulla</button>
+        <button class="btn btn-primary btn-sm" style="flex:2" id="btnForgot" onclick="handleForgot()">
+          <i class="ti ti-mail" style="font-size:16px" aria-hidden="true"></i> Invia link
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--testo-2)">
+    Studiando per Assosommelier? 🍷<br>
+    <span style="font-size:12px;color:var(--testo-3)">CantinApp usa la scheda ufficiale Assosommelier</span>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  // Redirect se già loggato
+  redirectIfLogged();
+
+  function togglePwd(id, btn) {
+    const input = document.getElementById(id);
+    const isText = input.type === 'text';
+    input.type = isText ? 'password' : 'text';
+    btn.querySelector('i').className = isText ? 'ti ti-eye' : 'ti ti-eye-off';
+  }
+
+  async function showForgot() {
+    document.getElementById('formLogin').style.display = 'none';
+    document.getElementById('formRegister').style.display = 'none';
+    document.getElementById('formForgot').style.display = 'block';
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab-active'));
+  }
+
+  async function handleForgot() {
+    const btn = document.getElementById('btnForgot');
+    const email = document.getElementById('emailForgot').value.trim();
+    if (!email) { showToast('Inserisci la tua email', true); return; }
+    setLoading(btn, true);
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/index.html'
+    });
+    setLoading(btn, false);
+    if (error) { showToast(error.message, true); return; }
+    showToast('Link inviato! Controlla la tua email.');
+    setTimeout(() => showLogin(), 2500);
+  }
+
+  // Gestione id duplicati nei form (email/password appaiono in entrambi)
+  // Workaround: leggiamo dal form attivo
+  document.getElementById('formLogin').addEventListener('submit', handleLogin);
+  document.getElementById('formRegister').addEventListener('submit', handleRegister);
+
+  function handleLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnLogin');
+    const email = e.target.querySelector('[name=email]').value.trim();
+    const password = e.target.querySelector('[name=password]').value;
+    if (!email || !password) { showToast('Compila tutti i campi', true); return; }
+    setLoading(btn, true);
+    sb.auth.signInWithPassword({ email, password }).then(({ error }) => {
+      setLoading(btn, false);
+      if (error) { showToast(error.message, true); return; }
+      window.location.href = 'cantina.html';
+    });
+  }
+
+  function handleRegister(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnRegister');
+    const username = e.target.querySelector('[name=username]').value.trim();
+    const email = e.target.querySelector('[name=email]').value.trim();
+    const password = e.target.querySelector('[name=password]').value;
+    const confirm = e.target.querySelector('[name=confirm]').value;
+    if (!username || !email || !password || !confirm) { showToast('Compila tutti i campi', true); return; }
+    if (password !== confirm) { showToast('Le password non coincidono', true); return; }
+    if (password.length < 6) { showToast('Password di almeno 6 caratteri', true); return; }
+    setLoading(btn, true);
+    sb.auth.signUp({ email, password, options: { data: { username } } }).then(({ error }) => {
+      setLoading(btn, false);
+      if (error) { showToast(error.message, true); return; }
+      showToast('Account creato! Controlla la tua email per confermare.');
+      setTimeout(() => showLogin(), 2500);
+    });
+  }
+</script>
+</body>
+</html>
