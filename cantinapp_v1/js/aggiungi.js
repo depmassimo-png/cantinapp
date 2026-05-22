@@ -78,9 +78,96 @@ function aggiornaAIHint() {
   document.getElementById('btnAI').style.display = ne ? 'flex' : 'none';
 }
 
-function analizzaConAI() {
-  // Per ora placeholder - implementeremo Claude API in fase 2
-  showToast('Funzione AI in arrivo nei prossimi aggiornamenti');
+async function analizzaConAI() {
+  if (!fotoFronte) {
+    showToast('Carica almeno la foto fronte', true);
+    return;
+  }
+
+  const btn = document.getElementById('btnAI');
+  const origText = btn.innerHTML;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="font-size:16px;animation:spin .7s linear infinite"></i> Analisi in corso...';
+  btn.disabled = true;
+
+  try {
+    const fronteBase64 = await fileToBase64(fotoFronte);
+    const retroBase64 = fotoRetro ? await fileToBase64(fotoRetro) : null;
+
+    const response = await fetch('/api/analyze-wine', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fronte_base64: fronteBase64,
+        fronte_media_type: fotoFronte.type,
+        retro_base64: retroBase64,
+        retro_media_type: fotoRetro?.type,
+      })
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      console.error('AI error:', result);
+      showToast('Errore analisi AI: ' + (result.error || 'sconosciuto'), true);
+      return;
+    }
+
+    const dati = result.data;
+    let campiCompilati = 0;
+
+    // Compila i campi solo se vuoti, o sovrascrive comunque
+    if (dati.nome_vino) { document.getElementById('nomeVino').value = dati.nome_vino; campiCompilati++; }
+    if (dati.produttore) { document.getElementById('produttore').value = dati.produttore; campiCompilati++; }
+    if (dati.annata) { document.getElementById('annata').value = dati.annata; campiCompilati++; }
+    if (dati.tipologia) {
+      document.getElementById('tipologia').value = dati.tipologia;
+      toggleSpumantiFields();
+      campiCompilati++;
+    }
+    if (dati.denominazione) { document.getElementById('denominazione').value = dati.denominazione; campiCompilati++; }
+    if (dati.regione) { document.getElementById('regione').value = dati.regione; campiCompilati++; }
+    if (dati.gradazione) { document.getElementById('gradazione').value = dati.gradazione; campiCompilati++; }
+    if (dati.formato_ml) { document.getElementById('formatoMl').value = dati.formato_ml; }
+
+    // Vitigni - aggiungi alla lista
+    if (dati.vitigni && Array.isArray(dati.vitigni)) {
+      for (const v of dati.vitigni) {
+        if (v && !vitigni.includes(v)) vitigni.push(v);
+      }
+      renderVitigni();
+      campiCompilati++;
+    }
+
+    // Campi spumante
+    if (dati.tipologia === 'spumante') {
+      if (dati.metodo) document.getElementById('metodo').value = dati.metodo;
+      if (dati.sboccatura) document.getElementById('sboccatura').value = dati.sboccatura;
+      if (dati.dosaggio) document.getElementById('dosaggio').value = dati.dosaggio;
+    }
+
+    showToast(`Compilati ${campiCompilati} campi — verifica e conferma`);
+
+  } catch (err) {
+    console.error(err);
+    showToast('Errore: ' + err.message, true);
+  } finally {
+    btn.innerHTML = origText;
+    btn.disabled = false;
+  }
+}
+
+// Converte File a base64 (senza il prefisso data:...)
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 // ==== GESTIONE VITIGNI ====
