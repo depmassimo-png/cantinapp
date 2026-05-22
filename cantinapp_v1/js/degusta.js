@@ -11,6 +11,10 @@ const TOT_STEP = 5;
 const D = {
   // intestazione
   bottiglia_id: null,
+  nome_vino_esterno: null,
+  produttore_esterno: null,
+  annata_esterna: null,
+  tipologia_esterna: null,
   luogo: '',
   data_degustazione: '',
   occasione: null,
@@ -72,7 +76,9 @@ const D = {
       }
     }
   } else {
-    document.getElementById('wineId').textContent = 'Degustazione libera';
+    document.getElementById('wineId').textContent = 'Degustazione alla cieca';
+    // Mostra la box per inserire i dati del vino in step 5
+    document.getElementById('boxVinoEsterno').style.display = 'block';
   }
 
   // Data oggi
@@ -141,6 +147,12 @@ function setupChips() {
   bindInput('tempoApertura', 'tempo_apertura_min', v => v ? parseInt(v) : null);
   bindInput('olfattoNote');
   bindInput('noteConclusive');
+
+  // Campi vino esterno (degustazione cieca)
+  bindInput('extNome', 'nome_vino_esterno', v => v.trim() || null);
+  bindInput('extProduttore', 'produttore_esterno', v => v.trim() || null);
+  bindInput('extAnnata', 'annata_esterna', v => v ? parseInt(v) : null);
+  bindInput('extTipologia', 'tipologia_esterna', v => v || null);
 
   document.getElementById('tempSlider').addEventListener('input', e => {
     D.temperatura_servizio = parseFloat(e.target.value);
@@ -303,6 +315,9 @@ async function salvaDegustazione() {
   const payload = {
     user_id: currentUser.id,
     bottiglia_id: D.bottiglia_id,
+    nome_vino_esterno: D.nome_vino_esterno,
+    produttore_esterno: D.produttore_esterno,
+    annata_esterna: D.annata_esterna,
     luogo: D.luogo || null,
     data_degustazione: D.data_degustazione,
     occasione: D.occasione,
