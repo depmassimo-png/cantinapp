@@ -387,6 +387,42 @@
 
     <div class="summary-box" id="summaryBox"></div>
 
+    <!-- Sezione vino esterno (solo se degustazione cieca/libera) -->
+    <div id="boxVinoEsterno" style="display:none;background:var(--bianco);border:1px solid var(--bordo);border-radius:var(--radius-lg);padding:16px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:var(--bordeaux);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+        <i class="ti ti-bottle-wine" style="color:var(--oro);font-size:16px"></i>
+        Identità del vino
+      </div>
+      <div style="font-size:12px;color:var(--testo-2);margin-bottom:12px;font-style:italic">
+        Ora che hai espresso il tuo giudizio, riveli quale vino hai degustato?
+      </div>
+
+      <label class="field-label">Nome del vino</label>
+      <input type="text" id="extNome" placeholder="es. Barolo Riserva">
+
+      <label class="field-label">Produttore</label>
+      <input type="text" id="extProduttore" placeholder="es. Giacomo Conterno">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label class="field-label">Annata</label>
+          <input type="number" id="extAnnata" placeholder="2018" min="1900" max="2099">
+        </div>
+        <div>
+          <label class="field-label">Tipologia</label>
+          <select id="extTipologia">
+            <option value="">—</option>
+            <option value="rosso">Rosso</option>
+            <option value="bianco">Bianco</option>
+            <option value="rosato">Rosato</option>
+            <option value="spumante">Spumante</option>
+            <option value="passito">Passito</option>
+            <option value="liquoroso">Liquoroso</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <label class="field-label">Piacere personale</label>
     <div class="stars" id="stars">
       <span class="star" data-v="1">★</span>
