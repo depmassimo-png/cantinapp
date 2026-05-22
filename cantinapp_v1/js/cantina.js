@@ -142,7 +142,9 @@ function cardHtml(b) {
   const qty = b.quantita || 1;
   const img = b.etichetta_url
     ? `<img src="${b.etichetta_url}" alt="">`
-    : `<i class="ti ti-bottle-wine" aria-hidden="true"></i>`;
+    : (b.controetichetta_url
+        ? `<img src="${b.controetichetta_url}" alt="">`
+        : `<i class="ti ti-bottle-wine" aria-hidden="true"></i>`);
 
   return `
     <a class="wine-card" href="bottiglia.html?id=${b.id}">

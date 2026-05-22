@@ -3,7 +3,8 @@
 // ============================================================
 
 let currentUser = null;
-let fotoFile = null;
+let fotoFronte = null;
+let fotoRetro = null;
 let vitigni = [];
 
 (async function init() {
@@ -21,8 +22,8 @@ function toggleSpumantiFields() {
     tip === 'spumante' ? 'block' : 'none';
 }
 
-// ==== GESTIONE FOTO ETICHETTA ====
-function handlePhotoSelect(e) {
+// ==== GESTIONE FOTO ETICHETTA (FRONTE/RETRO) ====
+function handlePhotoSelect(e, lato) {
   const file = e.target.files[0];
   if (!file) return;
 
@@ -31,38 +32,50 @@ function handlePhotoSelect(e) {
     return;
   }
 
-  fotoFile = file;
+  if (lato === 'fronte') fotoFronte = file;
+  else fotoRetro = file;
 
   // Mostra preview
   const reader = new FileReader();
   reader.onload = function(evt) {
-    const area = document.getElementById('uploadArea');
+    const areaId = lato === 'fronte' ? 'uploadFronte' : 'uploadRetro';
+    const area = document.getElementById(areaId);
     area.classList.add('has-image');
     area.innerHTML = `
-      <img src="${evt.target.result}" class="preview-img" alt="Etichetta">
-      <button type="button" class="preview-remove" onclick="rimuoviFoto(event)" aria-label="Rimuovi foto">
+      <img src="${evt.target.result}" class="preview-img" alt="Etichetta ${lato}">
+      <button type="button" class="preview-remove" onclick="rimuoviFoto(event, '${lato}')" aria-label="Rimuovi foto">
         <i class="ti ti-x"></i>
       </button>
     `;
-    document.getElementById('aiHint').style.display = 'flex';
-    document.getElementById('btnAI').style.display = 'flex';
+    aggiornaAIHint();
   };
   reader.readAsDataURL(file);
 }
 
-function rimuoviFoto(e) {
+function rimuoviFoto(e, lato) {
   e.stopPropagation();
-  fotoFile = null;
-  const area = document.getElementById('uploadArea');
+  const areaId = lato === 'fronte' ? 'uploadFronte' : 'uploadRetro';
+  const area = document.getElementById(areaId);
+  if (lato === 'fronte') fotoFronte = null;
+  else fotoRetro = null;
+
+  const label = lato === 'fronte' ? 'Fronte' : 'Retro';
+  const sub = lato === 'fronte' ? 'Etichetta principale' : 'Controetichetta';
+
   area.classList.remove('has-image');
   area.innerHTML = `
     <i class="ti ti-camera upload-icon" aria-hidden="true"></i>
-    <p>Fotografa l'etichetta</p>
-    <small>oppure scegli dalla galleria</small>
-    <input type="file" id="fotoEtichetta" accept="image/*" capture="environment" onchange="handlePhotoSelect(event)">
+    <p style="font-size:13px">${label}</p>
+    <small>${sub}</small>
+    <input type="file" accept="image/*" capture="environment" onchange="handlePhotoSelect(event, '${lato}')">
   `;
-  document.getElementById('aiHint').style.display = 'none';
-  document.getElementById('btnAI').style.display = 'none';
+  aggiornaAIHint();
+}
+
+function aggiornaAIHint() {
+  const ne = (fotoFronte || fotoRetro);
+  document.getElementById('aiHint').style.display = ne ? 'flex' : 'none';
+  document.getElementById('btnAI').style.display = ne ? 'flex' : 'none';
 }
 
 function analizzaConAI() {
@@ -144,21 +157,37 @@ async function salvaBottiglia(e) {
   overlay.classList.add('show');
 
   try {
-    // Upload foto se presente
-    if (fotoFile) {
-      msg.textContent = 'Upload foto...';
-      const ext = fotoFile.name.split('.').pop().toLowerCase();
-      const fileName = `${currentUser.id}/${Date.now()}.${ext}`;
+    // Upload foto FRONTE se presente
+    if (fotoFronte) {
+      msg.textContent = 'Upload foto fronte...';
+      const ext = fotoFronte.name.split('.').pop().toLowerCase();
+      const fileName = `${currentUser.id}/${Date.now()}_fronte.${ext}`;
       const { error: upErr } = await sb.storage
         .from('etichette')
-        .upload(fileName, fotoFile, { upsert: false });
-
+        .upload(fileName, fotoFronte, { upsert: false });
       if (upErr) {
-        console.error('Upload error:', upErr);
-        showToast('Errore upload foto: ' + upErr.message, true);
+        console.error('Upload fronte error:', upErr);
+        showToast('Errore upload fronte: ' + upErr.message, true);
       } else {
         const { data: { publicUrl } } = sb.storage.from('etichette').getPublicUrl(fileName);
         dati.etichetta_url = publicUrl;
+      }
+    }
+
+    // Upload foto RETRO se presente
+    if (fotoRetro) {
+      msg.textContent = 'Upload foto retro...';
+      const ext = fotoRetro.name.split('.').pop().toLowerCase();
+      const fileName = `${currentUser.id}/${Date.now()}_retro.${ext}`;
+      const { error: upErr } = await sb.storage
+        .from('etichette')
+        .upload(fileName, fotoRetro, { upsert: false });
+      if (upErr) {
+        console.error('Upload retro error:', upErr);
+        showToast('Errore upload retro: ' + upErr.message, true);
+      } else {
+        const { data: { publicUrl } } = sb.storage.from('etichette').getPublicUrl(fileName);
+        dati.controetichetta_url = publicUrl;
       }
     }
 

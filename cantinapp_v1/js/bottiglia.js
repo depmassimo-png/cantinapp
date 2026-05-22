@@ -43,11 +43,23 @@ async function loadBottiglia(id) {
 function render() {
   const b = bottiglia;
 
-  // Hero photo
+  // Hero photo - galleria con fronte/retro se presenti
   const hero = document.getElementById('heroPhoto');
-  if (b.etichetta_url) {
-    hero.innerHTML = `<img src="${b.etichetta_url}" alt="Etichetta">
-      <span class="badge tip-tag badge-${b.tipologia}">${cap(b.tipologia)}</span>`;
+  const fronte = b.etichetta_url;
+  const retro = b.controetichetta_url;
+
+  if (fronte || retro) {
+    const slides = [];
+    if (fronte) slides.push(`<div class="hero-slide active"><img src="${fronte}" alt="Fronte"></div>`);
+    if (retro) slides.push(`<div class="hero-slide"><img src="${retro}" alt="Retro"></div>`);
+    const dots = (fronte && retro) ? `
+      <div class="hero-dots">
+        <button class="hero-dot active" onclick="showSlide(0)" aria-label="Fronte"></button>
+        <button class="hero-dot" onclick="showSlide(1)" aria-label="Retro"></button>
+      </div>
+      <div class="hero-side-tag" id="heroSideTag">Fronte</div>
+    ` : '';
+    hero.innerHTML = `${slides.join('')}${dots}<span class="badge tip-tag badge-${b.tipologia}">${cap(b.tipologia)}</span>`;
   } else {
     hero.innerHTML = `<i class="ti ti-bottle-wine no-photo" aria-hidden="true"></i>
       <span class="badge tip-tag badge-${b.tipologia}">${cap(b.tipologia)}</span>`;
@@ -123,6 +135,15 @@ function row(label, value) {
     <span class="info-label">${esc(label)}</span>
     <span class="info-value">${esc(String(value))}</span>
   </div>`;
+}
+
+function showSlide(idx) {
+  const slides = document.querySelectorAll('.hero-slide');
+  const dots = document.querySelectorAll('.hero-dot');
+  const tag = document.getElementById('heroSideTag');
+  slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+  dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+  if (tag) tag.textContent = idx === 0 ? 'Fronte' : 'Retro';
 }
 
 function esc(s) {
