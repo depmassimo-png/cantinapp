@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1a0608">
+  <title>CantinApp — Dettaglio bottiglia</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    .header-detail {
+      background: var(--nero);
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: space-between;
+    }
+    .header-detail .left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-detail a, .header-detail button.icon-btn {
+      color: var(--oro);
+      font-size: 22px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .header-detail h1 {
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .hero-photo {
+      width: 100%;
+      height: 280px;
+      background: var(--avorio-dk);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    .hero-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .hero-photo .no-photo {
+      font-size: 80px;
+      color: var(--bordo-dk);
+    }
+    .hero-photo .tip-tag {
+      position: absolute;
+      top: 12px; left: 12px;
+    }
+
+    .wine-title {
+      padding: 20px 20px 8px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .wine-title h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--testo);
+      margin-bottom: 4px;
+    }
+    .wine-title .producer {
+      font-size: 15px;
+      color: var(--testo-2);
+      font-style: italic;
+    }
+    .wine-title .meta-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .quick-actions {
+      padding: 12px 20px;
+      max-width: 480px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .action-btn {
+      padding: 14px 12px;
+      border-radius: var(--radius-md);
+      background: var(--bianco);
+      border: 1px solid var(--bordo);
+      cursor: pointer;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--testo);
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: all .15s;
+      font-family: inherit;
+    }
+    .action-btn:active { transform: scale(.97); }
+    .action-btn i {
+      font-size: 22px;
+      color: var(--bordeaux);
+    }
+    .action-btn.degusta {
+      background: var(--bordeaux);
+      color: #fff;
+      border-color: var(--bordeaux);
+    }
+    .action-btn.degusta i { color: var(--oro); }
+
+    .info-section {
+      max-width: 480px;
+      margin: 12px auto;
+      padding: 0 20px;
+    }
+    .info-card {
+      background: var(--bianco);
+      border: 1px solid var(--bordo);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .info-card-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--bordeaux);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .info-card-title i { color: var(--oro); font-size: 16px; }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--bordo);
+      font-size: 14px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: var(--testo-2); }
+    .info-value { color: var(--testo); font-weight: 500; text-align: right; }
+
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .qty-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--bordo);
+      background: var(--bianco);
+      color: var(--bordeaux);
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qty-display {
+      min-width: 32px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--testo);
+    }
+
+    .vitigni-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .vit-chip {
+      background: var(--bordeaux-lt);
+      color: var(--bordeaux);
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .danger-zone {
+      max-width: 480px;
+      margin: 24px auto 100px;
+      padding: 0 20px;
+    }
+    .btn-danger {
+      background: transparent;
+      color: var(--bordeaux);
+      border: 1px solid var(--bordeaux);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--testo-2);
+    }
+    .loading i {
+      font-size: 32px;
+      animation: spin .7s linear infinite;
+      display: block;
+      margin-bottom: 8px;
+      color: var(--bordeaux);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Modal modifica */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26,6,8,.6);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 500;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-content {
+      background: var(--avorio);
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      padding: 16px 20px 100px;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0 16px;
+      border-bottom: 1px solid var(--bordo);
+      margin-bottom: 16px;
+      position: sticky;
+      top: 0;
+      background: var(--avorio);
+      z-index: 10;
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--testo);
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 26px;
+      color: var(--testo-2);
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+    .modal-bottom {
+      position: sticky;
+      bottom: 0;
+      background: var(--avorio);
+      padding: 12px 0;
+      display: flex;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loadingArea" class="loading">
+  <i class="ti ti-loader-2" aria-hidden="true"></i>
+  Caricamento...
+</div>
+
+<div id="detailArea" style="display:none">
+
+  <div class="header-detail">
+    <div class="left">
+      <a href="cantina.html" aria-label="Indietro">
+        <i class="ti ti-arrow-left"></i>
+      </a>
+      <h1>Dettaglio bottiglia</h1>
+    </div>
+    <button class="icon-btn" onclick="apriModifica()" aria-label="Modifica">
+      <i class="ti ti-edit"></i>
+    </button>
+  </div>
+
+  <div class="hero-photo" id="heroPhoto">
+    <i class="ti ti-bottle-wine no-photo" aria-hidden="true"></i>
+    <span class="badge tip-tag" id="tipBadge"></span>
+  </div>
+
+  <div class="wine-title">
+    <h1 id="wineName">—</h1>
+    <div class="producer" id="wineProducer">—</div>
+    <div class="meta-badges" id="metaBadges"></div>
+  </div>
+
+  <div class="quick-actions">
+    <button class="action-btn degusta" onclick="iniziaDegustazione()">
+      <i class="ti ti-glass-full"></i>
+      Degusta ora
+    </button>
+    <button class="action-btn" onclick="segnaBevuta()">
+      <i class="ti ti-check"></i>
+      Segna bevuta
+    </button>
+  </div>
+
+  <div class="info-section">
+    <div class="info-card">
+      <div class="info-card-title">
+        <i class="ti ti-info-circle"></i>
+        Identità del vino
+      </div>
+      <div id="infoIdentita"></div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">
+        <i class="ti ti-flask"></i>
+        Dati tecnici
+      </div>
+      <div id="infoTecnici"></div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">
+        <i class="ti ti-building-warehouse"></i>
+        In cantina
+      </div>
+      <div id="infoCantina"></div>
+    </div>
+
+    <div class="info-card" id="cardNote" style="display:none">
+      <div class="info-card-title">
+        <i class="ti ti-notes"></i>
+        Note personali
+      </div>
+      <div id="infoNote" style="font-size:14px;line-height:1.6;color:var(--testo-2);font-style:italic"></div>
+    </div>
+  </div>
+
+  <div class="danger-zone">
+    <button class="btn btn-danger" onclick="confermaElimina()">
+      <i class="ti ti-trash" style="font-size:18px"></i>
+      Elimina bottiglia
+    </button>
+  </div>
+
+</div>
+
+<!-- MODAL MODIFICA -->
+<div class="modal-overlay" id="modalModifica">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">Modifica bottiglia</div>
+      <button class="modal-close" onclick="chiudiModifica()" aria-label="Chiudi">×</button>
+    </div>
+
+    <form id="formModifica" onsubmit="salvaModifica(event)">
+
+      <label class="field-label">Nome del vino</label>
+      <input type="text" id="mNome" required>
+
+      <label class="field-label">Produttore</label>
+      <input type="text" id="mProduttore" required>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label class="field-label">Annata</label>
+          <input type="number" id="mAnnata" min="1900" max="2099">
+        </div>
+        <div>
+          <label class="field-label">Tipologia</label>
+          <select id="mTipologia">
+            <option value="rosso">Rosso</option>
+            <option value="bianco">Bianco</option>
+            <option value="rosato">Rosato</option>
+            <option value="spumante">Spumante</option>
+            <option value="passito">Passito</option>
+            <option value="liquoroso">Liquoroso</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label class="field-label">Denominazione</label>
+          <input type="text" id="mDenominazione">
+        </div>
+        <div>
+          <label class="field-label">Regione</label>
+          <input type="text" id="mRegione">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label class="field-label">Gradazione</label>
+          <input type="number" id="mGradazione" step="0.1" min="0" max="25">
+        </div>
+        <div>
+          <label class="field-label">Quantità</label>
+          <input type="number" id="mQuantita" min="0">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label class="field-label">Pronto da</label>
+          <input type="number" id="mProntoDa" min="1900" max="2099">
+        </div>
+        <div>
+          <label class="field-label">Pronto fino a</label>
+          <input type="number" id="mProntoA" min="1900" max="2099">
+        </div>
+      </div>
+
+      <label class="field-label">Note personali</label>
+      <textarea id="mNote" rows="3"></textarea>
+
+      <div class="modal-bottom">
+        <button type="button" class="btn btn-outline" onclick="chiudiModifica()">Annulla</button>
+        <button type="submit" class="btn btn-primary" style="flex:2">
+          <i class="ti ti-check" style="font-size:18px"></i>
+          Salva modifiche
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/bottiglia.js"></script>
+</body>
+</html>
