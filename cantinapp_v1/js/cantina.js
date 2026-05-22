@@ -1,0 +1,182 @@
+// ============================================================
+// CantinApp — Cantina (lista bottiglie)
+// ============================================================
+
+let bottiglie = [];
+let filtroAttivo = 'all';
+let currentUser = null;
+
+// Inizializzazione
+(async function init() {
+  const session = await requireAuth();
+  if (!session) return;
+  currentUser = session.user;
+
+  // Carica nome utente
+  loadUserName();
+
+  // Carica bottiglie
+  await loadBottiglie();
+})();
+
+async function loadUserName() {
+  const { data } = await sb.from('profiles').select('username').eq('id', currentUser.id).single();
+  if (data) {
+    document.getElementById('userName').textContent = 'Ciao, ' + data.username;
+  } else {
+    document.getElementById('userName').textContent = currentUser.email;
+  }
+}
+
+async function loadBottiglie() {
+  const { data, error } = await sb
+    .from('bottiglie')
+    .select('*')
+    .eq('stato', 'disponibile')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    showToast('Errore caricamento: ' + error.message, true);
+    return;
+  }
+  bottiglie = data || [];
+  document.getElementById('totalCount').textContent =
+    bottiglie.length + (bottiglie.length === 1 ? ' bottiglia' : ' bottiglie');
+  renderBottiglie();
+}
+
+function setFilter(filter, btn) {
+  filtroAttivo = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBottiglie();
+}
+
+function applyFilters() {
+  renderBottiglie();
+}
+
+function renderBottiglie() {
+  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  const area = document.getElementById('contentArea');
+
+  // Filtri
+  let filtered = bottiglie;
+  if (filtroAttivo !== 'all') {
+    filtered = filtered.filter(b => b.tipologia === filtroAttivo);
+  }
+  if (search) {
+    filtered = filtered.filter(b =>
+      (b.nome_vino || '').toLowerCase().includes(search) ||
+      (b.produttore || '').toLowerCase().includes(search) ||
+      (b.denominazione || '').toLowerCase().includes(search) ||
+      (b.regione || '').toLowerCase().includes(search)
+    );
+  }
+
+  // Empty state
+  if (filtered.length === 0) {
+    if (bottiglie.length === 0) {
+      area.innerHTML = `
+        <div class="empty">
+          <i class="ti ti-bottle-wine" aria-hidden="true"></i>
+          <h3>La tua cantina è vuota</h3>
+          <p>Aggiungi la tua prima bottiglia<br>toccando il pulsante <strong>+</strong> in basso</p>
+        </div>`;
+    } else {
+      area.innerHTML = `
+        <div class="empty">
+          <i class="ti ti-search" aria-hidden="true"></i>
+          <h3>Nessun risultato</h3>
+          <p>Prova a modificare i filtri o la ricerca</p>
+        </div>`;
+    }
+    return;
+  }
+
+  // Raggruppa per tipologia se filtro = all
+  let html = '';
+  if (filtroAttivo === 'all') {
+    const gruppi = groupByTipologia(filtered);
+    for (const tip of ['rosso', 'bianco', 'rosato', 'spumante', 'passito', 'liquoroso']) {
+      if (gruppi[tip] && gruppi[tip].length) {
+        html += `<p class="section-label">${labelTipologia(tip)} · ${gruppi[tip].length}</p>`;
+        html += '<div class="wine-list">';
+        for (const b of gruppi[tip]) html += cardHtml(b);
+        html += '</div>';
+      }
+    }
+  } else {
+    html = '<div class="wine-list" style="padding-top:8px">';
+    for (const b of filtered) html += cardHtml(b);
+    html += '</div>';
+  }
+
+  area.innerHTML = html;
+}
+
+function groupByTipologia(arr) {
+  const out = {};
+  for (const b of arr) {
+    (out[b.tipologia] = out[b.tipologia] || []).push(b);
+  }
+  return out;
+}
+
+function labelTipologia(tip) {
+  const map = {
+    rosso: 'Vini rossi', bianco: 'Vini bianchi', rosato: 'Vini rosati',
+    spumante: 'Spumanti', passito: 'Passiti', liquoroso: 'Liquorosi'
+  };
+  return map[tip] || tip;
+}
+
+function badgeClass(tipologia) {
+  return 'badge-' + tipologia;
+}
+
+function cardHtml(b) {
+  const tipologia = b.tipologia || 'rosso';
+  const annata = b.annata || 'NM';
+  const gradi = b.gradazione ? b.gradazione.toString().replace('.', ',') + '°' : '';
+  const qty = b.quantita || 1;
+  const img = b.etichetta_url
+    ? `<img src="${b.etichetta_url}" alt="">`
+    : `<i class="ti ti-bottle-wine" aria-hidden="true"></i>`;
+
+  return `
+    <a class="wine-card" href="bottiglia.html?id=${b.id}">
+      <div class="wine-thumb ${tipologia}">${img}</div>
+      <div class="wine-info">
+        <div class="wine-name">${escapeHtml(b.nome_vino)}</div>
+        <div class="wine-producer">${escapeHtml(b.produttore)}</div>
+        <div class="wine-meta">
+          <span class="badge ${badgeClass(tipologia)}">${capitalize(tipologia)}</span>
+          <span class="badge badge-anno">${annata}</span>
+          ${gradi ? `<span class="badge badge-anno">${gradi}</span>` : ''}
+        </div>
+      </div>
+      <div class="wine-right">
+        <span class="badge badge-qty">×${qty}</span>
+      </div>
+    </a>`;
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return s.replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+function capitalize(s) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+}
+
+function confirmLogout() {
+  if (confirm('Vuoi davvero uscire?')) {
+    sb.auth.signOut().then(() => {
+      window.location.href = 'index.html';
+    });
+  }
+}
