@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1a0608">
+  <title>CantinApp — La mia cantina</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    .header-cantina {
+      background: var(--nero);
+      padding: 16px 20px 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .header-title {
+      font-size: 18px;
+      font-weight: 500;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .header-title i { color: var(--oro); }
+    .header-count {
+      font-size: 12px;
+      color: var(--oro);
+      background: rgba(201,168,76,.12);
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(201,168,76,.3);
+    }
+    .header-user {
+      font-size: 12px;
+      color: rgba(255,255,255,.5);
+      font-style: italic;
+    }
+    .logout-btn {
+      background: none;
+      border: none;
+      color: var(--oro);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+    }
+
+    .search-bar {
+      background: var(--bianco);
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--bordo);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .search-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+    .search-input-wrap input {
+      padding-left: 38px;
+    }
+    .search-input-wrap i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--testo-3);
+      font-size: 18px;
+    }
+
+    .filter-btns {
+      display: flex;
+      gap: 6px;
+      padding: 12px 16px;
+      overflow-x: auto;
+      background: var(--avorio);
+      border-bottom: 1px solid var(--bordo);
+      scrollbar-width: none;
+    }
+    .filter-btns::-webkit-scrollbar { display: none; }
+    .filter-btn {
+      flex-shrink: 0;
+      padding: 7px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--bordo);
+      background: var(--bianco);
+      color: var(--testo-2);
+      transition: all .15s;
+      user-select: none;
+    }
+    .filter-btn.active {
+      background: var(--bordeaux);
+      border-color: var(--bordeaux);
+      color: #fff;
+    }
+
+    .section-label {
+      padding: 14px 20px 6px;
+      font-size: 11px;
+      color: var(--testo-2);
+      font-weight: 600;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+    }
+
+    .wine-list {
+      padding: 0 16px 100px;
+    }
+    .wine-card {
+      background: var(--bianco);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--bordo);
+      margin-bottom: 10px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      cursor: pointer;
+      transition: all .15s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .wine-card:active { transform: scale(0.98); }
+    .wine-thumb {
+      width: 52px;
+      height: 70px;
+      border-radius: 6px;
+      background: var(--avorio-dk);
+      border: 1px solid var(--bordo);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .wine-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .wine-thumb i {
+      font-size: 24px;
+      color: var(--testo-3);
+    }
+    .wine-thumb.rosso { background: #f5eaec; }
+    .wine-thumb.bianco { background: var(--oro-lt); }
+    .wine-thumb.rosato { background: #fce8ee; }
+    .wine-thumb.spumante { background: #e8f5ea; }
+    .wine-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .wine-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--testo);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .wine-producer {
+      font-size: 12px;
+      color: var(--testo-2);
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .wine-meta {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .wine-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-shrink: 0;
+      gap: 8px;
+    }
+    .stars-small {
+      color: var(--oro);
+      font-size: 11px;
+      letter-spacing: -1px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--testo-2);
+    }
+    .loading i {
+      font-size: 32px;
+      animation: spin .7s linear infinite;
+      display: block;
+      margin-bottom: 8px;
+      color: var(--bordeaux);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div class="header-cantina">
+  <div class="header-row">
+    <div class="header-title">
+      <i class="ti ti-bottle-wine" aria-hidden="true"></i>
+      La mia cantina
+    </div>
+    <button class="logout-btn" onclick="confirmLogout()" aria-label="Logout">
+      <i class="ti ti-logout"></i>
+    </button>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+    <span class="header-user" id="userName">...</span>
+    <span class="header-count" id="totalCount">0 bottiglie</span>
+  </div>
+</div>
+
+<div class="search-bar">
+  <div class="search-input-wrap">
+    <i class="ti ti-search" aria-hidden="true"></i>
+    <input type="text" id="searchInput" placeholder="Cerca vino, produttore…" oninput="applyFilters()">
+  </div>
+</div>
+
+<div class="filter-btns" id="filterBtns">
+  <span class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">Tutti</span>
+  <span class="filter-btn" data-filter="rosso" onclick="setFilter('rosso', this)">Rossi</span>
+  <span class="filter-btn" data-filter="bianco" onclick="setFilter('bianco', this)">Bianchi</span>
+  <span class="filter-btn" data-filter="rosato" onclick="setFilter('rosato', this)">Rosati</span>
+  <span class="filter-btn" data-filter="spumante" onclick="setFilter('spumante', this)">Spumanti</span>
+  <span class="filter-btn" data-filter="passito" onclick="setFilter('passito', this)">Passiti</span>
+</div>
+
+<div id="contentArea">
+  <div class="loading">
+    <i class="ti ti-loader-2" aria-hidden="true"></i>
+    Caricamento cantina...
+  </div>
+</div>
+
+<a href="aggiungi.html" class="fab" aria-label="Aggiungi bottiglia">
+  <i class="ti ti-plus" aria-hidden="true"></i>
+</a>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/cantina.js"></script>
+</body>
+</html>
