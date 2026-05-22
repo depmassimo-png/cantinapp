@@ -67,7 +67,7 @@ function rimuoviFoto(e, lato) {
     <i class="ti ti-camera upload-icon" aria-hidden="true"></i>
     <p style="font-size:13px">${label}</p>
     <small>${sub}</small>
-    <input type="file" accept="image/*" capture="environment" onchange="handlePhotoSelect(event, '${lato}')">
+    <input type="file" accept="image/*" onchange="handlePhotoSelect(event, '${lato}')">
   `;
   aggiornaAIHint();
 }
