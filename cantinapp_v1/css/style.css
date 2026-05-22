@@ -433,6 +433,35 @@ input[type=range]::-webkit-slider-thumb {
 }
 .step-icon i { color: var(--bordeaux); }
 
+/* ---- BOTTOM NAV ---- */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--bianco);
+  border-top: 1px solid var(--bordo);
+  display: flex;
+  max-width: 480px;
+  margin: 0 auto;
+  z-index: 90;
+}
+.nav-item {
+  flex: 1;
+  padding: 10px 4px 12px;
+  text-align: center;
+  color: var(--testo-2);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 500;
+  transition: color .15s;
+}
+.nav-item i {
+  display: block;
+  font-size: 22px;
+  margin-bottom: 2px;
+}
+.nav-item.active { color: var(--bordeaux); }
+.nav-item.active i { color: var(--bordeaux); }
+
 /* ---- LOGIN SPECIFICO ---- */
 .login-logo {
   text-align: center;
