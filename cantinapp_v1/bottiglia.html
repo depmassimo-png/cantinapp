@@ -51,7 +51,13 @@
       overflow: hidden;
       position: relative;
     }
-    .hero-photo img {
+    .hero-slide {
+      display: none;
+      width: 100%;
+      height: 100%;
+    }
+    .hero-slide.active { display: block; }
+    .hero-slide img {
       width: 100%;
       height: 100%;
       object-fit: contain;
@@ -63,6 +69,39 @@
     .hero-photo .tip-tag {
       position: absolute;
       top: 12px; left: 12px;
+    }
+    .hero-dots {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      background: rgba(26,6,8,.5);
+      padding: 6px 10px;
+      border-radius: var(--radius-pill);
+    }
+    .hero-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.4);
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      transition: background .15s;
+    }
+    .hero-dot.active { background: var(--oro); }
+    .hero-side-tag {
+      position: absolute;
+      top: 12px; right: 12px;
+      background: rgba(26,6,8,.65);
+      color: var(--oro);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      letter-spacing: .5px;
+      text-transform: uppercase;
     }
 
     .wine-title {

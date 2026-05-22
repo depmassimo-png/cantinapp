@@ -57,13 +57,16 @@
     .upload-area {
       border: 2px dashed var(--bordo-dk);
       border-radius: var(--radius-lg);
-      padding: 24px 16px;
+      padding: 20px 10px;
       text-align: center;
       cursor: pointer;
       background: var(--bianco);
-      margin-bottom: 12px;
       position: relative;
       transition: all .15s;
+      min-height: 130px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
     .upload-area:active {
       background: var(--avorio);
@@ -72,21 +75,22 @@
       padding: 0;
       border: 1px solid var(--bordo);
       overflow: hidden;
+      min-height: 130px;
     }
     .upload-area i.upload-icon {
-      font-size: 32px;
+      font-size: 26px;
       color: var(--bordeaux);
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     .upload-area p {
-      font-size: 14px;
+      font-size: 13px;
       color: var(--testo);
       font-weight: 500;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
     .upload-area small {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--testo-2);
     }
     .upload-area input[type=file] {
@@ -99,24 +103,24 @@
     }
     .preview-img {
       width: 100%;
-      max-height: 220px;
-      object-fit: contain;
+      height: 130px;
+      object-fit: cover;
       display: block;
       background: var(--avorio);
     }
     .preview-remove {
       position: absolute;
-      top: 8px; right: 8px;
+      top: 6px; right: 6px;
       background: var(--nero);
       color: #fff;
       border: none;
-      width: 32px; height: 32px;
+      width: 26px; height: 26px;
       border-radius: 50%;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 14px;
     }
 
     .form-row {
@@ -206,11 +210,19 @@
 
 <form id="formBottiglia" onsubmit="salvaBottiglia(event)" style="padding:16px;padding-bottom:100px;max-width:480px;margin:0 auto">
 
-  <div class="upload-area" id="uploadArea">
-    <i class="ti ti-camera upload-icon" aria-hidden="true"></i>
-    <p>Fotografa l'etichetta</p>
-    <small>oppure scegli dalla galleria</small>
-    <input type="file" id="fotoEtichetta" accept="image/*" capture="environment" onchange="handlePhotoSelect(event)">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+    <div class="upload-area" id="uploadFronte">
+      <i class="ti ti-camera upload-icon" aria-hidden="true"></i>
+      <p style="font-size:13px">Fronte</p>
+      <small>Etichetta principale</small>
+      <input type="file" accept="image/*" capture="environment" onchange="handlePhotoSelect(event, 'fronte')">
+    </div>
+    <div class="upload-area" id="uploadRetro">
+      <i class="ti ti-camera upload-icon" aria-hidden="true"></i>
+      <p style="font-size:13px">Retro</p>
+      <small>Controetichetta</small>
+      <input type="file" accept="image/*" capture="environment" onchange="handlePhotoSelect(event, 'retro')">
+    </div>
   </div>
 
   <div class="ai-hint" id="aiHint" style="display:none">
