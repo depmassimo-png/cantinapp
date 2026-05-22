@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1a0608">
+  <title>CantinApp — Scheda degustazione</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    .header-scheda {
+      background: var(--nero);
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: space-between;
+    }
+    .header-scheda .left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-scheda a, .header-scheda button {
+      color: var(--oro);
+      font-size: 22px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .header-scheda h1 {
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .body { padding: 16px 20px 100px; max-width: 480px; margin: 0 auto; }
+
+    .wine-hero {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .wine-hero h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--testo);
+      margin-bottom: 4px;
+    }
+    .wine-hero .prod {
+      font-size: 14px;
+      color: var(--testo-2);
+      font-style: italic;
+      margin-bottom: 10px;
+    }
+    .wine-hero .data {
+      font-size: 12px;
+      color: var(--testo-3);
+    }
+
+    .score-box-big {
+      background: var(--nero);
+      border: 1px solid rgba(201,168,76,.25);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .score-box-big .lbl {
+      font-size: 11px;
+      color: rgba(201,168,76,.6);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .score-box-big .num {
+      font-size: 60px;
+      font-weight: 600;
+      color: var(--oro);
+      line-height: 1;
+    }
+    .score-box-big .max {
+      font-size: 20px;
+      color: rgba(255,255,255,.3);
+    }
+    .score-box-big .fascia {
+      display: inline-block;
+      margin-top: 10px;
+      border: 1px solid var(--oro);
+      color: var(--oro);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 5px 18px;
+      border-radius: var(--radius-pill);
+      letter-spacing: .5px;
+    }
+
+    .stars-big {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin: 14px 0;
+      font-size: 32px;
+      color: var(--oro);
+    }
+    .stars-big .empty { color: var(--bordo); }
+
+    .section-detail {
+      background: var(--bianco);
+      border: 1px solid var(--bordo);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .section-detail-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--bordeaux);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-detail-title i { color: var(--oro); font-size: 16px; }
+
+    .attr-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--bordo);
+      font-size: 14px;
+    }
+    .attr-row:last-child { border-bottom: none; }
+    .attr-label { color: var(--testo-2); }
+    .attr-value { color: var(--testo); font-weight: 500; text-align: right; }
+    .attr-value.punti {
+      color: var(--bordeaux);
+      font-weight: 600;
+    }
+    .attr-value.punti .num {
+      background: var(--bordeaux-lt);
+      color: var(--bordeaux);
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      margin-right: 4px;
+    }
+
+    .descrittori-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .desc-tag {
+      background: var(--oro-lt);
+      color: #7a5a10;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .note-text {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--testo);
+      font-style: italic;
+    }
+
+    .danger-zone { padding: 0 20px 100px; max-width: 480px; margin: 0 auto; }
+
+    .loading { text-align: center; padding: 60px 20px; color: var(--testo-2); }
+    .loading i {
+      font-size: 32px;
+      animation: spin .7s linear infinite;
+      display: block;
+      margin-bottom: 8px;
+      color: var(--bordeaux);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--bordeaux);
+      border: 1px solid var(--bordeaux);
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading" class="loading">
+  <i class="ti ti-loader-2"></i>
+  Caricamento...
+</div>
+
+<div id="content" style="display:none">
+
+  <div class="header-scheda">
+    <div class="left">
+      <a href="bevute.html" aria-label="Indietro"><i class="ti ti-arrow-left"></i></a>
+      <h1>Scheda degustazione</h1>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <div class="wine-hero">
+      <h1 id="wineName">—</h1>
+      <div class="prod" id="wineProd">—</div>
+      <div class="data" id="wineData">—</div>
+    </div>
+
+    <div class="score-box-big">
+      <div class="lbl">Punteggio Assosommelier</div>
+      <div><span class="num" id="scoreNum">0</span><span class="max"> /100</span></div>
+      <span class="fascia" id="scoreFascia">—</span>
+    </div>
+
+    <div class="stars-big" id="starsBig"></div>
+
+    <div class="section-detail" id="cardContext">
+      <div class="section-detail-title">
+        <i class="ti ti-calendar"></i>
+        Contesto
+      </div>
+      <div id="bodyContext"></div>
+    </div>
+
+    <div class="section-detail">
+      <div class="section-detail-title">
+        <i class="ti ti-eye"></i>
+        Esame visivo
+      </div>
+      <div id="bodyVisivo"></div>
+    </div>
+
+    <div class="section-detail">
+      <div class="section-detail-title">
+        <i class="ti ti-wind"></i>
+        Olfatto
+      </div>
+      <div id="bodyOlfatto"></div>
+    </div>
+
+    <div class="section-detail">
+      <div class="section-detail-title">
+        <i class="ti ti-droplet-half"></i>
+        Gusto
+      </div>
+      <div id="bodyGusto"></div>
+    </div>
+
+    <div class="section-detail" id="cardConclusioni">
+      <div class="section-detail-title">
+        <i class="ti ti-award"></i>
+        Conclusioni
+      </div>
+      <div id="bodyConclusioni"></div>
+    </div>
+
+  </div>
+
+  <div class="danger-zone">
+    <button class="btn btn-danger" onclick="elimina()">
+      <i class="ti ti-trash" style="font-size:18px"></i>
+      Elimina degustazione
+    </button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/scheda.js"></script>
+</body>
+</html>
