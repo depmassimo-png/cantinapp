@@ -398,6 +398,9 @@ async function salvaDegustazione() {
 
 function renderFamiglieAromi() {
   const tipologia = determinaTipologia();
+  console.log('[Ruota Aromi] bottigliaCorrente:', bottigliaCorrente);
+  console.log('[Ruota Aromi] tipologia determinata:', tipologia);
+  console.log('[Ruota Aromi] D.colore:', D.colore);
   const grid = document.getElementById('famiglieGrid');
   if (!grid) return;
 
