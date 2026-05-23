@@ -26,6 +26,7 @@ const D = {
   // visivo
   colore: null,
   riflesso: null,
+  densita_cromatica: null,
   limpidezza: null,
   vivacita: null,
   perlage_grana: null,
@@ -72,6 +73,8 @@ const D = {
       // Nascondi tannino per non-rossi e mostra perlage per spumanti
       if (data.tipologia !== 'rosso') {
         document.getElementById('boxTannino').style.display = 'none';
+      } else {
+        document.getElementById('boxDensita').style.display = 'block';
       }
       if (data.tipologia === 'spumante') {
         document.getElementById('boxPerlage').style.display = 'block';
@@ -81,6 +84,8 @@ const D = {
     document.getElementById('wineId').textContent = 'Degustazione alla cieca';
     // Mostra la box per inserire i dati del vino in step 5
     document.getElementById('boxVinoEsterno').style.display = 'block';
+    // In degustazione cieca mostra sempre densità cromatica (valutabile anche per altri vini)
+    document.getElementById('boxDensita').style.display = 'block';
   }
 
   // Data oggi
@@ -107,6 +112,7 @@ function setupChips() {
     ['chipsDecanter', 'decanter', v => v === 'true'],
     ['chipsColore', 'colore'],
     ['chipsRiflesso', 'riflesso'],
+    ['chipsDensita', 'densita_cromatica'],
     ['chipsLimpidezza', 'limpidezza'],
     ['chipsVivacita', 'vivacita'],
     ['chipsPerlage', 'perlage_grana'],
@@ -343,6 +349,7 @@ async function salvaDegustazione() {
     decanter: D.decanter,
     colore: D.colore,
     riflesso: D.riflesso,
+    densita_cromatica: D.densita_cromatica,
     limpidezza: D.limpidezza,
     vivacita: D.vivacita,
     perlage_grana: D.perlage_grana,

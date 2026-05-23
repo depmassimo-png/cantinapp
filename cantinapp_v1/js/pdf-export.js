@@ -1,6 +1,6 @@
 // ============================================================
 // CantinApp — Export PDF scheda Assosommelier
-// Replica fedele del layout ufficiale
+// Replica fedele del layout ufficiale del quaderno
 // ============================================================
 
 async function esportaPDF() {
@@ -22,272 +22,498 @@ async function esportaPDF() {
   const doc = new jsPDF('p', 'mm', 'a4');
 
   const d = scheda;
-  const W = 210;   // A4 width mm
-  const M = 12;    // margin
-  const CW = W - M*2;  // content width
+  const W = 210;
+  const H = 297;
+  const M = 12;
+  const CW = W - M*2;
 
-  // ===== COLORI =====
+  // ===== PALETTE (fedele alla scheda Assosommelier) =====
   const C = {
-    blu: [27, 42, 74],
-    rosso: [192, 57, 43],
-    verde: [39, 174, 96],
-    bluS: [46, 95, 163],
+    headerDark: [42, 56, 86],    // blu scuro header
+    rosso: [196, 86, 50],         // arancione/rosso esame visivo
+    verde: [127, 161, 76],        // verde olfatto
+    bluS: [70, 105, 145],         // blu gusto
+    bluDark: [42, 56, 86],        // blu intenso (per selezioni gusto)
+    verdeChiaro: [200, 215, 165], // chip olfatto chiara
+    verdeMedio: [165, 185, 110],  // chip olfatto media
+    verdeScuro: [127, 161, 76],   // chip olfatto scura
+    bluChiaro: [185, 200, 220],
+    bluMedio: [125, 150, 185],
+    bluScuro: [70, 105, 145],
+    rossoChiaro: [240, 200, 185],
     grigio: [120, 120, 120],
+    grigioChiaro: [220, 220, 220],
+    grigioMolto: [240, 240, 240],
     nero: [40, 40, 40],
-    chiaro: [240, 240, 240],
-    sel: [27, 42, 74],
-    selText: [255, 255, 255],
+    bordo: [180, 180, 180],
   };
+
+  // Helper checkbox
+  function checkBox(x, y, sel, color) {
+    color = color || C.grigioChiaro;
+    if (sel) {
+      doc.setFillColor(...color);
+      doc.rect(x, y, 2.5, 2.5, 'F');
+    } else {
+      doc.setFillColor(...C.grigioMolto);
+      doc.setDrawColor(...C.bordo);
+      doc.setLineWidth(0.2);
+      doc.rect(x, y, 2.5, 2.5, 'FD');
+    }
+  }
+
+  // Helper riga di opzioni con checkbox
+  function checkboxRow(x, y, options, selected, color, totalWidth) {
+    const cw = totalWidth / options.length;
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    for (let i = 0; i < options.length; i++) {
+      const opt = options[i];
+      const optKey = typeof opt === 'string' ? opt.toLowerCase() : opt.key;
+      const optLabel = typeof opt === 'string' ? opt : opt.label;
+      const isSel = matchOption(selected, optKey);
+      const cx = x + i * cw;
+      checkBox(cx, y, isSel, color);
+      doc.setTextColor(...C.nero);
+      doc.setFont('helvetica', isSel ? 'bold' : 'normal');
+      doc.text(optLabel, cx + 3.5, y + 2);
+    }
+  }
+
+  function matchOption(selected, opt) {
+    if (!selected) return false;
+    const s = String(selected).toLowerCase().replace(/[_\s]/g, '');
+    const o = String(opt).toLowerCase().replace(/[_\s]/g, '');
+    return s === o || s.includes(o) || o.includes(s);
+  }
+
+  function isInArray(arr, opt) {
+    if (!arr || !arr.length) return false;
+    const o = String(opt).toLowerCase().replace(/[_\s]/g, '');
+    return arr.some(s => {
+      const ss = String(s).toLowerCase().replace(/[_\s]/g, '');
+      return ss === o || ss.includes(o) || o.includes(ss);
+    });
+  }
+
+  // Helper scala numerica con quadrati colorati
+  function scalaPunti(x, y, items, selected, palette, totalWidth) {
+    // items: [[num, label], ...]
+    const sw = totalWidth / items.length;
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    // Etichette in cima
+    for (let i = 0; i < items.length; i++) {
+      const [num, lbl] = items[i];
+      if (lbl) {
+        doc.setTextColor(...C.nero);
+        const w = doc.getTextWidth(lbl);
+        doc.text(lbl, x + i * sw + sw/2 - w/2, y);
+      }
+    }
+    // Caselle numeri
+    const boxY = y + 1.5;
+    const boxH = 4.5;
+    for (let i = 0; i < items.length; i++) {
+      const [num] = items[i];
+      const cx = x + i * sw;
+      const isSel = num != null && num === selected;
+      // Gradiente di palette dal chiaro allo scuro
+      const colorIdx = Math.min(palette.length - 1, Math.floor(i * palette.length / items.length));
+      const col = isSel ? palette[palette.length - 1] : palette[colorIdx];
+      doc.setFillColor(...col);
+      doc.rect(cx + 0.3, boxY, sw - 0.6, boxH, 'F');
+      doc.setTextColor(isSel ? 255 : 255);
+      doc.setFont('helvetica', isSel ? 'bold' : 'normal');
+      doc.setFontSize(8);
+      if (num != null) {
+        const ntxt = String(num);
+        const nw = doc.getTextWidth(ntxt);
+        doc.text(ntxt, cx + sw/2 - nw/2, boxY + boxH - 1.3);
+      }
+    }
+    return y + boxH + 3;
+  }
 
   let y = M;
 
-  // ===== HEADER =====
-  doc.setFillColor(...C.blu);
-  doc.rect(M, y, CW, 12, 'F');
+  // ===== HEADER nero/blu =====
+  doc.setFillColor(...C.headerDark);
+  doc.rect(M, y, CW, 10, 'F');
   doc.setTextColor(255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  doc.text('SCHEDA DI DEGUSTAZIONE', M + 3, y + 8);
+  doc.text('SCHEDA DI DEGUSTAZIONE', M + 3, y + 6.5);
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text('Assosommelier', W - M - 3, y + 8, { align: 'right' });
-  y += 16;
+  doc.text('Assosommelier', W - M - 3, y + 6.5, { align: 'right' });
+  y += 14;
 
   // ===== INTESTAZIONE =====
+  const nome = d.bottiglia?.nome_vino || d.nome_vino_esterno || '';
+  const prod = d.bottiglia?.produttore || d.produttore_esterno || '';
+  const annata = d.bottiglia?.annata || d.annata_esterna || '';
+  const grado = d.bottiglia?.gradazione || '';
+
   doc.setTextColor(...C.nero);
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
 
-  const nome = d.bottiglia?.nome_vino || d.nome_vino_esterno || '—';
-  const prod = d.bottiglia?.produttore || d.produttore_esterno || '—';
-  const annata = d.bottiglia?.annata || d.annata_esterna || '';
-
-  // Riga 1: Luogo + Data
+  // Luogo + Data
   doc.text('Luogo', M, y);
-  drawLine(doc, M + 12, y + 1, M + 95, y + 1);
+  drawUnderline(doc, M + 10, y + 0.5, M + 95);
   doc.setFont('helvetica', 'bold');
-  doc.text(d.luogo || '', M + 14, y - 0.5);
+  doc.text(d.luogo || '', M + 12, y - 0.5);
   doc.setFont('helvetica', 'normal');
 
   doc.text('Data', M + 100, y);
-  drawLine(doc, M + 110, y + 1, W - M, y + 1);
+  drawUnderline(doc, M + 108, y + 0.5, W - M);
   doc.setFont('helvetica', 'bold');
-  doc.text(formatDateIT(d.data_degustazione), M + 112, y - 0.5);
+  doc.text(formatDateIT(d.data_degustazione), M + 110, y - 0.5);
   doc.setFont('helvetica', 'normal');
+  y += 6;
+
+  // Vino
+  doc.text('Vino', M, y);
+  drawUnderline(doc, M + 10, y + 0.5, W - M);
+  doc.setFont('helvetica', 'bold');
+  const vinoLine = `${nome}${prod ? ' · ' + prod : ''}${annata ? ' · ' + annata : ''}`;
+  doc.text(vinoLine, M + 12, y - 0.5);
+  doc.setFont('helvetica', 'normal');
+  y += 6;
+
+  // Alcol
+  doc.text('Alcol % vol', M, y);
+  drawUnderline(doc, M + 18, y + 0.5, W - M);
+  doc.setFont('helvetica', 'bold');
+  if (grado) doc.text(String(grado), M + 20, y - 0.5);
+  doc.setFont('helvetica', 'normal');
+  y += 8;
+
+  // ===== SEZIONE COLORE (barra rosso/arancione) =====
+  sezioneBarra(doc, M, y, CW, 'COLORE', C.rosso);
+  y += 6;
+  const colori = ['Paglierino', 'Dorato', 'Aranciato', 'Cerasuolo', 'Ramato', 'Porpora', 'Rubino', 'Granato'];
+  checkboxRow(M, y, colori, d.colore, C.rossoChiaro, CW);
+  y += 6;
+
+  // RIFLESSO
+  sezioneSottoTitolo(doc, M, y, 'RIFLESSO', C.rosso);
+  y += 4.5;
+  const riflessi = ['Non rilevato', 'Verdolino', 'Dorato', 'Aranciato', 'Porpora', 'Granato'];
+  checkboxRow(M, y, riflessi, d.riflesso, C.rossoChiaro, CW);
+  y += 6;
+
+  // DENSITÀ/LIMPIDEZZA/VIVACITÀ/PERLAGE in 4 colonne
+  const colW = CW / 4;
+  sezioneSottoTitolo(doc, M, y, 'DENSITÀ CROMATICA', C.rosso, '(vini rossi)');
+  sezioneSottoTitolo(doc, M + colW, y, 'LIMPIDEZZA', C.rosso);
+  sezioneSottoTitolo(doc, M + colW * 2, y, 'VIVACITÀ', C.rosso);
+  sezioneSottoTitolo(doc, M + colW * 3, y, 'PERLAGE GRANA BOLLICINE', C.rosso);
+  y += 4.5;
+
+  // Linee verticali separatrici
+  doc.setDrawColor(...C.bordo);
+  doc.setLineWidth(0.2);
+  doc.line(M + colW, y - 4, M + colW, y + 5);
+  doc.line(M + colW * 2, y - 4, M + colW * 2, y + 5);
+  doc.line(M + colW * 3, y - 4, M + colW * 3, y + 5);
+
+  checkboxRow(M, y, ['Trasparente', 'Compatto'], d.densita_cromatica, C.rossoChiaro, colW - 2);
+  checkboxRow(M + colW, y, ['Opaco', 'Limpido'], d.limpidezza, C.rossoChiaro, colW - 2);
+  checkboxRow(M + colW * 2, y, ['Cupo', 'Vivace', 'Luminoso'], d.vivacita, C.rossoChiaro, colW - 2);
+  checkboxRow(M + colW * 3, y, ['Grandi', 'Fini'], d.perlage_grana, C.rossoChiaro, colW - 2);
+  y += 8;
+
+  // ===== SEZIONE OLFATTO (barra verde) =====
+  sezioneBarra(doc, M, y, CW, 'OLFATTO', C.verde);
+  y += 6;
+  const famOlfatto = ['Fruttato', 'Floreale', 'Vegetale', 'Minerale', 'Erbe aromatiche', 'Speziato', 'Tostato', 'Balsamico', 'Etereo'];
+  const famKeys = ['fruttato', 'floreale', 'vegetale', 'minerale', 'erbe_aromatiche', 'speziato', 'tostato', 'balsamico', 'etereo'];
+  const famOlfattoOpts = famOlfatto.map((label, i) => ({ key: famKeys[i], label }));
+  const familigieSelezionate = d.olfatto_descrittori || [];
+  doc.setFontSize(7);
+  const fcw = CW / famOlfatto.length;
+  for (let i = 0; i < famOlfatto.length; i++) {
+    const isSel = isInArray(familigieSelezionate, famKeys[i]);
+    checkBox(M + i * fcw, y, isSel, C.verdeChiaro);
+    doc.setTextColor(...C.nero);
+    doc.setFont('helvetica', isSel ? 'bold' : 'normal');
+    doc.text(famOlfatto[i], M + i * fcw + 3.5, y + 2);
+  }
   y += 5;
 
-  // Riga 2: Vino + Annata
-  doc.text('Vino', M, y);
-  drawLine(doc, M + 12, y + 1, M + 95, y + 1);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`${nome}${prod !== '—' ? ' · ' + prod : ''}`, M + 14, y - 0.5);
-  doc.setFont('helvetica', 'normal');
-
-  doc.text('Annata', M + 100, y);
-  drawLine(doc, M + 114, y + 1, W - M, y + 1);
-  doc.setFont('helvetica', 'bold');
-  doc.text(String(annata), M + 116, y - 0.5);
-  doc.setFont('helvetica', 'normal');
-  y += 8;
-
-  // ===== SEZIONE COLORE =====
-  sectionHeader(doc, M, y, CW, 'COLORE', C.rosso);
-  y += 6;
-  const coloriOpts = ['Paglierino','Dorato','Aranciato','Cerasuolo','Ramato','Porpora','Rubino','Granato'];
-  y = drawCheckRow(doc, M, y, CW, coloriOpts, d.colore);
-  y += 1;
-
-  sectionHeader(doc, M, y, CW, 'RIFLESSO', C.rosso);
-  y += 6;
-  const riflessoOpts = ['Non rilevato','Verdolino','Dorato','Aranciato','Porpora','Granato'];
-  y = drawCheckRow(doc, M, y, CW, riflessoOpts, d.riflesso, mapValue);
-  y += 1;
-
-  // Tripla: densità + limpidezza + vivacità + perlage
-  const blockW = CW / 4;
-  const yStart = y;
-  doc.setFontSize(7);
-  doc.setTextColor(...C.rosso);
-  doc.setFont('helvetica', 'bold');
-  doc.text('DENSITÀ CROMATICA', M + 1, y + 2);
-  doc.text('LIMPIDEZZA', M + blockW + 1, y + 2);
-  doc.text('VIVACITÀ', M + blockW*2 + 1, y + 2);
-  doc.text('PERLAGE / BOLLICINE', M + blockW*3 + 1, y + 2);
-  // Sottolineatura
-  doc.setDrawColor(...C.rosso);
-  doc.setLineWidth(0.4);
-  doc.line(M, y + 3, W - M, y + 3);
-  y += 6;
-
-  drawSmallChecks(doc, M, y, ['Trasparente','Compatto'], d.densita_cromatica);
-  drawSmallChecks(doc, M + blockW, y, ['Opaco','Limpido'], d.limpidezza);
-  drawSmallChecks(doc, M + blockW*2, y, ['Cupo','Vivace','Luminoso'], d.vivacita);
-  drawSmallChecks(doc, M + blockW*3, y, ['Grandi','Fini'], d.perlage_grana);
-  y += 8;
-
-  // ===== SEZIONE OLFATTO =====
-  sectionHeader(doc, M, y, CW, 'OLFATTO', C.verde);
-  y += 6;
-  const olfattoOpts = ['Fruttato','Floreale','Vegetale','Minerale','Erbe aromatiche','Speziato','Tostato','Balsamico','Etereo'];
-  const olfattoMap = ['fruttato','floreale','vegetale','minerale','erbe_aromatiche','speziato','tostato','balsamico','etereo'];
-  const olfattoSel = d.olfatto_descrittori || [];
-  y = drawCheckRowMulti(doc, M, y, CW, olfattoOpts, olfattoMap, olfattoSel);
-
-  // Note
-  doc.setFontSize(8);
+  // Note olfattive con sentori specifici
+  doc.setFontSize(7.5);
   doc.setTextColor(...C.nero);
   doc.setFont('helvetica', 'normal');
-  doc.text('Note', M, y + 3);
-  drawLine(doc, M + 10, y + 4, W - M, y + 4);
-  doc.setFont('helvetica', 'italic');
-  doc.text(d.olfatto_note || '', M + 12, y + 2.5);
-  doc.setFont('helvetica', 'normal');
+  doc.text('Note', M, y);
+  drawUnderline(doc, M + 8, y + 0.5, W - M);
+  if (d.olfatto_sentori && d.olfatto_sentori.length) {
+    doc.setFont('helvetica', 'italic');
+    const noteText = d.olfatto_sentori.join(', ') + (d.olfatto_note ? ' — ' + d.olfatto_note : '');
+    const lines = doc.splitTextToSize(noteText, W - M - M - 10);
+    doc.text(lines[0] || '', M + 10, y - 0.5);
+  } else if (d.olfatto_note) {
+    doc.setFont('helvetica', 'italic');
+    doc.text(d.olfatto_note.substring(0, 80), M + 10, y - 0.5);
+  }
   y += 7;
 
-  // Complessità + Qualità olfattiva (con punti)
-  y = drawScale(doc, M, y, CW, 'COMPLESSITÀ',
-    [[12,'Facile'],[13,''],[14,'Complesso'],[15,'Più che complesso'],[16,'Ampio']],
-    d.olfatto_complessita_punti, C.verde);
-  y += 1;
-
-  y = drawScale(doc, M, y, CW, 'QUALITÀ',
-    [[14,'Accettabile'],[15,''],[16,'Fine'],[17,''],[18,'Più che fine'],[19,''],[20,'Eccellente']],
-    d.olfatto_qualita_punti, C.verde);
-  y += 3;
-
-  // ===== SEZIONE GUSTO =====
-  sectionHeader(doc, M, y, CW, 'GUSTO', C.bluS);
-  y += 5;
-
-  // Box zucchero / alcol / acidità / tannino (4 colonne)
-  const gW = CW / 4;
-  // Header colorato di ogni box
-  doc.setFillColor(...C.chiaro);
-  doc.rect(M, y, gW - 1, 4, 'F');
-  doc.rect(M + gW, y, gW - 1, 4, 'F');
-  doc.rect(M + gW*2, y, gW - 1, 4, 'F');
-  doc.rect(M + gW*3, y, gW - 1, 4, 'F');
-  doc.setFontSize(7);
+  // COMPLESSITÀ + QUALITÀ (gradiente verde 5 livelli e 7 livelli)
   doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
   doc.setTextColor(...C.nero);
-  doc.text('ZUCCHERO', M + gW/2, y + 2.8, { align: 'center' });
-  doc.text('ALCOL (percepita)', M + gW + gW/2, y + 2.8, { align: 'center' });
-  doc.text('ACIDITÀ (percepita)', M + gW*2 + gW/2, y + 2.8, { align: 'center' });
-  doc.text('TANNINO', M + gW*3 + gW/2, y + 2.8, { align: 'center' });
-  y += 5;
-
-  drawColumnChecks(doc, M, y, gW, ['Secco','Tendente al dolce','Dolce','Molto dolce'], d.gusto_zucchero);
-  drawColumnChecks(doc, M + gW, y, gW, ['Contenuto','Caldo','Più che Caldo','Molto Caldo'], d.gusto_alcol);
-  drawColumnChecks(doc, M + gW*2, y, gW, ['Contenuto','Fresco','Più che Fresco','Molto Fresco'], d.gusto_acidita);
-  drawColumnChecks(doc, M + gW*3, y, gW, ['Amaro','Vegetale','Maturo','Raffinato'], d.gusto_tannino);
-  y += 16;
-
-  // Equilibrio + Persistenza scales
-  y = drawScale(doc, M, y, CW, 'EQUILIBRIO',
-    [[14,'Squilibrato'],[15,'In fase di equilibrio'],[16,''],[17,'Bilanciato'],[18,'Equilibrato']],
-    d.gusto_equilibrio_punti, C.bluS);
-  y += 1;
-
-  y = drawScale(doc, M, y, CW, 'PERSISTENZA',
-    [[12,'Accettabile'],[13,'Persistente'],[14,''],[15,'Più che persistente'],[16,'Lungo']],
-    d.gusto_persistenza_punti, C.bluS);
-  y += 1;
-
-  // Sapidità + Chiusura
-  const halfW = CW / 2;
+  doc.text('COMPLESSITÀ', M, y);
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
-  doc.setTextColor(...C.bluS);
-  doc.setFont('helvetica', 'bold');
-  doc.text('SAPIDITÀ PERCEPITA', M, y + 2);
-  doc.text('CHIUSURA DI BOCCA', M + halfW, y + 2);
-  doc.setDrawColor(...C.bluS);
-  doc.line(M, y + 3, W - M, y + 3);
-  y += 6;
-  drawSmallChecksHoriz(doc, M, y, halfW, ['Non avvertibile','Contenuta','Sapida','Più che sapida'], d.gusto_sapidita);
-  drawSmallChecksHoriz(doc, M + halfW, y, halfW, ['Imprecisa','Buona','Precisa','Elegante'], d.gusto_chiusura);
+  doc.text('Facile', M, y + 4);
+  doc.text('Complesso', M + 30, y + 4);
+  doc.text('Più che complesso', M + 55, y + 4);
+  doc.text('Ampio', M + 95, y + 4);
   y += 5;
-
-  // Qualità gustativa
-  y = drawScale(doc, M, y, CW, 'QUALITÀ GUSTATIVA',
-    [[20,'Accettabile'],[21,'Fine'],[22,''],[23,'Più che fine'],[24,'Eccellente']],
-    d.gusto_qualita_punti, C.bluS);
-  y += 1;
-
-  // Dimensioni
-  y = drawScale(doc, M, y, CW, 'DIMENSIONI',
-    [[null,'Strutturato'],[null,'Sottile'],[5,'Delicato'],[6,'Suggestivo']],
-    d.gusto_dimensioni_punti, C.bluS, true);
+  // Punti complessità 12-16
+  const complPalette = [C.verdeChiaro, [180,195,135], [165,185,110], [145,170,90], C.verdeScuro];
+  y = scalaPuntiSemplice(doc, M, y, [12,13,14,15,16], d.olfatto_complessita_punti, complPalette, CW - 25);
+  // Punti sul lato destro
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Punti', W - M - 22, y - 3);
+  doc.setFont('helvetica', 'bold');
+  doc.text(d.olfatto_complessita_punti ? String(d.olfatto_complessita_punti) : '___', W - M - 8, y - 3);
   y += 2;
 
-  // Prospettive di consumo
-  doc.setFontSize(7);
-  doc.setTextColor(...C.bluS);
   doc.setFont('helvetica', 'bold');
-  doc.text('PROSPETTIVE DI CONSUMO', M, y + 2);
-  doc.line(M, y + 3, W - M, y + 3);
-  y += 6;
-  const prosOpts = ['Da bere subito','Brevi prospettive','Medie prospettive','Lunghe prospettive'];
-  const prosMap = ['da_bere_subito','brevi_prospettive','medie_prospettive','lunghe_prospettive'];
-  drawCheckRowMulti(doc, M, y, CW, prosOpts, prosMap, d.prospettive_consumo ? [d.prospettive_consumo] : []);
+  doc.setFontSize(8);
+  doc.text('QUALITÀ', M, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.text('Accettabile', M, y + 4);
+  doc.text('Fine', M + 50, y + 4);
+  doc.text('Più che fine', M + 90, y + 4);
+  doc.text('Eccellente', M + 130, y + 4);
+  y += 5;
+  const qualPalette = [C.verdeChiaro, [195,210,150], [180,200,130], [165,190,110], [150,180,95], [135,170,85], C.verdeScuro];
+  y = scalaPuntiSemplice(doc, M, y, [14,15,16,17,18,19,20], d.olfatto_qualita_punti, qualPalette, CW - 25);
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Punti', W - M - 22, y - 3);
+  doc.setFont('helvetica', 'bold');
+  doc.text(d.olfatto_qualita_punti ? String(d.olfatto_qualita_punti) : '___', W - M - 8, y - 3);
+  y += 3;
+
+  // ===== SEZIONE GUSTO (barra blu) =====
+  sezioneBarra(doc, M, y, CW, 'GUSTO', C.bluS);
   y += 6;
 
-  // Conclusioni - fasce di totale
-  doc.setFontSize(7);
-  doc.setTextColor(...C.bluS);
+  // 4 colonne: Zucchero, Alcol, Acidità, Tannino
+  const gcw = CW / 4;
+  // Header con sfondo grigio
+  doc.setFillColor(...C.grigioChiaro);
+  doc.rect(M, y, gcw - 1, 4.5, 'F');
+  doc.rect(M + gcw, y, gcw - 1, 4.5, 'F');
+  doc.rect(M + gcw * 2, y, gcw - 1, 4.5, 'F');
+  doc.rect(M + gcw * 3, y, gcw - 1, 4.5, 'F');
+  doc.setTextColor(...C.nero);
   doc.setFont('helvetica', 'bold');
-  doc.text('CONCLUSIONI', M, y + 2);
-  doc.line(M, y + 3, W - M, y + 3);
+  doc.setFontSize(8);
+  doc.text('ZUCCHERO', M + gcw/2, y + 3, { align: 'center' });
+  doc.text('ALCOL (percepito)', M + gcw + gcw/2, y + 3, { align: 'center' });
+  doc.text('ACIDITÀ (percepita)', M + gcw * 2 + gcw/2, y + 3, { align: 'center' });
+  doc.text('TANNINO', M + gcw * 3 + gcw/2, y + 3, { align: 'center' });
+  y += 6;
+
+  // 4 colonne di chip verticali
+  drawColumnChecks(doc, M, y, gcw, ['Secco', 'Tendente al dolce', 'Dolce', 'Molto dolce'], d.gusto_zucchero, C.bluChiaro);
+  drawColumnChecks(doc, M + gcw, y, gcw, ['Contenuto', 'Caldo', 'Più che Caldo', 'Molto Caldo'], d.gusto_alcol, C.bluChiaro);
+  drawColumnChecks(doc, M + gcw * 2, y, gcw, ['Contenuto', 'Fresco', 'Più che Fresco', 'Molto Fresco'], d.gusto_acidita, C.bluChiaro);
+  drawColumnChecks(doc, M + gcw * 3, y, gcw, ['Amaro', 'Vegetale', 'Maturo', 'Raffinato'], d.gusto_tannino, C.bluChiaro);
+  y += 18;
+
+  // EQUILIBRIO
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...C.nero);
+  doc.text('EQUILIBRIO', M, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.text('Squilibrato', M, y + 4);
+  doc.text('In fase di equilibrio', M + 40, y + 4);
+  doc.text('Bilanciato', M + 90, y + 4);
+  doc.text('Equilibrato', M + 135, y + 4);
   y += 5;
+  const equiPalette = [C.bluChiaro, [165,185,210], [140,165,195], [115,145,180], [90,125,165], [70,105,145], C.bluDark];
+  y = scalaPuntiSemplice(doc, M, y, [12,13,14,15,16,17,18], d.gusto_equilibrio_punti, equiPalette, CW - 25);
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Punti', W - M - 22, y - 3);
+  doc.setFont('helvetica', 'bold');
+  doc.text(d.gusto_equilibrio_punti ? String(d.gusto_equilibrio_punti) : '___', W - M - 8, y - 3);
+  y += 2;
+
+  // PERSISTENZA
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.text('PERSISTENZA', M, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.text('Accettabile', M, y + 4);
+  doc.text('Persistente', M + 40, y + 4);
+  doc.text('Più che persistente', M + 80, y + 4);
+  doc.text('Lungo', M + 130, y + 4);
+  y += 5;
+  y = scalaPuntiSemplice(doc, M, y, [10,11,12,13,14,15,16], d.gusto_persistenza_punti, equiPalette, CW - 25);
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Punti', W - M - 22, y - 3);
+  doc.setFont('helvetica', 'bold');
+  doc.text(d.gusto_persistenza_punti ? String(d.gusto_persistenza_punti) : '___', W - M - 8, y - 3);
+  y += 3;
+
+  // SAPIDITÀ + CHIUSURA DI BOCCA in 2 colonne
+  const halfW = CW / 2;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...C.nero);
+  doc.text('SAPIDITÀ PERCEPITA', M, y);
+  doc.text('CHIUSURA DI BOCCA', M + halfW, y);
+  y += 4;
+  checkboxRow(M, y, ['Non avvertibile', 'Contenuta', 'Sapida', 'Più che sapida'], d.gusto_sapidita, C.bluChiaro, halfW - 2);
+  checkboxRow(M + halfW, y, ['Imprecisa', 'Buona', 'Precisa', 'Elegante'], d.gusto_chiusura, C.bluChiaro, halfW - 2);
+  y += 7;
+
+  // QUALITÀ GUSTATIVA
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.text('QUALITÀ GUSTATIVA', M, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.text('Accettabile', M, y + 4);
+  doc.text('Fine', M + 50, y + 4);
+  doc.text('Più che fine', M + 90, y + 4);
+  doc.text('Eccellente', M + 135, y + 4);
+  y += 5;
+  y = scalaPuntiSemplice(doc, M, y, [18,19,20,21,22,23,24], d.gusto_qualita_punti, equiPalette, CW - 25);
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Punti', W - M - 22, y - 3);
+  doc.setFont('helvetica', 'bold');
+  doc.text(d.gusto_qualita_punti ? String(d.gusto_qualita_punti) : '___', W - M - 8, y - 3);
+  y += 2;
+
+  // DIMENSIONE (4 caselle 3/3/5/6)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.text('DIMENSIONE', M, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.text('Strutturato', M, y + 4);
+  doc.text('Sottile', M + 45, y + 4);
+  doc.text('Distinto', M + 95, y + 4);
+  doc.text('Suggestivo', M + 140, y + 4);
+  y += 5;
+  const dimPunti = d.gusto_dimensioni_punti;
+  const dimLabel = d.gusto_dimensioni_label;
+  const dimItems = [
+    { label: 'strutturato', punti: 3 },
+    { label: 'sottile', punti: 3 },
+    { label: 'distinto', punti: 5 },
+    { label: 'suggestivo', punti: 6 }
+  ];
+  const dimSw = (CW - 25) / 4;
+  doc.setFontSize(8);
+  for (let i = 0; i < dimItems.length; i++) {
+    const it = dimItems[i];
+    const isSel = dimLabel === it.label;
+    const col = isSel ? C.bluDark : (i < 2 ? C.bluChiaro : (i === 2 ? C.bluMedio : C.bluScuro));
+    doc.setFillColor(...col);
+    doc.rect(M + i * dimSw + 0.3, y, dimSw - 0.6, 4.5, 'F');
+    doc.setTextColor(isSel ? 255 : 255);
+    doc.setFont('helvetica', isSel ? 'bold' : 'normal');
+    const nt = String(it.punti);
+    const nw = doc.getTextWidth(nt);
+    doc.text(nt, M + i * dimSw + dimSw/2 - nw/2, y + 3.2);
+  }
+  doc.setFontSize(7);
+  doc.setTextColor(...C.nero);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Punti', W - M - 22, y + 3);
+  doc.setFont('helvetica', 'bold');
+  doc.text(dimPunti ? String(dimPunti) : '___', W - M - 8, y + 3);
+  y += 8;
+
+  // PROSPETTIVE DI CONSUMO
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...C.nero);
+  doc.text('PROSPETTIVE DI CONSUMO', M, y);
+  y += 4;
+  const pros = [
+    { key: 'da_bere_subito', label: 'Da bere subito' },
+    { key: 'brevi_prospettive', label: 'Brevi prospettive' },
+    { key: 'medie_prospettive', label: 'Medie prospettive' },
+    { key: 'lunghe_prospettive', label: 'Lunghe prospettive' },
+  ];
+  checkboxRow(M, y, pros, d.prospettive_consumo, C.bluChiaro, CW);
+  y += 7;
+
+  // CONCLUSIONI + TOTALE
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...C.nero);
+  doc.text('CONCLUSIONI', M, y);
+  doc.text('Totale', W - M - 22, y);
+  y += 3;
 
   const punteggio = d.punteggio_totale || 0;
   const fasce = [
-    ['Accettabile', '70/77', 70, 77],
-    ['Buono', '78/85', 78, 85],
-    ['Ottimo', '86/90', 86, 90],
-    ['Eccellente', '91/96', 91, 96],
-    ['Memorabile', '97/100', 97, 100],
+    ['Accettabile - 70/77', 70, 77, C.bluChiaro],
+    ['Buono - 78/85', 78, 85, [140,165,195]],
+    ['Ottimo - 86/90', 86, 90, [115,145,180]],
+    ['Eccellente - 91/96', 91, 96, [90,125,165]],
+    ['Memorabile - 97/100', 97, 100, C.bluDark],
   ];
-  const fascW = CW * 0.7 / 5;
+  const fascW = (CW - 25) / 5;
   for (let i = 0; i < 5; i++) {
-    const [lbl, range, min, max] = fasce[i];
+    const [lbl, min, max, col] = fasce[i];
     const isSel = punteggio >= min && punteggio <= max;
+    doc.setFillColor(...col);
+    doc.rect(M + i * fascW + 0.3, y, fascW - 0.6, 4.5, 'F');
     if (isSel) {
-      doc.setFillColor(...C.bluS);
-      doc.setTextColor(255);
-    } else {
-      doc.setFillColor(...C.chiaro);
-      doc.setTextColor(...C.nero);
+      // Bordo evidenziato
+      doc.setDrawColor(...C.headerDark);
+      doc.setLineWidth(0.8);
+      doc.rect(M + i * fascW + 0.3, y, fascW - 0.6, 4.5);
+      doc.setLineWidth(0.2);
     }
-    doc.rect(M + i * fascW, y, fascW - 1, 5, 'F');
+    doc.setTextColor(255);
+    doc.setFont('helvetica', isSel ? 'bold' : 'normal');
     doc.setFontSize(6.5);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`${lbl} ${range}`, M + i * fascW + (fascW - 1)/2, y + 3.3, { align: 'center' });
+    const lw = doc.getTextWidth(lbl);
+    doc.text(lbl, M + i * fascW + (fascW - 0.6)/2 - lw/2, y + 3);
   }
-
   // Totale
-  doc.setFontSize(8);
   doc.setTextColor(...C.nero);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Totale', M + CW * 0.72, y + 3);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  doc.text(String(punteggio), M + CW * 0.82, y + 3.5);
-  doc.setFontSize(8);
-  doc.text('/ 100', M + CW * 0.9, y + 3);
-  y += 10;
+  doc.text(String(punteggio), W - M - 14, y + 3.5);
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.text('/100', W - M - 6, y + 3.5);
+  y += 8;
 
-  // Note conclusive (se presenti)
+  // Note conclusive
   if (d.note_conclusive) {
-    doc.setFontSize(8);
-    doc.setTextColor(...C.bluS);
+    doc.setFontSize(7);
+    doc.setTextColor(...C.headerDark);
     doc.setFont('helvetica', 'bold');
     doc.text('NOTE CONCLUSIVE', M, y);
+    y += 3.5;
     doc.setTextColor(...C.nero);
     doc.setFont('helvetica', 'italic');
-    doc.setFontSize(8);
     const wrap = doc.splitTextToSize('"' + d.note_conclusive + '"', CW);
-    doc.text(wrap, M, y + 4);
-    y += 4 + wrap.length * 3.5;
+    doc.text(wrap, M, y);
+    y += wrap.length * 3.5;
   }
 
   // Footer
@@ -295,199 +521,102 @@ async function esportaPDF() {
   doc.setTextColor(...C.grigio);
   doc.setFont('helvetica', 'italic');
   doc.text('Generato da CantinApp · ' + formatDateIT(new Date().toISOString().split('T')[0]),
-    W/2, 290, { align: 'center' });
+    W/2, H - 8, { align: 'center' });
 
-  // Salva
-  const filename = `degustazione_${nome.replace(/[^a-zA-Z0-9]/g,'_')}_${d.data_degustazione || 'data'}.pdf`;
+  const filename = `degustazione_${(nome || 'vino').replace(/[^a-zA-Z0-9]/g,'_')}_${d.data_degustazione || ''}.pdf`;
   doc.save(filename);
 }
 
-// ===== HELPERS DI DISEGNO =====
+// ===== HELPERS =====
 
-function sectionHeader(doc, x, y, w, label, color) {
-  doc.setFontSize(8);
+function sezioneBarra(doc, x, y, w, label, color) {
   doc.setTextColor(...color);
   doc.setFont('helvetica', 'bold');
-  doc.text(label, x, y + 2.5);
-  doc.setDrawColor(...color);
-  doc.setLineWidth(0.5);
-  doc.line(x, y + 4, x + w, y + 4);
+  doc.setFontSize(10);
+  doc.text(label, x, y + 2);
+  // Barra orizzontale colorata a destra
+  const tw = doc.getTextWidth(label) + 3;
+  doc.setFillColor(...color);
+  doc.rect(x + tw, y, w - tw, 2, 'F');
 }
 
-function drawLine(doc, x1, y1, x2, y2) {
+function sezioneSottoTitolo(doc, x, y, label, color, sub) {
+  doc.setTextColor(...color);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.text(label, x, y + 2);
+  if (sub) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(120);
+    const w = doc.getTextWidth(label);
+    doc.text(sub, x + w + 1.5, y + 2);
+  }
+}
+
+function drawUnderline(doc, x1, y, x2) {
   doc.setDrawColor(180);
   doc.setLineWidth(0.2);
-  doc.line(x1, y1, x2, y2);
+  doc.line(x1, y, x2, y);
 }
 
-// Riga di checkbox in linea (selezione singola)
-function drawCheckRow(doc, x, y, w, opts, selected, mapper) {
-  const cw = w / opts.length;
-  for (let i = 0; i < opts.length; i++) {
-    const opt = opts[i];
-    const optKey = mapper ? mapper(opt) : opt.toLowerCase().replace(/ /g, '_');
-    const isSel = selected && (
-      selected.toLowerCase() === opt.toLowerCase() ||
-      selected.toLowerCase() === optKey.toLowerCase() ||
-      selected === optKey
-    );
-    drawCheck(doc, x + i * cw + 1, y, isSel);
-    doc.setFontSize(7);
-    doc.setTextColor(40);
-    doc.setFont('helvetica', isSel ? 'bold' : 'normal');
-    doc.text(opt, x + i * cw + 4.5, y + 2.5);
-  }
-  return y + 4;
-}
-
-// Riga di checkbox multipla
-function drawCheckRowMulti(doc, x, y, w, opts, keys, selectedArr) {
-  const cw = w / opts.length;
-  selectedArr = selectedArr || [];
-  for (let i = 0; i < opts.length; i++) {
-    const isSel = selectedArr.includes(keys[i]);
-    drawCheck(doc, x + i * cw + 1, y, isSel);
-    doc.setFontSize(7);
-    doc.setTextColor(40);
-    doc.setFont('helvetica', isSel ? 'bold' : 'normal');
-    doc.text(opts[i], x + i * cw + 4.5, y + 2.5);
-  }
-  return y + 4;
-}
-
-// Checkbox piccoli su colonna verticale
-function drawColumnChecks(doc, x, y, w, opts, selected) {
-  for (let i = 0; i < opts.length; i++) {
-    const optKey = opts[i].toLowerCase().replace(/ /g, '_').replace('à','a').replace('è','e');
-    const isSel = selected && (
-      selected.toLowerCase() === opts[i].toLowerCase() ||
-      selected === optKey ||
-      norm(selected) === norm(opts[i])
-    );
-    drawCheck(doc, x + 1, y + i * 3.8, isSel);
-    doc.setFontSize(7);
-    doc.setTextColor(40);
-    doc.setFont('helvetica', isSel ? 'bold' : 'normal');
-    doc.text(opts[i], x + 4.5, y + i * 3.8 + 2.5);
-  }
-}
-
-// Checkbox piccoli orizzontali in un blocco
-function drawSmallChecks(doc, x, y, opts, selected) {
-  let curY = y;
-  for (let i = 0; i < opts.length; i++) {
-    const isSel = selected && norm(selected) === norm(opts[i]);
-    drawCheck(doc, x + 1, curY, isSel);
-    doc.setFontSize(7);
-    doc.setTextColor(40);
-    doc.setFont('helvetica', isSel ? 'bold' : 'normal');
-    doc.text(opts[i], x + 4.5, curY + 2.5);
-    curY += 3.5;
-  }
-}
-
-function drawSmallChecksHoriz(doc, x, y, w, opts, selected) {
-  const cw = w / opts.length;
-  for (let i = 0; i < opts.length; i++) {
-    const isSel = selected && norm(selected) === norm(opts[i]);
-    drawCheck(doc, x + i * cw + 1, y, isSel);
-    doc.setFontSize(7);
-    doc.setTextColor(40);
-    doc.setFont('helvetica', isSel ? 'bold' : 'normal');
-    doc.text(opts[i], x + i * cw + 4.5, y + 2.5);
-  }
-}
-
-function drawCheck(doc, x, y, filled) {
-  doc.setDrawColor(80);
-  doc.setLineWidth(0.3);
-  if (filled) {
-    doc.setFillColor(27, 42, 74);
-    doc.rect(x, y, 2.8, 2.8, 'FD');
-    doc.setDrawColor(255);
-    doc.setLineWidth(0.5);
-    doc.line(x + 0.6, y + 1.5, x + 1.2, y + 2.2);
-    doc.line(x + 1.2, y + 2.2, x + 2.3, y + 0.7);
-  } else {
-    doc.rect(x, y, 2.8, 2.8);
-  }
-}
-
-// Scala numerica con punti evidenziati
-function drawScale(doc, x, y, w, label, items, selectedPunti, color, smallNums) {
-  doc.setFontSize(7);
-  doc.setTextColor(...color);
-  doc.setFont('helvetica', 'bold');
-  doc.text(label, x, y + 2);
-  doc.setDrawColor(...color);
-  doc.setLineWidth(0.4);
-  doc.line(x, y + 3, x + w, y + 3);
-  y += 4;
-
-  // Labels sopra
-  const sw = (w - 25) / items.length;
-  doc.setFontSize(6.5);
-  doc.setTextColor(80);
+function drawColumnChecks(doc, x, y, w, opts, selected, color) {
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
-  for (let i = 0; i < items.length; i++) {
-    const [num, lbl] = items[i];
-    if (lbl) {
-      doc.text(lbl, x + i * sw + sw/2, y + 2, { align: 'center' });
-    }
-  }
-  y += 3;
-
-  // Quadrati numeri
-  for (let i = 0; i < items.length; i++) {
-    const [num, lbl] = items[i];
-    if (num === null) continue;
-    const isSel = num === selectedPunti;
-    const cx = x + i * sw + sw/2 - 3;
+  for (let i = 0; i < opts.length; i++) {
+    const optKey = normalizeKey(opts[i]);
+    const isSel = selected && (normalizeKey(selected) === optKey);
     if (isSel) {
       doc.setFillColor(...color);
-      doc.rect(cx, y, 6, 4, 'F');
-      doc.setTextColor(255);
     } else {
-      doc.setFillColor(220, 235, 220);
-      if (color[0] === 39) doc.setFillColor(220, 240, 220);
-      else if (color[0] === 192) doc.setFillColor(245, 220, 215);
-      else doc.setFillColor(220, 230, 245);
-      doc.rect(cx, y, 6, 4, 'F');
-      doc.setTextColor(80);
+      doc.setFillColor(240, 240, 240);
+      doc.setDrawColor(180);
+      doc.setLineWidth(0.2);
     }
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'bold');
-    doc.text(String(num), cx + 3, y + 2.8, { align: 'center' });
+    doc.rect(x + 1.5, y + i * 3.7, 2.5, 2.5, isSel ? 'F' : 'FD');
+    doc.setTextColor(40);
+    doc.setFont('helvetica', isSel ? 'bold' : 'normal');
+    doc.text(opts[i], x + 5.5, y + i * 3.7 + 2);
   }
-
-  // Etichetta "Punti" e valore a destra
-  doc.setTextColor(40);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  doc.text('Punti', x + w - 18, y + 2.8);
-  doc.setFont('helvetica', 'bold');
-  doc.text(selectedPunti ? String(selectedPunti) : '___', x + w - 6, y + 2.8);
-
-  return y + 5;
 }
 
-function mapValue(opt) {
-  return opt.toLowerCase().replace(/ /g, '_');
+function scalaPuntiSemplice(doc, x, y, numeri, selectedPunti, palette, totalWidth) {
+  const sw = totalWidth / numeri.length;
+  const boxH = 4.5;
+  for (let i = 0; i < numeri.length; i++) {
+    const num = numeri[i];
+    const cx = x + i * sw;
+    const isSel = num === selectedPunti;
+    // Gradiente dal chiaro allo scuro a seconda della posizione
+    const colorIdx = Math.min(palette.length - 1, i);
+    const col = isSel ? palette[palette.length - 1] : palette[colorIdx];
+    doc.setFillColor(...col);
+    doc.rect(cx + 0.3, y, sw - 0.6, boxH, 'F');
+    if (isSel) {
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.6);
+      doc.rect(cx + 0.3, y, sw - 0.6, boxH);
+      doc.setLineWidth(0.2);
+    }
+    doc.setTextColor(255);
+    doc.setFont('helvetica', isSel ? 'bold' : 'normal');
+    doc.setFontSize(8);
+    const nt = String(num);
+    const nw = doc.getTextWidth(nt);
+    doc.text(nt, cx + sw/2 - nw/2, y + boxH - 1.3);
+  }
+  return y + boxH + 3;
 }
 
-function norm(s) {
+function normalizeKey(s) {
   return String(s).toLowerCase()
-    .replace(/_/g, ' ')
-    .replace(/à/g, 'a')
-    .replace(/è/g, 'e').replace(/é/g, 'e')
-    .replace(/ò/g, 'o')
-    .replace(/ù/g, 'u')
-    .replace(/ì/g, 'i')
-    .trim();
+    .replace(/[_\s]/g, '')
+    .replace(/à/g, 'a').replace(/è/g, 'e').replace(/é/g, 'e')
+    .replace(/ò/g, 'o').replace(/ù/g, 'u').replace(/ì/g, 'i');
 }
 
 function formatDateIT(iso) {
-  if (!iso) return '—';
+  if (!iso) return '';
   const d = new Date(iso);
   return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }

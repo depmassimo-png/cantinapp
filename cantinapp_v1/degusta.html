@@ -223,6 +223,14 @@
       <span class="chip" data-v="granato">Granato</span>
     </div>
 
+    <div id="boxDensita" style="display:none">
+      <label class="field-label">Densità cromatica <span style="color:var(--testo-2);font-size:11px;font-weight:400">(vini rossi)</span></label>
+      <div class="chips" id="chipsDensita">
+        <span class="chip" data-v="trasparente">Trasparente</span>
+        <span class="chip" data-v="compatto">Compatto</span>
+      </div>
+    </div>
+
     <label class="field-label">Limpidezza</label>
     <div class="chips" id="chipsLimpidezza">
       <span class="chip" data-v="opaco">Opaco</span>
@@ -336,22 +344,6 @@
       </div>
     </div>
 
-    <label class="field-label">Sapidità</label>
-    <div class="chips" id="chipsSapidita">
-      <span class="chip" data-v="non_avvertibile">Non avvert.</span>
-      <span class="chip" data-v="contenuta">Contenuta</span>
-      <span class="chip" data-v="sapida">Sapida</span>
-      <span class="chip" data-v="piu_che_sapida">+ che sapida</span>
-    </div>
-
-    <label class="field-label">Chiusura di bocca</label>
-    <div class="chips" id="chipsChiusura">
-      <span class="chip" data-v="imprecisa">Imprecisa</span>
-      <span class="chip" data-v="buona">Buona</span>
-      <span class="chip" data-v="precisa">Precisa</span>
-      <span class="chip" data-v="elegante">Elegante</span>
-    </div>
-
     <div class="divider"></div>
 
     <label class="field-label">Equilibrio</label>
@@ -376,6 +368,22 @@
       <div class="scale-btn" data-v="16" data-lbl="lungo"><span class="num">16</span>Lungo</div>
     </div>
 
+    <label class="field-label">Sapidità</label>
+    <div class="chips" id="chipsSapidita">
+      <span class="chip" data-v="non_avvertibile">Non avvert.</span>
+      <span class="chip" data-v="contenuta">Contenuta</span>
+      <span class="chip" data-v="sapida">Sapida</span>
+      <span class="chip" data-v="piu_che_sapida">+ che sapida</span>
+    </div>
+
+    <label class="field-label">Chiusura di bocca</label>
+    <div class="chips" id="chipsChiusura">
+      <span class="chip" data-v="imprecisa">Imprecisa</span>
+      <span class="chip" data-v="buona">Buona</span>
+      <span class="chip" data-v="precisa">Precisa</span>
+      <span class="chip" data-v="elegante">Elegante</span>
+    </div>
+
     <label class="field-label">Qualità gustativa</label>
     <div class="scale-row" id="scaleGustoQualita">
       <div class="scale-btn" data-v="18" data-lbl="accettabile"><span class="num">18</span>Accett.</div>
@@ -391,8 +399,16 @@
     <div class="scale-row" id="scaleDimensioni">
       <div class="scale-btn" data-v="3" data-lbl="strutturato"><span class="num">3</span>Strutt.</div>
       <div class="scale-btn" data-v="3" data-lbl="sottile"><span class="num">3</span>Sottile</div>
-      <div class="scale-btn" data-v="5" data-lbl="delicato"><span class="num">5</span>Delic.</div>
+      <div class="scale-btn" data-v="5" data-lbl="distinto"><span class="num">5</span>Distinto</div>
       <div class="scale-btn" data-v="6" data-lbl="suggestivo"><span class="num">6</span>Sugg.</div>
+    </div>
+
+    <label class="field-label">Prospettive di consumo</label>
+    <div class="chips" id="chipsProspettive">
+      <span class="chip" data-v="da_bere_subito">Da bere subito</span>
+      <span class="chip" data-v="brevi_prospettive">Brevi</span>
+      <span class="chip" data-v="medie_prospettive">Medie</span>
+      <span class="chip" data-v="lunghe_prospettive">Lunghe</span>
     </div>
   </div>
 
@@ -453,14 +469,6 @@
       <span class="star" data-v="3">★</span>
       <span class="star" data-v="4">★</span>
       <span class="star" data-v="5">★</span>
-    </div>
-
-    <label class="field-label">Prospettive di consumo</label>
-    <div class="chips" id="chipsProspettive">
-      <span class="chip" data-v="da_bere_subito">Da bere subito</span>
-      <span class="chip" data-v="brevi_prospettive">Brevi</span>
-      <span class="chip" data-v="medie_prospettive">Medie</span>
-      <span class="chip" data-v="lunghe_prospettive">Lunghe</span>
     </div>
 
     <label class="field-label">Note conclusive</label>
