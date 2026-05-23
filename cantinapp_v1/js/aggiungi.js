@@ -90,17 +90,34 @@ async function analizzaConAI() {
   btn.disabled = true;
 
   try {
-    const fronteBase64 = await fileToBase64(fotoFronte);
-    const retroBase64 = fotoRetro ? await fileToBase64(fotoRetro) : null;
+    let fronteBase64, retroBase64, fronteType, retroType;
+    try {
+      const compressed = await compressImage(fotoFronte);
+      fronteBase64 = compressed.base64;
+      fronteType = compressed.type;
+    } catch (e) {
+      showToast('Errore lettura foto fronte: ' + e.message, true);
+      return;
+    }
+    if (fotoRetro) {
+      try {
+        const compressed = await compressImage(fotoRetro);
+        retroBase64 = compressed.base64;
+        retroType = compressed.type;
+      } catch (e) {
+        showToast('Errore lettura foto retro: ' + e.message, true);
+        return;
+      }
+    }
 
     const response = await fetch('/api/analyze-wine', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         fronte_base64: fronteBase64,
-        fronte_media_type: fotoFronte.type,
+        fronte_media_type: fronteType,
         retro_base64: retroBase64,
-        retro_media_type: fotoRetro?.type,
+        retro_media_type: retroType,
       })
     });
 
@@ -167,7 +184,18 @@ async function analizzaConAI() {
 
   } catch (err) {
     console.error(err);
-    showToast('Errore: ' + (err.message || err.toString()).substring(0, 100), true);
+    // Toast persistente per debug iPhone
+    const t = document.getElementById('toast');
+    if (t) {
+      const stack = err.stack ? '\n' + err.stack.substring(0, 200) : '';
+      t.textContent = 'ERR: ' + (err.message || err.toString()) + stack;
+      t.className = 'toast error show';
+      t.style.cssText = 'bottom: 10px; max-height: 200px; overflow: auto; font-size: 11px; text-align: left; white-space: pre-wrap;';
+      setTimeout(() => {
+        t.style.cssText = '';
+        t.classList.remove('show');
+      }, 15000);
+    }
   } finally {
     btn.innerHTML = origText;
     btn.disabled = false;
@@ -182,6 +210,43 @@ function fileToBase64(file) {
       const result = reader.result;
       const base64 = result.split(',')[1];
       resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Comprime un'immagine: ridimensiona a max 1200px lato lungo e qualità 85% JPEG
+function compressImage(file, maxSize = 1200, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        let w = img.width;
+        let h = img.height;
+        // Calcola nuove dimensioni mantenendo proporzioni
+        if (w > h && w > maxSize) {
+          h = h * (maxSize / w);
+          w = maxSize;
+        } else if (h > maxSize) {
+          w = w * (maxSize / h);
+          h = maxSize;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+
+        // Output JPEG con qualità ridotta
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        const base64 = dataUrl.split(',')[1];
+        resolve({ base64, type: 'image/jpeg' });
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);
