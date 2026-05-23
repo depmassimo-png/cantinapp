@@ -90,34 +90,35 @@ async function analizzaConAI() {
   btn.disabled = true;
 
   try {
-    let fronteBase64, retroBase64, fronteType, retroType;
+    let fronteBlob, retroBlob;
     try {
-      const compressed = await compressImage(fotoFronte);
-      fronteBase64 = compressed.base64;
-      fronteType = compressed.type;
+      fronteBlob = await compressImageToBlob(fotoFronte);
+      showToast(`Fronte compresso: ${Math.round(fronteBlob.size/1024)} KB`);
     } catch (e) {
       showToast('Errore lettura foto fronte: ' + e.message, true);
       return;
     }
     if (fotoRetro) {
       try {
-        const compressed = await compressImage(fotoRetro);
-        retroBase64 = compressed.base64;
-        retroType = compressed.type;
+        retroBlob = await compressImageToBlob(fotoRetro);
       } catch (e) {
         showToast('Errore lettura foto retro: ' + e.message, true);
         return;
       }
     }
 
+    // Converte in base64 dopo compressione
+    const fronteBase64 = await blobToBase64(fronteBlob);
+    const retroBase64 = retroBlob ? await blobToBase64(retroBlob) : null;
+
     const response = await fetch('/api/analyze-wine', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         fronte_base64: fronteBase64,
-        fronte_media_type: fronteType,
+        fronte_media_type: 'image/jpeg',
         retro_base64: retroBase64,
-        retro_media_type: retroType,
+        retro_media_type: retroBlob ? 'image/jpeg' : undefined,
       })
     });
 
@@ -216,8 +217,8 @@ function fileToBase64(file) {
   });
 }
 
-// Comprime un'immagine: ridimensiona a max 1200px lato lungo e qualità 85% JPEG
-function compressImage(file, maxSize = 1200, quality = 0.85) {
+// Comprime un'immagine: ridimensiona a max 900px lato lungo e qualità 75% JPEG
+function compressImage(file, maxSize = 900, quality = 0.75) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -225,7 +226,6 @@ function compressImage(file, maxSize = 1200, quality = 0.85) {
       img.onload = function() {
         let w = img.width;
         let h = img.height;
-        // Calcola nuove dimensioni mantenendo proporzioni
         if (w > h && w > maxSize) {
           h = h * (maxSize / w);
           w = maxSize;
@@ -233,14 +233,11 @@ function compressImage(file, maxSize = 1200, quality = 0.85) {
           w = w * (maxSize / h);
           h = maxSize;
         }
-
         const canvas = document.createElement('canvas');
         canvas.width = w;
         canvas.height = h;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
-
-        // Output JPEG con qualità ridotta
         const dataUrl = canvas.toDataURL('image/jpeg', quality);
         const base64 = dataUrl.split(',')[1];
         resolve({ base64, type: 'image/jpeg' });
@@ -250,6 +247,52 @@ function compressImage(file, maxSize = 1200, quality = 0.85) {
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);
+  });
+}
+
+// Comprime ritornando Blob
+function compressImageToBlob(file, maxSize = 900, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        let w = img.width;
+        let h = img.height;
+        if (w > h && w > maxSize) {
+          h = h * (maxSize / w);
+          w = maxSize;
+        } else if (h > maxSize) {
+          w = w * (maxSize / h);
+          h = maxSize;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => {
+          if (blob) resolve(blob);
+          else reject(new Error('Conversione blob fallita'));
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      resolve(result.split(',')[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
   });
 }
 
