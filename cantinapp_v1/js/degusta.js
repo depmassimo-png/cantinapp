@@ -231,8 +231,15 @@ function renderStep() {
     document.getElementById('btnSalva').style.display = 'none';
   }
 
-  // Scroll in alto
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Scroll all'inizio del passo attivo (considera header sticky tramite scroll-margin-top)
+  setTimeout(() => {
+    const stepActive = document.querySelector('.step.active');
+    if (stepActive) {
+      stepActive.scrollIntoView({ behavior: 'instant', block: 'start' });
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, 0);
 }
 
 function stepAvanti() {
