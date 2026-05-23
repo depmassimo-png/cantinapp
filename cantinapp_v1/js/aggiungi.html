@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1a0608">
+  <title>CantinApp — Aggiungi bottiglia</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CantinApp">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    .header-add {
+      background: var(--nero);
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-add a {
+      color: var(--oro);
+      font-size: 22px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+    .header-add h1 {
+      font-size: 17px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .form-section {
+      background: var(--bianco);
+      border: 1px solid var(--bordo);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--bordeaux);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .section-title i {
+      font-size: 18px;
+      color: var(--oro);
+    }
+
+    .upload-area {
+      border: 2px dashed var(--bordo-dk);
+      border-radius: var(--radius-lg);
+      padding: 20px 10px;
+      text-align: center;
+      cursor: pointer;
+      background: var(--bianco);
+      position: relative;
+      transition: all .15s;
+      min-height: 130px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .upload-area:active {
+      background: var(--avorio);
+    }
+    .upload-area.has-image {
+      padding: 0;
+      border: 1px solid var(--bordo);
+      overflow: hidden;
+      min-height: 130px;
+    }
+    .upload-area i.upload-icon {
+      font-size: 26px;
+      color: var(--bordeaux);
+      display: block;
+      margin-bottom: 6px;
+    }
+    .upload-area p {
+      font-size: 13px;
+      color: var(--testo);
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .upload-area small {
+      font-size: 11px;
+      color: var(--testo-2);
+    }
+    .upload-area input[type=file] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .preview-img {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      display: block;
+      background: var(--avorio);
+    }
+    .preview-remove {
+      position: absolute;
+      top: 6px; right: 6px;
+      background: var(--nero);
+      color: #fff;
+      border: none;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .vitigni-input-wrap {
+      position: relative;
+    }
+    .vitigni-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .vitigno-tag {
+      background: var(--bordeaux);
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .vitigno-tag button {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      padding: 0;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .ai-hint {
+      background: var(--oro-lt);
+      border: 1px solid var(--oro);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #6a4d10;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ai-hint i { font-size: 18px; flex-shrink: 0; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .saving-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26,6,8,.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+    }
+    .saving-overlay.show { display: flex; }
+    .saving-box {
+      background: var(--bianco);
+      padding: 24px 32px;
+      border-radius: var(--radius-lg);
+      text-align: center;
+    }
+    .saving-box i {
+      font-size: 32px;
+      color: var(--bordeaux);
+      animation: spin .7s linear infinite;
+      display: block;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header-add">
+  <a href="cantina.html" aria-label="Indietro">
+    <i class="ti ti-arrow-left"></i>
+  </a>
+  <h1>Aggiungi bottiglia</h1>
+</div>
+
+<form id="formBottiglia" onsubmit="salvaBottiglia(event)" style="padding:16px;padding-bottom:100px;max-width:480px;margin:0 auto">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+    <div class="upload-area" id="uploadFronte">
+      <i class="ti ti-camera upload-icon" aria-hidden="true"></i>
+      <p style="font-size:13px">Fronte</p>
+      <small>Etichetta principale</small>
+      <input type="file" accept="image/*" onchange="handlePhotoSelect(event, 'fronte')">
+    </div>
+    <div class="upload-area" id="uploadRetro">
+      <i class="ti ti-camera upload-icon" aria-hidden="true"></i>
+      <p style="font-size:13px">Retro</p>
+      <small>Controetichetta</small>
+      <input type="file" accept="image/*" onchange="handlePhotoSelect(event, 'retro')">
+    </div>
+  </div>
+
+  <div class="ai-hint" id="aiHint" style="display:none">
+    <i class="ti ti-sparkles"></i>
+    <span>Compila i campi qui sotto, oppure tocca <strong>Analizza con AI</strong> per provare il riconoscimento automatico dell'etichetta</span>
+  </div>
+
+  <button type="button" class="btn btn-oro btn-sm" id="btnAI" style="margin-bottom:12px;display:none" onclick="analizzaConAI()">
+    <i class="ti ti-sparkles" style="font-size:16px"></i> Analizza con AI
+  </button>
+
+  <div class="form-section">
+    <div class="section-title">
+      <i class="ti ti-info-circle"></i>
+      Identità del vino
+    </div>
+
+    <label class="field-label">Nome del vino *</label>
+    <input type="text" id="nomeVino" placeholder="es. Barolo Riserva Monfortino" required>
+
+    <label class="field-label">Produttore / Cantina *</label>
+    <input type="text" id="produttore" placeholder="es. Giacomo Conterno" required>
+
+    <div class="form-row">
+      <div>
+        <label class="field-label">Annata</label>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="annata" placeholder="2020" maxlength="4">
+      </div>
+      <div>
+        <label class="field-label">Tipologia *</label>
+        <select id="tipologia" required onchange="toggleSpumantiFields()">
+          <option value="rosso">Rosso</option>
+          <option value="bianco">Bianco</option>
+          <option value="rosato">Rosato</option>
+          <option value="spumante">Spumante</option>
+          <option value="passito">Passito</option>
+          <option value="liquoroso">Liquoroso</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div>
+        <label class="field-label">Denominazione</label>
+        <input type="text" id="denominazione" placeholder="es. DOCG">
+      </div>
+      <div>
+        <label class="field-label">Regione</label>
+        <input type="text" id="regione" placeholder="es. Piemonte">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="section-title">
+      <i class="ti ti-flask"></i>
+      Dati tecnici
+    </div>
+
+    <div class="form-row">
+      <div>
+        <label class="field-label">Gradazione (%)</label>
+        <input type="text" inputmode="decimal" id="gradazione" placeholder="13.5">
+      </div>
+      <div>
+        <label class="field-label">Formato (ml)</label>
+        <select id="formatoMl">
+          <option value="375">375 (mezza)</option>
+          <option value="750" selected>750 (standard)</option>
+          <option value="1500">1500 (magnum)</option>
+          <option value="3000">3000 (jeroboam)</option>
+          <option value="6000">6000 (imperiale)</option>
+        </select>
+      </div>
+    </div>
+
+    <label class="field-label">Vitigni</label>
+    <div class="vitigni-tags" id="vitigniTags"></div>
+    <input type="text" id="vitignoInput" placeholder="Digita un vitigno e premi Invio" onkeydown="handleVitigno(event)">
+
+    <div id="spumantiFields" style="display:none">
+      <div class="divider"></div>
+      <label class="field-label">Metodo</label>
+      <select id="metodo">
+        <option value="">— Seleziona —</option>
+        <option value="classico">Classico (Champenoise)</option>
+        <option value="charmat">Charmat (Martinotti)</option>
+        <option value="ancestrale">Ancestrale</option>
+      </select>
+
+      <div class="form-row">
+        <div>
+          <label class="field-label">Sboccatura (anno)</label>
+          <input type="text" inputmode="numeric" pattern="[0-9]*" id="sboccatura" placeholder="2023" maxlength="4">
+        </div>
+        <div>
+          <label class="field-label">Dosaggio</label>
+          <select id="dosaggio">
+            <option value="">—</option>
+            <option value="Pas Dosé">Pas Dosé</option>
+            <option value="Brut Nature">Brut Nature</option>
+            <option value="Extra Brut">Extra Brut</option>
+            <option value="Brut">Brut</option>
+            <option value="Extra Dry">Extra Dry</option>
+            <option value="Sec">Sec</option>
+            <option value="Demi-Sec">Demi-Sec</option>
+            <option value="Doux">Doux</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="section-title">
+      <i class="ti ti-building-warehouse"></i>
+      In cantina
+    </div>
+
+    <div class="form-row">
+      <div>
+        <label class="field-label">Quantità *</label>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="quantita" value="1" required>
+      </div>
+      <div>
+        <label class="field-label">Posizione</label>
+        <input type="text" id="posizione" placeholder="es. A2">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div>
+        <label class="field-label">Prezzo (€)</label>
+        <input type="text" inputmode="decimal" id="prezzo" placeholder="0.00">
+      </div>
+      <div>
+        <label class="field-label">Data acquisto</label>
+        <input type="date" id="dataAcquisto">
+      </div>
+    </div>
+
+    <label class="field-label">Luogo acquisto</label>
+    <input type="text" id="luogoAcquisto" placeholder="Enoteca, fiera, online...">
+
+    <div class="form-row">
+      <div>
+        <label class="field-label">Pronto da</label>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="prontoDa" placeholder="2024" maxlength="4">
+      </div>
+      <div>
+        <label class="field-label">Pronto fino a</label>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="prontoA" placeholder="2035" maxlength="4">
+      </div>
+    </div>
+
+    <label class="field-label">Note personali</label>
+    <textarea id="note" rows="3" placeholder="Acquistato in cantina durante visita..."></textarea>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-top:20px">
+    <a href="cantina.html" class="btn btn-outline" style="text-decoration:none;display:flex;align-items:center;justify-content:center">
+      Annulla
+    </a>
+    <button type="submit" class="btn btn-primary" id="btnSalva" style="flex:2">
+      <i class="ti ti-check" style="font-size:18px"></i>
+      Aggiungi in cantina
+    </button>
+  </div>
+
+</form>
+
+<div class="saving-overlay" id="savingOverlay">
+  <div class="saving-box">
+    <i class="ti ti-loader-2"></i>
+    <div id="savingMsg">Salvataggio...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/aggiungi.js"></script>
+</body>
+</html>
