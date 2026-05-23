@@ -113,24 +113,38 @@ async function analizzaConAI() {
     }
 
     const dati = result.data;
+    console.log('AI restituisce:', dati);
     let campiCompilati = 0;
 
     // Compila i campi solo se vuoti, o sovrascrive comunque
-    if (dati.nome_vino) { document.getElementById('nomeVino').value = dati.nome_vino; campiCompilati++; }
-    if (dati.produttore) { document.getElementById('produttore').value = dati.produttore; campiCompilati++; }
-    const annataNum = sanitizeInt(dati.annata);
-    if (annataNum) { document.getElementById('annata').value = annataNum; campiCompilati++; }
-    if (dati.tipologia) {
-      document.getElementById('tipologia').value = dati.tipologia;
-      toggleSpumantiFields();
-      campiCompilati++;
+    function safeSet(id, value, counter) {
+      if (value == null || value === '') return false;
+      try {
+        document.getElementById(id).value = value;
+        return true;
+      } catch (e) {
+        console.warn(`Errore set ${id}=${value}:`, e.message);
+        return false;
+      }
     }
-    if (dati.denominazione) { document.getElementById('denominazione').value = dati.denominazione; campiCompilati++; }
-    if (dati.regione) { document.getElementById('regione').value = dati.regione; campiCompilati++; }
+
+    if (safeSet('nomeVino', dati.nome_vino)) campiCompilati++;
+    if (safeSet('produttore', dati.produttore)) campiCompilati++;
+    const annataNum = sanitizeInt(dati.annata);
+    if (safeSet('annata', annataNum)) campiCompilati++;
+    if (dati.tipologia) {
+      try {
+        document.getElementById('tipologia').value = dati.tipologia;
+        toggleSpumantiFields();
+        campiCompilati++;
+      } catch (e) { console.warn('Tipologia:', e.message); }
+    }
+    if (safeSet('denominazione', dati.denominazione)) campiCompilati++;
+    if (safeSet('regione', dati.regione)) campiCompilati++;
     const gradoNum = sanitizeFloat(dati.gradazione);
-    if (gradoNum) { document.getElementById('gradazione').value = gradoNum; campiCompilati++; }
+    if (safeSet('gradazione', gradoNum)) campiCompilati++;
     const formatoNum = sanitizeInt(dati.formato_ml);
-    if (formatoNum) { document.getElementById('formatoMl').value = formatoNum; }
+    safeSet('formatoMl', formatoNum);
 
     // Vitigni - aggiungi alla lista
     if (dati.vitigni && Array.isArray(dati.vitigni)) {
@@ -153,7 +167,7 @@ async function analizzaConAI() {
 
   } catch (err) {
     console.error(err);
-    showToast('Errore: ' + err.message, true);
+    showToast('Errore: ' + (err.message || err.toString()).substring(0, 100), true);
   } finally {
     btn.innerHTML = origText;
     btn.disabled = false;
