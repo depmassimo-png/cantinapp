@@ -215,6 +215,31 @@ const PROFILI_VITIGNO = {
   'semillon': { tipologia: 'bianco', sentori_tipici: ['mela','pera','pesca','limone',"scorza d'arancia",'biancospino','caprifoglio','cotognata','albicocca secca','fieno','cera','vaniglia'] }
 };
 
+// ============================================================
+// MAPPATURA COLORE → TIPOLOGIA
+// Usata in degustazione alla cieca per dedurre la tipologia dal colore
+// e filtrare di conseguenza i sentori
+// ============================================================
+
+const COLORE_TIPOLOGIA = {
+  // Bianchi
+  'paglierino': 'bianco',
+  'dorato': 'bianco',
+  'aranciato': 'bianco',     // bianco evoluto / passito
+  // Rosati
+  'cerasuolo': 'rosato',
+  'ramato': 'rosato',
+  // Rossi
+  'porpora': 'rosso',
+  'rubino': 'rosso',
+  'granato': 'rosso',
+};
+
+function tipologiaDaColore(colore) {
+  if (!colore) return null;
+  return COLORE_TIPOLOGIA[colore.toLowerCase()] || null;
+}
+
 // Restituisce le 9 famiglie SEMPRE complete (fedele alla scheda Assosommelier),
 // ma all'interno mantiene solo le sottocategorie compatibili con la tipologia.
 // Una famiglia che non ha sottocategorie compatibili viene mostrata vuota (consente comunque la selezione manuale).

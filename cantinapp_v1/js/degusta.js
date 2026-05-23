@@ -231,6 +231,12 @@ function renderStep() {
     document.getElementById('btnSalva').style.display = 'none';
   }
 
+  // Aggiorna la ruota aromi se entro nello step Olfatto
+  // (il colore o la tipologia potrebbero essere appena stati selezionati)
+  if (stepAttuale === 3) {
+    renderFamiglieAromi();
+  }
+
   // Scroll all'inizio del passo attivo (considera header sticky tramite scroll-margin-top)
   setTimeout(() => {
     const stepActive = document.querySelector('.step.active');
@@ -391,7 +397,7 @@ async function salvaDegustazione() {
 // ============================================================
 
 function renderFamiglieAromi() {
-  const tipologia = bottigliaCorrente?.tipologia || D.tipologia_esterna || null;
+  const tipologia = determinaTipologia();
   const grid = document.getElementById('famiglieGrid');
   if (!grid) return;
 
@@ -429,24 +435,33 @@ function renderVitignoBanner() {
   if (!banner || !text) return;
 
   const vitigni = bottigliaCorrente?.vitigni || [];
-  if (!vitigni.length) {
-    banner.style.display = 'none';
-    return;
-  }
 
-  // Trova i profili vitigno disponibili
+  // Profili vitigno disponibili
   const profili = vitigni
     .map(v => ({ nome: v, profilo: getProfiloVitigno(v) }))
     .filter(x => x.profilo);
 
-  if (!profili.length) {
-    banner.style.display = 'none';
+  if (profili.length) {
+    const nomi = profili.map(p => p.nome).join(', ');
+    text.innerHTML = `Profilo aromatico evidenziato per <b>${nomi}</b>. I sentori tipici sono marcati con ★`;
+    banner.style.display = 'flex';
     return;
   }
 
-  const nomi = profili.map(p => p.nome).join(', ');
-  text.innerHTML = `Profilo aromatico evidenziato per <b>${nomi}</b>. I sentori tipici sono marcati con ★`;
-  banner.style.display = 'flex';
+  // Nessun vitigno noto: se è una degustazione cieca e c'è un colore selezionato,
+  // mostra una nota informativa sulla deduzione dal colore
+  const isCieca = !bottigliaCorrente && D.colore;
+  if (isCieca) {
+    const tipo = tipologiaDaColore(D.colore);
+    if (tipo) {
+      const tipoLabel = { rosso: 'rosso', bianco: 'bianco', rosato: 'rosato' }[tipo] || tipo;
+      text.innerHTML = `Sentori filtrati per <b>vino ${tipoLabel}</b> (dedotto dal colore <b>${D.colore}</b>)`;
+      banner.style.display = 'flex';
+      return;
+    }
+  }
+
+  banner.style.display = 'none';
 }
 
 function toggleFamiglia(key) {
@@ -561,7 +576,7 @@ function renderSentoriRiepilogo() {
 
 function aggiornaContatori() {
   // Per ogni famiglia mostrata, conta quanti sentori selezionati le appartengono
-  const tipologia = bottigliaCorrente?.tipologia || D.tipologia_esterna || null;
+  const tipologia = determinaTipologia();
   const famiglie = tipologia ? getFamiglieCompatibili(tipologia) : AROMI;
   for (const [key, fam] of Object.entries(famiglie)) {
     const badge = document.getElementById('count-' + key);
@@ -579,4 +594,17 @@ function aggiornaContatori() {
       badge.style.display = 'none';
     }
   }
+}
+
+// ============================================================
+// Determina la tipologia del vino in ordine di priorità:
+// 1. Bottiglia in cantina (tipologia certa)
+// 2. Tipologia dichiarata esternamente
+// 3. Tipologia dedotta dal colore osservato (utile in degustazione alla cieca)
+// ============================================================
+function determinaTipologia() {
+  if (bottigliaCorrente?.tipologia) return bottigliaCorrente.tipologia;
+  if (D.tipologia_esterna) return D.tipologia_esterna;
+  if (D.colore) return tipologiaDaColore(D.colore);
+  return null;
 }
