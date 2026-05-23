@@ -48,12 +48,18 @@ async function esportaPDF() {
     bordo: [180, 180, 180],
   };
 
-  // Helper checkbox
+  // Helper checkbox - con X visibile quando selezionato
   function checkBox(x, y, sel, color) {
     color = color || C.grigioChiaro;
     if (sel) {
       doc.setFillColor(...color);
       doc.rect(x, y, 2.5, 2.5, 'F');
+      // X visibile
+      doc.setDrawColor(...C.nero);
+      doc.setLineWidth(0.5);
+      doc.line(x + 0.5, y + 0.5, x + 2.0, y + 2.0);
+      doc.line(x + 2.0, y + 0.5, x + 0.5, y + 2.0);
+      doc.setLineWidth(0.2);
     } else {
       doc.setFillColor(...C.grigioMolto);
       doc.setDrawColor(...C.bordo);
@@ -428,6 +434,17 @@ async function esportaPDF() {
     const col = isSel ? C.bluDark : (i < 2 ? C.bluChiaro : (i === 2 ? C.bluMedio : C.bluScuro));
     doc.setFillColor(...col);
     doc.rect(M + i * dimSw + 0.3, y, dimSw - 0.6, 4.5, 'F');
+    if (isSel) {
+      // Bordo + X bianca
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.8);
+      doc.rect(M + i * dimSw + 0.3, y, dimSw - 0.6, 4.5);
+      doc.setDrawColor(255, 255, 255);
+      doc.setLineWidth(0.6);
+      doc.line(M + i * dimSw + 1.5, y + 0.8, M + i * dimSw + dimSw - 1.5, y + 4.5 - 0.8);
+      doc.line(M + i * dimSw + dimSw - 1.5, y + 0.8, M + i * dimSw + 1.5, y + 4.5 - 0.8);
+      doc.setLineWidth(0.2);
+    }
     doc.setTextColor(isSel ? 255 : 255);
     doc.setFont('helvetica', isSel ? 'bold' : 'normal');
     const nt = String(it.punti);
@@ -480,10 +497,15 @@ async function esportaPDF() {
     doc.setFillColor(...col);
     doc.rect(M + i * fascW + 0.3, y, fascW - 0.6, 4.5, 'F');
     if (isSel) {
-      // Bordo evidenziato
+      // Bordo evidenziato + X bianca centrale
       doc.setDrawColor(...C.headerDark);
       doc.setLineWidth(0.8);
       doc.rect(M + i * fascW + 0.3, y, fascW - 0.6, 4.5);
+      doc.setDrawColor(255, 255, 255);
+      doc.setLineWidth(0.6);
+      const cxFasc = M + i * fascW + (fascW - 0.6) / 2;
+      doc.line(cxFasc - 1.5, y + 0.8, cxFasc + 1.5, y + 4.5 - 0.8);
+      doc.line(cxFasc + 1.5, y + 0.8, cxFasc - 1.5, y + 4.5 - 0.8);
       doc.setLineWidth(0.2);
     }
     doc.setTextColor(255);
@@ -568,12 +590,19 @@ function drawColumnChecks(doc, x, y, w, opts, selected, color) {
     const isSel = selected && (normalizeKey(selected) === optKey);
     if (isSel) {
       doc.setFillColor(...color);
+      doc.rect(x + 1.5, y + i * 3.7, 2.5, 2.5, 'F');
+      // X
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.5);
+      doc.line(x + 2.0, y + i * 3.7 + 0.5, x + 3.5, y + i * 3.7 + 2.0);
+      doc.line(x + 3.5, y + i * 3.7 + 0.5, x + 2.0, y + i * 3.7 + 2.0);
+      doc.setLineWidth(0.2);
     } else {
       doc.setFillColor(240, 240, 240);
       doc.setDrawColor(180);
       doc.setLineWidth(0.2);
+      doc.rect(x + 1.5, y + i * 3.7, 2.5, 2.5, 'FD');
     }
-    doc.rect(x + 1.5, y + i * 3.7, 2.5, 2.5, isSel ? 'F' : 'FD');
     doc.setTextColor(40);
     doc.setFont('helvetica', isSel ? 'bold' : 'normal');
     doc.text(opts[i], x + 5.5, y + i * 3.7 + 2);
@@ -593,9 +622,16 @@ function scalaPuntiSemplice(doc, x, y, numeri, selectedPunti, palette, totalWidt
     doc.setFillColor(...col);
     doc.rect(cx + 0.3, y, sw - 0.6, boxH, 'F');
     if (isSel) {
+      // Bordo evidenziato + X
       doc.setDrawColor(0);
-      doc.setLineWidth(0.6);
+      doc.setLineWidth(0.8);
       doc.rect(cx + 0.3, y, sw - 0.6, boxH);
+      // X sopra
+      doc.setDrawColor(255, 255, 255);
+      doc.setLineWidth(0.6);
+      const xPad = 1.5;
+      doc.line(cx + xPad, y + 0.8, cx + sw - xPad, y + boxH - 0.8);
+      doc.line(cx + sw - xPad, y + 0.8, cx + xPad, y + boxH - 0.8);
       doc.setLineWidth(0.2);
     }
     doc.setTextColor(255);
