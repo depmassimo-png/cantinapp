@@ -210,7 +210,7 @@
   <a href="cantina.html" aria-label="Indietro">
     <i class="ti ti-arrow-left"></i>
   </a>
-  <h1>Aggiungi bottiglia</h1>
+  <h1><img src="logo.png" alt="" class="logo-mini"> Aggiungi bottiglia</h1>
 </div>
 
 <form id="formBottiglia" onsubmit="salvaBottiglia(event)" style="padding:16px;padding-bottom:100px;max-width:480px;margin:0 auto">
@@ -254,7 +254,7 @@
     <div class="form-row">
       <div>
         <label class="field-label">Annata</label>
-        <input type="number" id="annata" placeholder="2020" min="1900" max="2099">
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="annata" placeholder="2020" maxlength="4">
       </div>
       <div>
         <label class="field-label">Tipologia *</label>
@@ -290,7 +290,7 @@
     <div class="form-row">
       <div>
         <label class="field-label">Gradazione (%)</label>
-        <input type="number" id="gradazione" placeholder="13.5" step="0.1" min="0" max="25">
+        <input type="text" inputmode="decimal" id="gradazione" placeholder="13.5">
       </div>
       <div>
         <label class="field-label">Formato (ml)</label>
@@ -321,7 +321,7 @@
       <div class="form-row">
         <div>
           <label class="field-label">Sboccatura (anno)</label>
-          <input type="number" id="sboccatura" placeholder="2023" min="1900" max="2099">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" id="sboccatura" placeholder="2023" maxlength="4">
         </div>
         <div>
           <label class="field-label">Dosaggio</label>
@@ -350,7 +350,7 @@
     <div class="form-row">
       <div>
         <label class="field-label">Quantità *</label>
-        <input type="number" id="quantita" value="1" min="1" required>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="quantita" value="1" required>
       </div>
       <div>
         <label class="field-label">Posizione</label>
@@ -361,7 +361,7 @@
     <div class="form-row">
       <div>
         <label class="field-label">Prezzo (€)</label>
-        <input type="number" id="prezzo" placeholder="0.00" step="0.01" min="0">
+        <input type="text" inputmode="decimal" id="prezzo" placeholder="0.00">
       </div>
       <div>
         <label class="field-label">Data acquisto</label>
@@ -375,11 +375,11 @@
     <div class="form-row">
       <div>
         <label class="field-label">Pronto da</label>
-        <input type="number" id="prontoDa" placeholder="2024" min="1900" max="2099">
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="prontoDa" placeholder="2024" maxlength="4">
       </div>
       <div>
         <label class="field-label">Pronto fino a</label>
-        <input type="number" id="prontoA" placeholder="2035" min="1900" max="2099">
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="prontoA" placeholder="2035" maxlength="4">
       </div>
     </div>
 
