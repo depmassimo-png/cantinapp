@@ -93,7 +93,6 @@ async function analizzaConAI() {
     let fronteBlob, retroBlob;
     try {
       fronteBlob = await compressImageToBlob(fotoFronte);
-      showToast(`Fronte compresso: ${Math.round(fronteBlob.size/1024)} KB`);
     } catch (e) {
       showToast('Errore lettura foto fronte: ' + e.message, true);
       return;
