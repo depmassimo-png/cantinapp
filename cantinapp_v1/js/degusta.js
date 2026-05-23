@@ -436,7 +436,7 @@ function renderVitignoBanner() {
 
   const vitigni = bottigliaCorrente?.vitigni || [];
 
-  // Profili vitigno disponibili
+  // Profili vitigno disponibili (riconosciuti)
   const profili = vitigni
     .map(v => ({ nome: v, profilo: getProfiloVitigno(v) }))
     .filter(x => x.profilo);
@@ -448,8 +448,17 @@ function renderVitignoBanner() {
     return;
   }
 
-  // Nessun vitigno noto: se è una degustazione cieca e c'è un colore selezionato,
-  // mostra una nota informativa sulla deduzione dal colore
+  // Bottiglia in cantina con tipologia nota ma vitigno non profilato
+  if (bottigliaCorrente?.tipologia) {
+    const tipoLabel = { rosso: 'rosso', bianco: 'bianco', rosato: 'rosato',
+                        spumante: 'spumante', passito: 'passito', liquoroso: 'liquoroso' }[bottigliaCorrente.tipologia] || bottigliaCorrente.tipologia;
+    const nomeVit = vitigni.length ? ` (${vitigni.join(', ')})` : '';
+    text.innerHTML = `Sentori filtrati per <b>vino ${tipoLabel}</b>${nomeVit}`;
+    banner.style.display = 'flex';
+    return;
+  }
+
+  // Degustazione cieca con colore selezionato
   const isCieca = !bottigliaCorrente && D.colore;
   if (isCieca) {
     const tipo = tipologiaDaColore(D.colore);
