@@ -491,21 +491,26 @@ function renderSentoriContainer() {
       ${fam.label}
     </div>`;
 
-    for (const [subKey, sub] of Object.entries(fam.subcategories)) {
-      html += `<div class="subcat-block">
-        <div class="subcat-label">${sub.label}</div>
-        <div class="sentori-row">`;
-
-      for (const sentore of sub.sentori) {
-        const sel = D.olfatto_sentori.includes(sentore);
-        const tipico = isSentoreTipico(sentore, profili);
-        let cls = 'sentore-chip';
-        if (sel) cls += ' sel';
-        if (tipico) cls += ' tipico';
-        html += `<span class="${cls}" data-sentore="${sentore}">${sentore}</span>`;
+    const subEntries = Object.entries(fam.subcategories);
+    if (subEntries.length === 0) {
+      html += `<div style="font-size:12px;color:var(--testo-2);font-style:italic;padding:4px 0">
+        Nessun sentore tipico per questa tipologia di vino
+      </div>`;
+    } else {
+      for (const [subKey, sub] of subEntries) {
+        html += `<div class="subcat-block">
+          <div class="subcat-label">${sub.label}</div>
+          <div class="sentori-row">`;
+        for (const sentore of sub.sentori) {
+          const sel = D.olfatto_sentori.includes(sentore);
+          const tipico = isSentoreTipico(sentore, profili);
+          let cls = 'sentore-chip';
+          if (sel) cls += ' sel';
+          if (tipico) cls += ' tipico';
+          html += `<span class="${cls}" data-sentore="${sentore}">${sentore}</span>`;
+        }
+        html += `</div></div>`;
       }
-
-      html += `</div></div>`;
     }
     block.innerHTML = html;
     container.appendChild(block);
@@ -554,8 +559,10 @@ function renderSentoriRiepilogo() {
 }
 
 function aggiornaContatori() {
-  // Per ogni famiglia, conta quanti sentori selezionati appartengono a essa
-  for (const [key, fam] of Object.entries(AROMI)) {
+  // Per ogni famiglia mostrata, conta quanti sentori selezionati le appartengono
+  const tipologia = bottigliaCorrente?.tipologia || D.tipologia_esterna || null;
+  const famiglie = tipologia ? getFamiglieCompatibili(tipologia) : AROMI;
+  for (const [key, fam] of Object.entries(famiglie)) {
     const badge = document.getElementById('count-' + key);
     if (!badge) continue;
     let n = 0;

@@ -1,406 +1,238 @@
 // ============================================================
-// CantinApp — Database Ruota degli Aromi del Vino
-// Basato sulla Ruota Assosommelier
+// CantinApp — Database Aromi (Scheda Assosommelier)
+// Le 9 famiglie olfattive ufficiali della scheda di degustazione,
+// arricchite con i sentori della Ruota degli Aromi
 // ============================================================
 
-// Struttura: famiglie → sottocategorie → sentori specifici
-// Ogni famiglia ha un colore (palette Assosommelier) e una compatibilità
-// con le tipologie di vino (rosso, bianco, rosato, spumante, passito, liquoroso)
-
 const AROMI = {
-  fruttato_vino_bianco: {
-    label: 'Fruttato (vino bianco)',
-    family: 'fruttato',
-    color: '#F4D03F',
-    compatible: ['bianco', 'spumante', 'passito'],
+  fruttato: {
+    label: 'Fruttato',
+    color: '#C0392B',
     subcategories: {
       agrumi: {
         label: 'Agrumi',
-        sentori: ['limone', 'lime', 'pompelmo']
+        compat: ['bianco', 'spumante', 'rosato'],
+        sentori: ['limone', 'lime', 'pompelmo', "scorza d'arancia"]
       },
       bacche_bianche: {
         label: 'Bacche bianche',
+        compat: ['bianco', 'spumante'],
         sentori: ['uva spina']
       },
       pomacee: {
         label: 'Pomacee',
-        sentori: ['pera', 'mela', 'mela verde']
+        compat: ['bianco', 'spumante', 'rosato'],
+        sentori: ['pera', 'mela', 'mela verde', 'cotognata']
       },
-      drupacee: {
-        label: 'Drupacee',
-        sentori: ['pesca', 'melone']
+      drupacee_bianche: {
+        label: 'Drupacee (bianchi)',
+        compat: ['bianco', 'spumante', 'rosato', 'passito'],
+        sentori: ['pesca', 'albicocca', 'albicocca secca', 'melone']
       },
       frutti_tropicali: {
         label: 'Frutti tropicali',
-        sentori: ['guaiava', 'ananas', 'frutto della passione', 'litchi']
-      },
-      botritizzato: {
-        label: 'Botritizzato',
-        sentori: ['albicocca secca', 'scorza d\'arancia']
-      }
-    }
-  },
-  fruttato_vino_rosso: {
-    label: 'Fruttato (vino rosso)',
-    family: 'fruttato',
-    color: '#C0392B',
-    compatible: ['rosso', 'rosato', 'passito', 'liquoroso'],
-    subcategories: {
-      frutti_tropicali_rosso: {
-        label: 'Frutti tropicali',
-        sentori: ['banana']
+        compat: ['bianco', 'spumante', 'passito'],
+        sentori: ['ananas', 'guaiava', 'frutto della passione', 'litchi', 'banana', 'mango']
       },
       bacche_rosse: {
         label: 'Bacche rosse',
-        sentori: ['lampone', 'ribes nero', 'fragola', 'mora']
+        compat: ['rosso', 'rosato', 'spumante'],
+        sentori: ['lampone', 'ribes nero', 'fragola', 'mora', 'ciliegia']
       },
-      drupacee_rosso: {
-        label: 'Drupacee',
-        sentori: ['ciliegia']
-      },
-      fortificato: {
-        label: 'Fortificato',
-        sentori: ['prugna', 'prugna secca']
+      drupacee_rosse: {
+        label: 'Drupacee (rossi)',
+        compat: ['rosso', 'rosato', 'passito', 'liquoroso'],
+        sentori: ['prugna', 'prugna secca', 'amarena']
       }
     }
   },
-  floreali: {
-    label: 'Floreali',
-    family: 'floreali',
+
+  floreale: {
+    label: 'Floreale',
     color: '#E8A0BF',
-    compatible: ['rosso', 'bianco', 'rosato', 'spumante', 'passito'],
     subcategories: {
       fiori_bianchi: {
         label: 'Fiori bianchi',
-        sentori: ['caprifoglio', 'biancospino', 'fiori d\'arancio', 'tiglio', 'gelsomino', 'acacia']
+        compat: ['rosso', 'bianco', 'rosato', 'spumante', 'passito'],
+        sentori: ['caprifoglio', 'biancospino', "fiori d'arancio", 'tiglio', 'gelsomino', 'acacia', 'sambuco']
       },
       fiori_colorati: {
         label: 'Fiori colorati',
-        sentori: ['rosa', 'lavanda', 'violetta']
+        compat: ['rosso', 'rosato', 'bianco', 'spumante'],
+        sentori: ['rosa', 'lavanda', 'violetta', 'glicine', 'iris', 'geranio']
+      },
+      fiori_appassiti: {
+        label: 'Fiori appassiti',
+        compat: ['rosso', 'passito', 'liquoroso'],
+        sentori: ['rosa appassita', 'fiori secchi']
       }
     }
   },
-  vegetali: {
-    label: 'Vegetali',
-    family: 'vegetali',
+
+  vegetale: {
+    label: 'Vegetale',
     color: '#27AE60',
-    compatible: ['rosso', 'bianco', 'rosato', 'spumante'],
     subcategories: {
-      ortaggi: {
-        label: 'Ortaggi',
-        sentori: ['peperone', 'finocchio', 'pomodoro', 'erba tagliata', 'aneto']
-      },
-      erbe_fresche: {
-        label: 'Erbe fresche',
-        sentori: ['timo', 'felce', 'menta']
-      },
-      erbe_essiccate: {
-        label: 'Erbe essiccate',
-        sentori: ['fieno', 'tè nero', 'tabacco']
-      },
       foglie: {
         label: 'Foglie',
-        sentori: ['foglia di ribes nero', 'foglia di alloro', 'eucalipto']
-      }
-    }
-  },
-  minerale: {
-    label: 'Minerale',
-    family: 'minerale',
-    color: '#2E5FA3',
-    compatible: ['rosso', 'bianco', 'rosato', 'spumante'],
-    subcategories: {
-      minerale_gen: {
-        label: 'Minerali',
-        sentori: ['iodio', 'pietra focaia', 'cherosene']
-      }
-    }
-  },
-  affinamento_botte: {
-    label: 'Affinamento botte',
-    family: 'affinamento',
-    color: '#6B4226',
-    compatible: ['rosso', 'bianco', 'spumante', 'passito', 'liquoroso'],
-    subcategories: {
-      lievito: {
-        label: 'Lievito / Malolattica',
-        sentori: ['pane', 'burro']
+        compat: ['rosso', 'bianco', 'rosato', 'spumante'],
+        sentori: ['foglia di ribes nero', 'foglia di pomodoro', 'foglia di tè', 'felce']
       },
-      tostato: {
-        label: 'Tostato',
-        sentori: ['caramello', 'cioccolato', 'pane tostato', 'caffè', 'bacon', 'fumo', 'catrame']
-      },
-      spezie: {
-        label: 'Spezie',
-        sentori: ['vaniglia', 'pepe', 'cannella', 'liquirizia', 'noce moscata', 'chiodi di garofano']
-      },
-      noci: {
-        label: 'Noci',
-        sentori: ['noce di cocco', 'nocciola', 'mandorla']
-      },
-      legno: {
-        label: 'Legno',
-        sentori: ['quercia', 'cedro', 'cèdre', 'pino']
-      }
-    }
-  },
-  vino_bianco_vecchio: {
-    label: 'Vino bianco vecchio',
-    family: 'evoluzione',
-    color: '#8B7355',
-    compatible: ['bianco', 'passito', 'liquoroso'],
-    subcategories: {
-      evoluzione_bianco: {
-        label: 'Evoluzione',
-        sentori: ['cotognata', 'miele', 'salsa di soia']
-      }
-    }
-  },
-  vino_rosso_vecchio: {
-    label: 'Vino rosso vecchio',
-    family: 'evoluzione',
-    color: '#722F37',
-    compatible: ['rosso', 'passito', 'liquoroso'],
-    subcategories: {
-      animale: {
-        label: 'Animale',
-        sentori: ['cuoio', 'sugo di carne']
+      ortaggi: {
+        label: 'Ortaggi',
+        compat: ['rosso', 'bianco', 'rosato', 'spumante'],
+        sentori: ['peperone', 'pomodoro', 'finocchio', 'erba tagliata', 'asparago', 'carciofo']
       },
       sottobosco: {
         label: 'Sottobosco',
-        sentori: ['tartufo', 'fungo', 'albero di muschio']
+        compat: ['rosso', 'passito', 'liquoroso'],
+        sentori: ['fungo', 'tartufo', 'muschio', 'humus']
+      }
+    }
+  },
+
+  minerale: {
+    label: 'Minerale',
+    color: '#2E5FA3',
+    subcategories: {
+      minerale_gen: {
+        label: 'Minerali',
+        compat: ['rosso', 'bianco', 'rosato', 'spumante'],
+        sentori: ['pietra focaia', 'iodio', 'gesso', 'grafite', 'pietra bagnata', 'cherosene']
+      }
+    }
+  },
+
+  erbe_aromatiche: {
+    label: 'Erbe aromatiche',
+    color: '#7DB342',
+    subcategories: {
+      erbe_fresche: {
+        label: 'Erbe fresche',
+        compat: ['rosso', 'bianco', 'rosato', 'spumante'],
+        sentori: ['menta', 'basilico', 'salvia', 'timo', 'rosmarino', 'eucalipto']
+      },
+      erbe_essiccate: {
+        label: 'Erbe essiccate',
+        compat: ['rosso', 'passito', 'liquoroso', 'bianco'],
+        sentori: ['fieno', 'tè nero', 'tabacco', 'origano', 'alloro']
+      }
+    }
+  },
+
+  speziato: {
+    label: 'Speziato',
+    color: '#D35400',
+    subcategories: {
+      spezie_dolci: {
+        label: 'Spezie dolci',
+        compat: ['rosso', 'bianco', 'passito', 'spumante', 'liquoroso'],
+        sentori: ['vaniglia', 'cannella', 'noce moscata', 'anice', 'cardamomo', 'zenzero']
+      },
+      spezie_piccanti: {
+        label: 'Spezie piccanti',
+        compat: ['rosso', 'rosato', 'liquoroso'],
+        sentori: ['pepe nero', 'pepe bianco', 'pepe rosa', 'chiodi di garofano', 'paprika']
+      },
+      altre_spezie: {
+        label: 'Altre',
+        compat: ['rosso', 'bianco', 'passito', 'liquoroso'],
+        sentori: ['liquirizia', 'curry', 'zafferano']
+      }
+    }
+  },
+
+  tostato: {
+    label: 'Tostato',
+    color: '#6B4226',
+    subcategories: {
+      tostatura: {
+        label: 'Tostatura',
+        compat: ['rosso', 'bianco', 'spumante', 'passito', 'liquoroso'],
+        sentori: ['pane tostato', 'caffè', 'cacao', 'cioccolato', 'caramello']
+      },
+      affumicato: {
+        label: 'Affumicato',
+        compat: ['rosso', 'liquoroso'],
+        sentori: ['fumo', 'catrame', 'bacon']
+      },
+      frutta_secca: {
+        label: 'Frutta secca',
+        compat: ['rosso', 'bianco', 'passito', 'liquoroso'],
+        sentori: ['mandorla', 'nocciola', 'noce', 'noce di cocco']
+      }
+    }
+  },
+
+  balsamico: {
+    label: 'Balsamico',
+    color: '#16A085',
+    subcategories: {
+      balsamici: {
+        label: 'Balsamici',
+        compat: ['rosso', 'bianco', 'spumante', 'passito'],
+        sentori: ['eucalipto', 'mentolo', 'resina', 'pino', 'incenso']
+      }
+    }
+  },
+
+  etereo: {
+    label: 'Etereo',
+    color: '#9B59B6',
+    subcategories: {
+      eterei: {
+        label: 'Eterei / Animali',
+        compat: ['rosso', 'passito', 'liquoroso'],
+        sentori: ['smalto', 'cera', 'cuoio', 'sugo di carne', 'pellame', 'goudron', 'idrocarburi']
       }
     }
   }
 };
 
 // ============================================================
-// PROFILI VITIGNO - aromi tipici evidenziati nella ruota dedicata
-// Estratti dalle ruote vitigno-specifiche Assosommelier
+// PROFILI VITIGNO — sentori tipici evidenziati con ★
 // ============================================================
 
 const PROFILI_VITIGNO = {
-  // ===== ROSSI =====
-  'sangiovese': {
-    tipologia: 'rosso',
-    sentori_tipici: [
-      'ciliegia', 'lampone', 'fragola', 'mora', 'prugna',
-      'violetta', 'rosa',
-      'tabacco', 'tè nero', 'foglia di alloro',
-      'spezie', 'liquirizia', 'pepe', 'cannella',
-      'tostato', 'tabacco', 'cuoio',
-      'minerale_gen'
-    ]
-  },
-  'nebbiolo': {
-    tipologia: 'rosso',
-    sentori_tipici: [
-      'ciliegia', 'lampone', 'prugna', 'prugna secca',
-      'rosa', 'violetta',
-      'tabacco', 'tè nero', 'foglia di alloro',
-      'liquirizia', 'cannella', 'pepe', 'noce moscata',
-      'cuoio', 'tartufo', 'fungo',
-      'catrame', 'caffè', 'cioccolato',
-      'goudron', 'cedro'
-    ]
-  },
-  'cabernet_sauvignon': {
-    tipologia: 'rosso',
-    sentori_tipici: [
-      'ribes nero', 'mora', 'ciliegia',
-      'violetta', 'caprifoglio',
-      'peperone', 'foglia di ribes nero', 'eucalipto', 'menta',
-      'cedro', 'tabacco',
-      'vaniglia', 'pepe', 'liquirizia',
-      'tostato', 'caffè', 'cioccolato', 'pane tostato'
-    ]
-  },
-  'merlot': {
-    tipologia: 'rosso',
-    sentori_tipici: [
-      'prugna', 'mora', 'ciliegia', 'fragola', 'ribes nero',
-      'violetta', 'rosa',
-      'foglia di alloro',
-      'cioccolato', 'cacao', 'caffè',
-      'vaniglia', 'cannella', 'noce moscata',
-      'cuoio', 'tabacco'
-    ]
-  },
-  'cabernet_franc': {
-    tipologia: 'rosso',
-    sentori_tipici: [
-      'lampone', 'fragola', 'ribes nero',
-      'peperone', 'foglia di ribes nero', 'tabacco',
-      'violetta',
-      'pepe', 'cannella', 'liquirizia',
-      'cedro', 'matita'
-    ]
-  },
-  'pinot_nero': {
-    tipologia: 'rosso',
-    sentori_tipici: [
-      'ciliegia', 'fragola', 'lampone', 'mora',
-      'rosa', 'violetta',
-      'fungo', 'tartufo', 'sottobosco',
-      'cuoio', 'spezie',
-      'caffè', 'cioccolato', 'pane tostato',
-      'vaniglia', 'noce moscata'
-    ]
-  },
-  'syrah': {
-    tipologia: 'rosso',
-    sentori_tipici: [
-      'mora', 'ribes nero', 'prugna',
-      'violetta', 'rosa',
-      'pepe', 'pepe nero', 'cannella', 'liquirizia', 'chiodi di garofano',
-      'cuoio', 'tabacco',
-      'cioccolato', 'caffè',
-      'fumo', 'catrame', 'bacon'
-    ]
-  },
-  'gamay': {
-    tipologia: 'rosso',
-    sentori_tipici: [
-      'fragola', 'lampone', 'ciliegia', 'mora',
-      'violetta', 'rosa',
-      'pepe', 'cannella',
-      'banana', 'caramella'
-    ]
-  },
-  'malbec': {
-    tipologia: 'rosso',
-    sentori_tipici: [
-      'mora', 'prugna', 'ribes nero', 'ciliegia',
-      'violetta',
-      'cacao', 'cioccolato', 'caffè',
-      'pepe', 'cannella', 'liquirizia',
-      'cuoio', 'tabacco', 'vaniglia'
-    ]
-  },
-  'grenache': {
-    tipologia: 'rosso',
-    sentori_tipici: [
-      'fragola', 'lampone', 'ciliegia', 'mora', 'prugna',
-      'rosa', 'lavanda',
-      'pepe', 'cannella', 'liquirizia', 'erbe essiccate',
-      'cuoio', 'tabacco'
-    ]
-  },
-  'tempranillo': {
-    tipologia: 'rosso',
-    sentori_tipici: [
-      'ciliegia', 'fragola', 'prugna', 'prugna secca',
-      'rosa',
-      'tabacco', 'foglia di alloro',
-      'vaniglia', 'cannella', 'pepe', 'liquirizia',
-      'cuoio', 'cioccolato', 'caffè',
-      'cedro'
-    ]
-  },
-
-  // ===== BIANCHI =====
-  'chardonnay': {
-    tipologia: 'bianco',
-    sentori_tipici: [
-      'mela', 'pera', 'pesca', 'melone', 'ananas',
-      'limone', 'pompelmo',
-      'caprifoglio', 'biancospino', 'acacia',
-      'pietra focaia', 'iodio',
-      'burro', 'pane',
-      'vaniglia', 'noce di cocco', 'mandorla',
-      'cannella', 'pane tostato', 'cioccolato'
-    ]
-  },
-  'sauvignon_blanc': {
-    tipologia: 'bianco',
-    sentori_tipici: [
-      'lime', 'limone', 'pompelmo', 'uva spina',
-      'mela verde', 'pesca', 'frutto della passione',
-      'biancospino', 'fiori d\'arancio',
-      'foglia di ribes nero', 'erba tagliata', 'peperone',
-      'menta', 'eucalipto', 'foglia di pomodoro',
-      'pietra focaia', 'iodio'
-    ]
-  },
-  'riesling': {
-    tipologia: 'bianco',
-    sentori_tipici: [
-      'lime', 'limone', 'pompelmo',
-      'mela verde', 'pera', 'pesca', 'albicocca secca',
-      'litchi',
-      'caprifoglio', 'gelsomino', 'tiglio',
-      'miele', 'cotognata',
-      'pietra focaia', 'cherosene', 'iodio'
-    ]
-  },
-  'pinot_grigio': {
-    tipologia: 'bianco',
-    sentori_tipici: [
-      'mela', 'pera', 'pesca',
-      'limone',
-      'biancospino', 'acacia',
-      'mandorla', 'nocciola',
-      'miele', 'cotognata'
-    ]
-  },
-  'gewurztraminer': {
-    tipologia: 'bianco',
-    sentori_tipici: [
-      'litchi', 'frutto della passione', 'ananas',
-      'mela', 'pesca', 'albicocca secca',
-      'rosa', 'fiori d\'arancio', 'gelsomino', 'caprifoglio',
-      'cannella', 'chiodi di garofano', 'noce moscata', 'pepe',
-      'miele'
-    ]
-  },
-  'viognier': {
-    tipologia: 'bianco',
-    sentori_tipici: [
-      'pesca', 'albicocca secca', 'mango', 'ananas',
-      'fiori d\'arancio', 'caprifoglio', 'gelsomino',
-      'miele',
-      'vaniglia', 'cannella'
-    ]
-  },
-  'chenin_blanc': {
-    tipologia: 'bianco',
-    sentori_tipici: [
-      'mela', 'mela verde', 'pera', 'pesca', 'albicocca secca',
-      'limone',
-      'caprifoglio', 'fiori d\'arancio',
-      'miele', 'cotognata',
-      'pietra focaia', 'iodio',
-      'fieno'
-    ]
-  },
-  'semillon': {
-    tipologia: 'bianco',
-    sentori_tipici: [
-      'mela', 'pera', 'pesca',
-      'limone', 'scorza d\'arancia',
-      'biancospino', 'caprifoglio',
-      'miele', 'cotognata', 'albicocca secca',
-      'fieno', 'cera d\'api',
-      'vaniglia', 'tostato'
-    ]
-  }
+  'sangiovese': { tipologia: 'rosso', sentori_tipici: ['ciliegia','lampone','fragola','mora','prugna','amarena','violetta','rosa','tabacco','tè nero','alloro','liquirizia','pepe nero','cannella','cuoio'] },
+  'nebbiolo': { tipologia: 'rosso', sentori_tipici: ['ciliegia','lampone','prugna','prugna secca','amarena','rosa','rosa appassita','violetta','tabacco','tè nero','alloro','liquirizia','cannella','pepe nero','noce moscata','cuoio','tartufo','fungo','catrame','caffè','cacao','goudron'] },
+  'cabernet_sauvignon': { tipologia: 'rosso', sentori_tipici: ['ribes nero','mora','ciliegia','prugna','violetta','peperone','foglia di ribes nero','eucalipto','menta','tabacco','vaniglia','pepe nero','liquirizia','caffè','cacao','pane tostato'] },
+  'merlot': { tipologia: 'rosso', sentori_tipici: ['prugna','mora','ciliegia','fragola','ribes nero','violetta','rosa','alloro','cacao','cioccolato','caffè','vaniglia','cannella','noce moscata','cuoio','tabacco'] },
+  'cabernet_franc': { tipologia: 'rosso', sentori_tipici: ['lampone','fragola','ribes nero','peperone','foglia di ribes nero','tabacco','violetta','pepe nero','cannella','liquirizia'] },
+  'pinot_nero': { tipologia: 'rosso', sentori_tipici: ['ciliegia','fragola','lampone','mora','amarena','rosa','violetta','fungo','tartufo','muschio','cuoio','caffè','cacao','pane tostato','vaniglia','noce moscata'] },
+  'syrah': { tipologia: 'rosso', sentori_tipici: ['mora','ribes nero','prugna','violetta','rosa','pepe nero','pepe bianco','cannella','liquirizia','chiodi di garofano','cuoio','tabacco','cacao','caffè','fumo','catrame','bacon'] },
+  'gamay': { tipologia: 'rosso', sentori_tipici: ['fragola','lampone','ciliegia','mora','amarena','violetta','rosa','pepe nero','cannella','banana'] },
+  'malbec': { tipologia: 'rosso', sentori_tipici: ['mora','prugna','ribes nero','ciliegia','violetta','cacao','cioccolato','caffè','pepe nero','cannella','liquirizia','cuoio','tabacco','vaniglia'] },
+  'grenache': { tipologia: 'rosso', sentori_tipici: ['fragola','lampone','ciliegia','mora','prugna','rosa','lavanda','pepe nero','cannella','liquirizia','cuoio','tabacco','fieno'] },
+  'tempranillo': { tipologia: 'rosso', sentori_tipici: ['ciliegia','fragola','prugna','prugna secca','rosa','tabacco','alloro','vaniglia','cannella','pepe nero','liquirizia','cuoio','cacao','caffè'] },
+  'chardonnay': { tipologia: 'bianco', sentori_tipici: ['mela','pera','pesca','melone','ananas','limone','pompelmo','caprifoglio','biancospino','acacia','pietra focaia','iodio','vaniglia','noce di cocco','mandorla','nocciola','cannella','pane tostato','caramello'] },
+  'sauvignon_blanc': { tipologia: 'bianco', sentori_tipici: ['lime','limone','pompelmo','uva spina','mela verde','pesca','frutto della passione','biancospino',"fiori d'arancio",'sambuco','foglia di ribes nero','erba tagliata','peperone','asparago','menta','eucalipto','foglia di pomodoro','pietra focaia','iodio'] },
+  'riesling': { tipologia: 'bianco', sentori_tipici: ['lime','limone','pompelmo','mela verde','pera','pesca','albicocca secca','litchi','caprifoglio','gelsomino','tiglio','cotognata','pietra focaia','cherosene','iodio'] },
+  'pinot_grigio': { tipologia: 'bianco', sentori_tipici: ['mela','pera','pesca','limone','biancospino','acacia','mandorla','nocciola','cotognata'] },
+  'gewurztraminer': { tipologia: 'bianco', sentori_tipici: ['litchi','frutto della passione','ananas','mela','pesca','albicocca secca','rosa',"fiori d'arancio",'gelsomino','caprifoglio','cannella','chiodi di garofano','noce moscata','pepe bianco','zenzero'] },
+  'viognier': { tipologia: 'bianco', sentori_tipici: ['pesca','albicocca secca','mango','ananas',"fiori d'arancio",'caprifoglio','gelsomino','vaniglia','cannella'] },
+  'chenin_blanc': { tipologia: 'bianco', sentori_tipici: ['mela','mela verde','pera','pesca','albicocca secca','limone','caprifoglio',"fiori d'arancio",'cotognata','pietra focaia','iodio','fieno'] },
+  'semillon': { tipologia: 'bianco', sentori_tipici: ['mela','pera','pesca','limone',"scorza d'arancia",'biancospino','caprifoglio','cotognata','albicocca secca','fieno','cera','vaniglia'] }
 };
 
-// ============================================================
-// HELPER: dato un vino, restituisce famiglie compatibili filtrate
-// ============================================================
-
+// Restituisce le 9 famiglie SEMPRE complete (fedele alla scheda Assosommelier),
+// ma all'interno mantiene solo le sottocategorie compatibili con la tipologia.
+// Una famiglia che non ha sottocategorie compatibili viene mostrata vuota (consente comunque la selezione manuale).
 function getFamiglieCompatibili(tipologia) {
+  if (!tipologia) return AROMI;
   const result = {};
   for (const [key, fam] of Object.entries(AROMI)) {
-    if (fam.compatible.includes(tipologia)) {
-      result[key] = fam;
+    const newFam = { label: fam.label, color: fam.color, subcategories: {} };
+    for (const [subKey, sub] of Object.entries(fam.subcategories)) {
+      if (sub.compat && !sub.compat.includes(tipologia)) continue;
+      newFam.subcategories[subKey] = sub;
     }
+    // Includi SEMPRE la famiglia (anche se vuota) — fedeltà alla scheda Assosommelier
+    result[key] = newFam;
   }
   return result;
 }
 
-// Restituisce i sentori tipici di un vitigno (normalizza nome)
 function getProfiloVitigno(nomeVitigno) {
   if (!nomeVitigno) return null;
   const key = nomeVitigno.toLowerCase()
@@ -411,7 +243,6 @@ function getProfiloVitigno(nomeVitigno) {
   return PROFILI_VITIGNO[key] || null;
 }
 
-// Verifica se un sentore è "tipico" del vitigno dato
 function isSentoreTipico(sentore, profili) {
   if (!profili || profili.length === 0) return false;
   return profili.some(p => p.sentori_tipici.includes(sentore));
