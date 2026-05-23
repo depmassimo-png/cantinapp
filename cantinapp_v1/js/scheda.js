@@ -95,7 +95,14 @@ function render() {
   if (d.olfatto_descrittori && d.olfatto_descrittori.length) {
     const tags = d.olfatto_descrittori.map(v => `<span class="desc-tag">${labelize(v)}</span>`).join('');
     olf.push(`<div style="padding:8px 0 12px;border-bottom:1px solid var(--bordo)">
-      <div style="font-size:13px;color:var(--testo-2);margin-bottom:6px">Descrittori</div>
+      <div style="font-size:13px;color:var(--testo-2);margin-bottom:6px">Famiglie</div>
+      <div class="descrittori-list">${tags}</div>
+    </div>`);
+  }
+  if (d.olfatto_sentori && d.olfatto_sentori.length) {
+    const tags = d.olfatto_sentori.map(v => `<span class="desc-tag" style="background:var(--bordeaux);color:#fff;border-color:var(--bordeaux)">${esc(v)}</span>`).join('');
+    olf.push(`<div style="padding:8px 0 12px;border-bottom:1px solid var(--bordo)">
+      <div style="font-size:13px;color:var(--testo-2);margin-bottom:6px">Sentori specifici</div>
       <div class="descrittori-list">${tags}</div>
     </div>`);
   }

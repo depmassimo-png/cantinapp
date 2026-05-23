@@ -31,6 +31,8 @@ const D = {
   perlage_grana: null,
   // olfatto
   olfatto_descrittori: [],
+  olfatto_sentori: [],          // sentori specifici dalla ruota aromi (es. 'ciliegia', 'rosa')
+  olfatto_famiglie_aperte: [],  // famiglie attualmente espanse nell'UI (es. 'fruttato_vino_rosso')
   olfatto_note: '',
   olfatto_complessita_label: null, olfatto_complessita_punti: null,
   olfatto_qualita_label: null, olfatto_qualita_punti: null,
@@ -131,14 +133,8 @@ function setupChips() {
     });
   }
 
-  // Descrittori olfattivi (multi)
-  document.querySelectorAll('#descGrid .desc-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      chip.classList.toggle('sel');
-      D.olfatto_descrittori = Array.from(document.querySelectorAll('#descGrid .desc-chip.sel'))
-        .map(c => c.dataset.v);
-    });
-  });
+  // ===== RUOTA AROMI - render iniziale =====
+  renderFamiglieAromi();
 
   // Input testuali e textarea
   bindInput('luogo');
@@ -302,7 +298,12 @@ function aggiornaPunteggio() {
   // Summary
   const parts = [];
   if (D.colore) parts.push(`<span class="lbl">Colore:</span> ${D.colore}`);
-  if (D.olfatto_descrittori.length) parts.push(`<span class="lbl">Olfatto:</span> ${D.olfatto_descrittori.join(', ')}`);
+  if (D.olfatto_sentori.length) {
+    const display = D.olfatto_sentori.slice(0, 5).join(', ') + (D.olfatto_sentori.length > 5 ? '…' : '');
+    parts.push(`<span class="lbl">Sentori:</span> ${display}`);
+  } else if (D.olfatto_descrittori.length) {
+    parts.push(`<span class="lbl">Olfatto:</span> ${D.olfatto_descrittori.join(', ')}`);
+  }
   if (D.gusto_zucchero) parts.push(`<span class="lbl">Bocca:</span> ${D.gusto_zucchero}${D.gusto_acidita ? ', ' + D.gusto_acidita : ''}`);
   document.getElementById('summaryBox').innerHTML = parts.join(' · ') || 'Riepilogo non disponibile';
 }
@@ -332,6 +333,7 @@ async function salvaDegustazione() {
     vivacita: D.vivacita,
     perlage_grana: D.perlage_grana,
     olfatto_descrittori: D.olfatto_descrittori.length ? D.olfatto_descrittori : null,
+    olfatto_sentori: D.olfatto_sentori.length ? D.olfatto_sentori : null,
     olfatto_note: D.olfatto_note || null,
     olfatto_complessita_label: D.olfatto_complessita_label,
     olfatto_complessita_punti: D.olfatto_complessita_punti,
@@ -374,4 +376,192 @@ async function salvaDegustazione() {
       location.href = 'cantina.html';
     }
   }, 1200);
+}
+
+// ============================================================
+// RUOTA AROMI: rendering interattivo gerarchico
+// ============================================================
+
+function renderFamiglieAromi() {
+  const tipologia = bottigliaCorrente?.tipologia || D.tipologia_esterna || null;
+  const grid = document.getElementById('famiglieGrid');
+  if (!grid) return;
+
+  // Filtra le famiglie compatibili con la tipologia
+  const famiglie = tipologia ? getFamiglieCompatibili(tipologia) : AROMI;
+
+  // Banner vitigno (se presente)
+  renderVitignoBanner();
+
+  // Render delle famiglie come chip
+  grid.innerHTML = '';
+  for (const [key, fam] of Object.entries(famiglie)) {
+    const chip = document.createElement('div');
+    chip.className = 'fam-chip';
+    chip.dataset.key = key;
+    if (D.olfatto_famiglie_aperte.includes(key)) chip.classList.add('sel');
+    chip.innerHTML = `
+      <span class="fam-dot" style="background:${fam.color}"></span>
+      <span>${fam.label}</span>
+      <span class="fam-count" id="count-${key}" style="display:none">0</span>
+    `;
+    chip.addEventListener('click', () => toggleFamiglia(key));
+    grid.appendChild(chip);
+  }
+
+  // Render delle famiglie aperte
+  renderSentoriContainer();
+  renderSentoriRiepilogo();
+  aggiornaContatori();
+}
+
+function renderVitignoBanner() {
+  const banner = document.getElementById('vitignoBanner');
+  const text = document.getElementById('vitignoBannerText');
+  if (!banner || !text) return;
+
+  const vitigni = bottigliaCorrente?.vitigni || [];
+  if (!vitigni.length) {
+    banner.style.display = 'none';
+    return;
+  }
+
+  // Trova i profili vitigno disponibili
+  const profili = vitigni
+    .map(v => ({ nome: v, profilo: getProfiloVitigno(v) }))
+    .filter(x => x.profilo);
+
+  if (!profili.length) {
+    banner.style.display = 'none';
+    return;
+  }
+
+  const nomi = profili.map(p => p.nome).join(', ');
+  text.innerHTML = `Profilo aromatico evidenziato per <b>${nomi}</b>. I sentori tipici sono marcati con ★`;
+  banner.style.display = 'flex';
+}
+
+function toggleFamiglia(key) {
+  const idx = D.olfatto_famiglie_aperte.indexOf(key);
+  if (idx >= 0) {
+    D.olfatto_famiglie_aperte.splice(idx, 1);
+  } else {
+    D.olfatto_famiglie_aperte.push(key);
+  }
+
+  // Aggiorna anche olfatto_descrittori (i nomi famiglie semplici)
+  D.olfatto_descrittori = D.olfatto_famiglie_aperte.map(k => {
+    const f = AROMI[k];
+    return f?.family || k;
+  });
+  // Dedup
+  D.olfatto_descrittori = [...new Set(D.olfatto_descrittori)];
+
+  // Re-render
+  renderFamiglieAromi();
+}
+
+function renderSentoriContainer() {
+  const container = document.getElementById('sentoriContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // Calcola profili vitigno per evidenziare ★
+  const vitigni = bottigliaCorrente?.vitigni || [];
+  const profili = vitigni.map(v => getProfiloVitigno(v)).filter(Boolean);
+
+  // Per ogni famiglia aperta, mostra le sottocategorie e sentori
+  for (const key of D.olfatto_famiglie_aperte) {
+    const fam = AROMI[key];
+    if (!fam) continue;
+
+    const block = document.createElement('div');
+    block.className = 'fam-expanded';
+    block.style.borderLeft = `4px solid ${fam.color}`;
+
+    let html = `<div class="fam-expanded-header">
+      <span class="fam-dot" style="background:${fam.color}"></span>
+      ${fam.label}
+    </div>`;
+
+    for (const [subKey, sub] of Object.entries(fam.subcategories)) {
+      html += `<div class="subcat-block">
+        <div class="subcat-label">${sub.label}</div>
+        <div class="sentori-row">`;
+
+      for (const sentore of sub.sentori) {
+        const sel = D.olfatto_sentori.includes(sentore);
+        const tipico = isSentoreTipico(sentore, profili);
+        let cls = 'sentore-chip';
+        if (sel) cls += ' sel';
+        if (tipico) cls += ' tipico';
+        html += `<span class="${cls}" data-sentore="${sentore}">${sentore}</span>`;
+      }
+
+      html += `</div></div>`;
+    }
+    block.innerHTML = html;
+    container.appendChild(block);
+
+    // Bind eventi sentori
+    block.querySelectorAll('.sentore-chip').forEach(chip => {
+      chip.addEventListener('click', () => toggleSentore(chip.dataset.sentore));
+    });
+  }
+}
+
+function toggleSentore(sentore) {
+  const idx = D.olfatto_sentori.indexOf(sentore);
+  if (idx >= 0) {
+    D.olfatto_sentori.splice(idx, 1);
+  } else {
+    D.olfatto_sentori.push(sentore);
+  }
+  // Re-render solo le parti interessate
+  renderSentoriContainer();
+  renderSentoriRiepilogo();
+  aggiornaContatori();
+}
+
+function renderSentoriRiepilogo() {
+  const box = document.getElementById('sentoriRiepilogo');
+  const tagsBox = document.getElementById('sentoriTagsBox');
+  const count = document.getElementById('sentoriCount');
+  if (!box || !tagsBox) return;
+
+  if (!D.olfatto_sentori.length) {
+    box.style.display = 'none';
+    return;
+  }
+
+  box.style.display = 'block';
+  count.textContent = D.olfatto_sentori.length;
+
+  tagsBox.innerHTML = D.olfatto_sentori.map(s =>
+    `<span class="sentore-tag">${s} <i class="ti ti-x" data-rm="${s}"></i></span>`
+  ).join('');
+
+  tagsBox.querySelectorAll('i[data-rm]').forEach(ic => {
+    ic.addEventListener('click', () => toggleSentore(ic.dataset.rm));
+  });
+}
+
+function aggiornaContatori() {
+  // Per ogni famiglia, conta quanti sentori selezionati appartengono a essa
+  for (const [key, fam] of Object.entries(AROMI)) {
+    const badge = document.getElementById('count-' + key);
+    if (!badge) continue;
+    let n = 0;
+    for (const sub of Object.values(fam.subcategories)) {
+      for (const s of sub.sentori) {
+        if (D.olfatto_sentori.includes(s)) n++;
+      }
+    }
+    if (n > 0) {
+      badge.style.display = 'flex';
+      badge.textContent = n;
+    } else {
+      badge.style.display = 'none';
+    }
+  }
 }

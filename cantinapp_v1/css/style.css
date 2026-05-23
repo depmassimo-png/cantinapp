@@ -214,6 +214,149 @@ input::placeholder, textarea::placeholder { color: var(--testo-3); }
   color: var(--nero);
 }
 
+/* ---- RUOTA AROMI: famiglie e sentori ---- */
+.famiglie-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.fam-chip {
+  padding: 14px 10px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: var(--bianco);
+  color: var(--testo);
+  text-align: center;
+  transition: all .15s;
+  user-select: none;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.fam-chip .fam-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.fam-chip .fam-count {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: var(--bordeaux);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+.fam-chip.sel {
+  border-color: var(--bordeaux);
+  background: var(--avorio);
+  box-shadow: 0 2px 6px rgba(139,38,53,.15);
+}
+
+.fam-expanded {
+  background: var(--bianco);
+  border: 1px solid var(--bordo);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 10px;
+  animation: slideDown .2s ease-out;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fam-expanded-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--bordeaux);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.subcat-block { margin-bottom: 10px; }
+.subcat-block:last-child { margin-bottom: 0; }
+.subcat-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--testo-2);
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  margin-bottom: 6px;
+}
+.sentori-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.sentore-chip {
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--bordo);
+  background: var(--bianco);
+  color: var(--testo);
+  user-select: none;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.sentore-chip.tipico {
+  border-color: var(--oro);
+  background: linear-gradient(135deg, #FFFBF0, #FCF4DA);
+  position: relative;
+}
+.sentore-chip.tipico::before {
+  content: '★';
+  color: var(--oro);
+  margin-right: 4px;
+  font-size: 10px;
+}
+.sentore-chip.sel {
+  background: var(--bordeaux);
+  border-color: var(--bordeaux);
+  color: #fff;
+}
+.sentore-chip.sel.tipico {
+  background: linear-gradient(135deg, var(--bordeaux), var(--bordeaux-dk));
+  border-color: var(--bordeaux-dk);
+}
+
+.sentore-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bordeaux);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 500;
+}
+.sentore-tag i {
+  cursor: pointer;
+  font-size: 13px;
+  opacity: .8;
+}
+.sentore-tag i:hover { opacity: 1; }
+
 /* ---- STELLE ---- */
 .stars { display: flex; gap: 10px; justify-content: center; margin: 12px 0; }
 .star {

@@ -243,27 +243,35 @@
     </div>
   </div>
 
-  <!-- ============== STEP 3: OLFATTO ============== -->
+  <!-- ============== STEP 3: OLFATTO (nuova interfaccia gerarchica) ============== -->
   <div class="step" id="s3">
     <div class="step-icon"><i class="ti ti-wind" aria-hidden="true"></i></div>
-    <div class="step-title">Olfatto</div>
-    <div class="step-sub">Annusa, poi descrivi</div>
+    <div class="step-title">Esame Olfattivo</div>
+    <div class="step-sub">Esplora i sentori dalla Ruota degli Aromi</div>
 
-    <label class="field-label">Descrittori (selezione multipla)</label>
-    <div class="desc-grid" id="descGrid">
-      <span class="desc-chip" data-v="fruttato"><i class="ti ti-apple"></i>Fruttato</span>
-      <span class="desc-chip" data-v="floreale"><i class="ti ti-leaf"></i>Floreale</span>
-      <span class="desc-chip" data-v="vegetale"><i class="ti ti-plant"></i>Vegetale</span>
-      <span class="desc-chip" data-v="minerale"><i class="ti ti-mountain"></i>Minerale</span>
-      <span class="desc-chip" data-v="erbe_aromatiche"><i class="ti ti-leaf-2"></i>Erbe arom.</span>
-      <span class="desc-chip" data-v="speziato"><i class="ti ti-star"></i>Speziato</span>
-      <span class="desc-chip" data-v="tostato"><i class="ti ti-flame"></i>Tostato</span>
-      <span class="desc-chip" data-v="balsamico"><i class="ti ti-droplet"></i>Balsamico</span>
-      <span class="desc-chip" data-v="etereo"><i class="ti ti-sparkles"></i>Etereo</span>
+    <!-- Banner vitigno se presente -->
+    <div id="vitignoBanner" style="display:none;margin-bottom:14px;padding:10px 12px;background:linear-gradient(135deg,#FBF7F1,#F5E6CC);border:1px solid var(--oro);border-radius:var(--radius-md);font-size:12px;color:#6a4d10;display:flex;align-items:center;gap:8px">
+      <i class="ti ti-sparkles" style="font-size:16px;color:var(--oro);flex-shrink:0"></i>
+      <span id="vitignoBannerText"></span>
     </div>
 
-    <label class="field-label">Note olfattive</label>
-    <textarea class="note-area" id="olfattoNote" rows="2" placeholder="Es. amarena, viola, tabacco..."></textarea>
+    <!-- FAMIGLIE OLFATTIVE - selezione di partenza -->
+    <label class="field-label">Famiglie olfattive percepite</label>
+    <div class="famiglie-grid" id="famiglieGrid"></div>
+
+    <!-- SOTTOCATEGORIE e SENTORI - mostrati per ogni famiglia selezionata -->
+    <div id="sentoriContainer"></div>
+
+    <!-- Riepilogo sentori scelti -->
+    <div id="sentoriRiepilogo" style="display:none;margin-top:14px;padding:12px;background:var(--bianco);border:1px solid var(--bordo);border-radius:var(--radius-md)">
+      <div style="font-size:11px;font-weight:600;color:var(--bordeaux);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">
+        Sentori riconosciuti (<span id="sentoriCount">0</span>)
+      </div>
+      <div id="sentoriTagsBox" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+
+    <label class="field-label">Note olfattive aggiuntive</label>
+    <textarea class="note-area" id="olfattoNote" rows="2" placeholder="Note personali, evoluzione nel bicchiere..."></textarea>
 
     <label class="field-label">Complessità olfattiva</label>
     <div class="scale-row" id="scaleOlfComplessita">
@@ -480,6 +488,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/aromi-data.js"></script>
 <script src="js/degusta.js"></script>
 </body>
 </html>
