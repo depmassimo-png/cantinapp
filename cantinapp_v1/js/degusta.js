@@ -278,11 +278,12 @@ function calcolaPunteggio() {
 
 function calcolaFascia(punti) {
   if (!punti) return null;
-  if (punti < 18) return 'accettabile';
-  if (punti < 22) return 'buono';
-  if (punti < 24) return 'ottimo';
-  if (punti < 27) return 'eccellente';
-  return 'avvincente';
+  if (punti < 70) return null;        // sotto soglia
+  if (punti <= 77) return 'accettabile';   // 70-77
+  if (punti <= 85) return 'buono';          // 78-85
+  if (punti <= 90) return 'ottimo';         // 86-90
+  if (punti <= 96) return 'eccellente';     // 91-96
+  return 'memorabile';                       // 97-100
 }
 
 function labelFascia(f) {
@@ -291,7 +292,7 @@ function labelFascia(f) {
     buono: 'Buono',
     ottimo: 'Ottimo',
     eccellente: 'Eccellente',
-    avvincente: 'Avvincente',
+    memorabile: 'Memorabile',
   };
   return map[f] || '—';
 }

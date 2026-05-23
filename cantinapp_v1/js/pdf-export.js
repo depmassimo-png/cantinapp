@@ -241,11 +241,11 @@ async function esportaPDF() {
 
   const punteggio = d.punteggio_totale || 0;
   const fasce = [
-    ['Accettabile', '12/17', 12, 17],
-    ['Buono', '18/21', 18, 21],
-    ['Ottimo', '22/23', 22, 23],
-    ['Eccellente', '24/26', 24, 26],
-    ['Avvincente', '27/100', 27, 100],
+    ['Accettabile', '70/77', 70, 77],
+    ['Buono', '78/85', 78, 85],
+    ['Ottimo', '86/90', 86, 90],
+    ['Eccellente', '91/96', 91, 96],
+    ['Memorabile', '97/100', 97, 100],
   ];
   const fascW = CW * 0.7 / 5;
   for (let i = 0; i < 5; i++) {

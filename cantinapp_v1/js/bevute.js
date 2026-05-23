@@ -130,7 +130,7 @@ function labelFascia(f) {
     buono: 'Buono',
     ottimo: 'Ottimo',
     eccellente: 'Eccellente',
-    avvincente: 'Avvincente',
+    memorabile: 'Memorabile',
   };
   return map[f] || f;
 }
