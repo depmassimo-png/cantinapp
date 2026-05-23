@@ -118,7 +118,8 @@ async function analizzaConAI() {
     // Compila i campi solo se vuoti, o sovrascrive comunque
     if (dati.nome_vino) { document.getElementById('nomeVino').value = dati.nome_vino; campiCompilati++; }
     if (dati.produttore) { document.getElementById('produttore').value = dati.produttore; campiCompilati++; }
-    if (dati.annata) { document.getElementById('annata').value = dati.annata; campiCompilati++; }
+    const annataNum = sanitizeInt(dati.annata);
+    if (annataNum) { document.getElementById('annata').value = annataNum; campiCompilati++; }
     if (dati.tipologia) {
       document.getElementById('tipologia').value = dati.tipologia;
       toggleSpumantiFields();
@@ -126,8 +127,10 @@ async function analizzaConAI() {
     }
     if (dati.denominazione) { document.getElementById('denominazione').value = dati.denominazione; campiCompilati++; }
     if (dati.regione) { document.getElementById('regione').value = dati.regione; campiCompilati++; }
-    if (dati.gradazione) { document.getElementById('gradazione').value = dati.gradazione; campiCompilati++; }
-    if (dati.formato_ml) { document.getElementById('formatoMl').value = dati.formato_ml; }
+    const gradoNum = sanitizeFloat(dati.gradazione);
+    if (gradoNum) { document.getElementById('gradazione').value = gradoNum; campiCompilati++; }
+    const formatoNum = sanitizeInt(dati.formato_ml);
+    if (formatoNum) { document.getElementById('formatoMl').value = formatoNum; }
 
     // Vitigni - aggiungi alla lista
     if (dati.vitigni && Array.isArray(dati.vitigni)) {
@@ -141,7 +144,8 @@ async function analizzaConAI() {
     // Campi spumante
     if (dati.tipologia === 'spumante') {
       if (dati.metodo) document.getElementById('metodo').value = dati.metodo;
-      if (dati.sboccatura) document.getElementById('sboccatura').value = dati.sboccatura;
+      const sboccNum = sanitizeInt(dati.sboccatura);
+      if (sboccNum) document.getElementById('sboccatura').value = sboccNum;
       if (dati.dosaggio) document.getElementById('dosaggio').value = dati.dosaggio;
     }
 
@@ -168,6 +172,24 @@ function fileToBase64(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// Sanifica un valore in intero (toglie spazi, simboli, virgole)
+function sanitizeInt(v) {
+  if (v == null || v === '') return null;
+  const s = String(v).replace(/[^0-9]/g, '');
+  if (!s) return null;
+  const n = parseInt(s);
+  return isNaN(n) ? null : n;
+}
+
+// Sanifica un valore in float (gestisce virgola/punto, % e altri simboli)
+function sanitizeFloat(v) {
+  if (v == null || v === '') return null;
+  const s = String(v).replace(',', '.').replace(/[^0-9.]/g, '');
+  if (!s) return null;
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
 }
 
 // ==== GESTIONE VITIGNI ====
