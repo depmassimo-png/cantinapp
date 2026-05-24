@@ -26,12 +26,21 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body {
+html {
+  background: #0F0405;
+  min-height: 100vh;
+}
+
+body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--avorio);
   color: var(--testo);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  box-shadow: 0 0 60px rgba(0,0,0,0.5);
 }
 
 /* ---- TOPBAR ---- */
@@ -265,6 +274,14 @@ input::placeholder, textarea::placeholder { color: var(--testo-3); }
   border-color: var(--bordeaux);
   background: var(--avorio);
   box-shadow: 0 2px 6px rgba(139,38,53,.15);
+}
+.fam-chip.has-sentori {
+  border-color: var(--oro);
+  background: rgba(201, 168, 76, 0.08);
+}
+.fam-chip.has-sentori.sel {
+  border-color: var(--bordeaux);
+  background: var(--avorio);
 }
 
 .fam-expanded {
@@ -595,12 +612,14 @@ input[type=range]::-webkit-slider-thumb {
 /* ---- BOTTOM NAV ---- */
 .bottom-nav {
   position: fixed;
-  bottom: 0; left: 0; right: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
   background: var(--bianco);
   border-top: 1px solid var(--bordo);
   display: flex;
+  width: 100%;
   max-width: 480px;
-  margin: 0 auto;
   z-index: 90;
 }
 .nav-item {
@@ -620,6 +639,35 @@ input[type=range]::-webkit-slider-thumb {
 }
 .nav-item.active { color: var(--bordeaux); }
 .nav-item.active i { color: var(--bordeaux); }
+
+/* Pulsante centrale Aggiungi nella bottom-nav */
+.nav-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 4px !important;
+  color: var(--bordeaux) !important;
+  font-weight: 600;
+}
+.nav-add-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bordeaux);
+  color: #fff !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+  box-shadow: 0 2px 8px rgba(139,38,53,0.4);
+}
+.nav-add-circle i {
+  font-size: 22px !important;
+  color: #fff !important;
+  margin: 0 !important;
+  display: block !important;
+}
 
 /* ---- LOGIN SPECIFICO ---- */
 .login-logo {

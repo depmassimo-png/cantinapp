@@ -14,10 +14,18 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <style>
     /* === Sfondo scuro coerente === */
+    html {
+      background: #0F0405;
+      min-height: 100vh;
+    }
     body {
       background: var(--nero, #1a0608);
       color: var(--avorio, #faf7f4);
       min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+      box-shadow: 0 0 60px rgba(0,0,0,0.5);
     }
 
     /* === Header V3: brand + sottotitolo === */
@@ -241,26 +249,33 @@
       padding-left: 8px;
     }
 
-    /* FAB a sinistra */
-    .fab {
-      position: fixed;
-      left: 20px;
-      bottom: 88px;
-      width: 56px;
-      height: 56px;
-      background: var(--bordeaux, #8B2635);
-      color: #fff;
+    /* Pulsante Aggiungi nella bottom-nav (circle bordeaux centrale) */
+    .nav-add {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 4px !important;
+    }
+    .nav-add-circle {
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
+      background: var(--bordeaux, #8B2635);
+      color: #fff !important;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
-      text-decoration: none;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 2px rgba(201,168,76,0.3);
-      z-index: 95;
-      transition: transform .15s;
+      margin-bottom: 2px;
+      box-shadow: 0 2px 8px rgba(139,38,53,0.4);
     }
-    .fab:active { transform: scale(0.92); }
+    .nav-add-circle i {
+      font-size: 22px !important;
+      color: #fff !important;
+      margin: 0 !important;
+      display: block !important;
+    }
+    .nav-add { color: var(--bordeaux, #8B2635) !important; font-weight: 600; }
 
     /* Loading + empty state */
     .loading {
@@ -356,10 +371,6 @@
   </div>
 </div>
 
-<a href="aggiungi.html" class="fab" aria-label="Aggiungi bottiglia">
-  <i class="ti ti-plus" aria-hidden="true"></i>
-</a>
-
 <nav class="bottom-nav">
   <a href="cantina.html" class="nav-item active">
     <i class="ti ti-building-warehouse"></i>
@@ -369,8 +380,14 @@
     <i class="ti ti-glass-full"></i>
     Bevute
   </a>
+  <a href="aggiungi.html" class="nav-item nav-add" aria-label="Aggiungi bottiglia">
+    <span class="nav-add-circle">
+      <i class="ti ti-plus"></i>
+    </span>
+    Aggiungi
+  </a>
   <a href="degusta.html" class="nav-item">
-    <i class="ti ti-plus" style="background:var(--bordeaux);color:#fff;border-radius:50%;width:32px;height:32px;line-height:32px;margin:0 auto 4px"></i>
+    <i class="ti ti-wine"></i>
     Degusta
   </a>
   <a href="teoria.html" class="nav-item">

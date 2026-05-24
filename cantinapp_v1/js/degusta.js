@@ -102,6 +102,16 @@ const D = {
     D.data_degustazione = e.target.value;
   });
 
+  // Proponi ripresa del draft precedente se esiste
+  const ripreso = await proponiRipresaDraft();
+  if (ripreso) {
+    ripristinaUI();
+    showToast('Degustazione ripresa');
+  }
+
+  // Attiva il salvataggio automatico in background
+  attivaAutosave();
+
   renderStep();
 })();
 
@@ -258,6 +268,7 @@ function stepAvanti() {
   if (stepAttuale < TOT_STEP) {
     stepAttuale++;
     renderStep();
+    if (typeof salvaDraft === 'function') salvaDraft();
   }
 }
 
@@ -265,11 +276,14 @@ function stepIndietro() {
   if (stepAttuale > 1) {
     stepAttuale--;
     renderStep();
+    if (typeof salvaDraft === 'function') salvaDraft();
   }
 }
 
 function annullaDegustazione() {
   if (confirm('Vuoi davvero annullare la degustazione?\n\nI dati inseriti andranno persi.')) {
+    if (typeof cancellaDraft === 'function') cancellaDraft();
+    draftDirty = false;
     if (bottigliaCorrente) {
       location.href = 'bottiglia.html?id=' + bottigliaCorrente.id;
     } else {
@@ -390,6 +404,8 @@ async function salvaDegustazione() {
   }
 
   showToast('Degustazione salvata!');
+  cancellaDraft();
+  draftDirty = false;
   setTimeout(() => {
     if (bottigliaCorrente) {
       location.href = 'bottiglia.html?id=' + bottigliaCorrente.id;
@@ -484,23 +500,40 @@ function renderVitignoBanner() {
 }
 
 function toggleFamiglia(key) {
-  const idx = D.olfatto_famiglie_aperte.indexOf(key);
-  if (idx >= 0) {
-    D.olfatto_famiglie_aperte.splice(idx, 1);
+  const isAperta = D.olfatto_famiglie_aperte.includes(key);
+
+  if (isAperta) {
+    // Se la famiglia è già aperta, la richiudo (toggle off)
+    D.olfatto_famiglie_aperte = [];
   } else {
-    D.olfatto_famiglie_aperte.push(key);
+    // Altrimenti chiudo tutte le altre e apro solo questa
+    D.olfatto_famiglie_aperte = [key];
   }
 
-  // Aggiorna anche olfatto_descrittori (i nomi famiglie semplici)
-  D.olfatto_descrittori = D.olfatto_famiglie_aperte.map(k => {
-    const f = AROMI[k];
-    return f?.family || k;
-  });
-  // Dedup
-  D.olfatto_descrittori = [...new Set(D.olfatto_descrittori)];
+  // Aggiorna anche olfatto_descrittori basandosi sui sentori effettivamente selezionati
+  // (NON sulle famiglie aperte, perché chiudere una famiglia non deve cancellare i sentori scelti)
+  D.olfatto_descrittori = calcolaFamiglieDaSentori();
 
   // Re-render
   renderFamiglieAromi();
+}
+
+// Ricostruisce la lista delle famiglie a cui appartengono i sentori selezionati
+function calcolaFamiglieDaSentori() {
+  const famiglie = new Set();
+  for (const sentore of D.olfatto_sentori) {
+    // Cerca a quale famiglia appartiene questo sentore
+    for (const [key, fam] of Object.entries(AROMI)) {
+      if (!fam.subcategories) continue;
+      for (const sub of Object.values(fam.subcategories)) {
+        if (sub.sentori && sub.sentori.includes(sentore)) {
+          famiglie.add(fam.family || key);
+          break;
+        }
+      }
+    }
+  }
+  return [...famiglie];
 }
 
 function renderSentoriContainer() {
@@ -564,6 +597,8 @@ function toggleSentore(sentore) {
   } else {
     D.olfatto_sentori.push(sentore);
   }
+  // Aggiorna la lista delle famiglie che hanno sentori selezionati
+  D.olfatto_descrittori = calcolaFamiglieDaSentori();
   // Re-render solo le parti interessate
   renderSentoriContainer();
   renderSentoriRiepilogo();
@@ -606,6 +641,12 @@ function aggiornaContatori() {
         if (D.olfatto_sentori.includes(s)) n++;
       }
     }
+    // Aggiorna anche la classe del chip parent per evidenziarlo
+    const chip = badge.closest('.fam-chip');
+    if (chip) {
+      if (n > 0) chip.classList.add('has-sentori');
+      else chip.classList.remove('has-sentori');
+    }
     if (n > 0) {
       badge.style.display = 'flex';
       badge.textContent = n;
@@ -626,4 +667,189 @@ function determinaTipologia() {
   if (D.tipologia_esterna) return D.tipologia_esterna;
   if (D.colore) return tipologiaDaColore(D.colore);
   return null;
+}
+
+
+// ============================================================
+// SISTEMA AUTOSAVE DRAFT (localStorage)
+// ============================================================
+// Salva automaticamente lo stato della degustazione in background
+// così se l'utente esce per sbaglio (back, telefonata, app chiusa)
+// può riprenderla dal punto esatto in cui l'ha lasciata.
+// ============================================================
+
+const DRAFT_KEY_PREFIX = 'cantinapp_draft_degustazione_';
+
+// Chiave specifica per questa degustazione (per bottiglia o cieca)
+function getDraftKey() {
+  if (!currentUser) return null;
+  const id = D.bottiglia_id || 'cieca';
+  return DRAFT_KEY_PREFIX + currentUser.id + '_' + id;
+}
+
+// Salva il draft in localStorage
+function salvaDraft() {
+  try {
+    const key = getDraftKey();
+    if (!key) return;
+    const draft = {
+      D: D,
+      stepAttuale: stepAttuale,
+      timestamp: Date.now(),
+      nome_visualizzato: bottigliaCorrente
+        ? (bottigliaCorrente.nome_vino + ' · ' + (bottigliaCorrente.annata || 'NM'))
+        : 'Degustazione alla cieca',
+    };
+    localStorage.setItem(key, JSON.stringify(draft));
+    draftDirty = true;
+  } catch (e) {
+    console.warn('Impossibile salvare draft:', e);
+  }
+}
+
+// Cancella il draft (chiamato dopo salvataggio definitivo)
+function cancellaDraft() {
+  try {
+    const key = getDraftKey();
+    if (key) localStorage.removeItem(key);
+    draftDirty = false;
+  } catch (e) {}
+}
+
+// Carica draft esistente (se compatibile con la bottiglia corrente)
+function caricaDraft() {
+  try {
+    const key = getDraftKey();
+    if (!key) return null;
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+// Flag: true se ci sono modifiche non salvate
+let draftDirty = false;
+
+// Auto-save: aggancia salvaDraft a tutti gli eventi di modifica
+function attivaAutosave() {
+  // Listener globale per "input" e "change" su tutto il form
+  document.addEventListener('input', () => salvaDraft());
+  document.addEventListener('change', () => salvaDraft());
+  // Click sui chip viene già gestito (modifica D dentro setupChips)
+  // ma aggiungo un listener delegato per essere certi
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.chip') || e.target.closest('.scale-num') || e.target.closest('.star') || e.target.closest('.fam-chip') || e.target.closest('.sentore-chip')) {
+      // Piccolo delay per dare tempo alla logica di aggiornare D
+      setTimeout(() => salvaDraft(), 50);
+    }
+  });
+
+  // Avviso uscita pagina se ci sono modifiche non salvate
+  window.addEventListener('beforeunload', (e) => {
+    if (draftDirty) {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    }
+  });
+}
+
+// Proponi ripresa del draft se esiste
+async function proponiRipresaDraft() {
+  const draft = caricaDraft();
+  if (!draft) return false;
+
+  // Mostra un dialog di conferma personalizzato
+  const oraSalvataggio = new Date(draft.timestamp);
+  const ora = oraSalvataggio.toLocaleString('it-IT', {
+    day: '2-digit', month: '2-digit',
+    hour: '2-digit', minute: '2-digit'
+  });
+
+  const messaggio = `Hai una degustazione non completata di "${draft.nome_visualizzato}" iniziata il ${ora}.\n\nVuoi riprenderla?`;
+
+  if (confirm(messaggio)) {
+    // Riprende: ripristina D e step
+    Object.assign(D, draft.D);
+    stepAttuale = draft.stepAttuale || 1;
+    return true;
+  } else {
+    // Inizia nuova: cancella il draft
+    cancellaDraft();
+    return false;
+  }
+}
+
+// Ripristina lo stato visivo dei chip/scale/stars dopo il caricamento del draft
+function ripristinaUI() {
+  // Chip (selezione singola)
+  const chipConfig = [
+    ['chipsOccasione', 'occasione'],
+    ['chipsDecanter', 'decanter'],
+    ['chipsColore', 'colore'],
+    ['chipsRiflesso', 'riflesso'],
+    ['chipsDensita', 'densita_cromatica'],
+    ['chipsLimpidezza', 'limpidezza'],
+    ['chipsVivacita', 'vivacita'],
+    ['chipsPerlage', 'perlage_grana'],
+    ['chipsZucchero', 'gusto_zucchero'],
+    ['chipsAlcol', 'gusto_alcol'],
+    ['chipsAcidita', 'gusto_acidita'],
+    ['chipsTannino', 'gusto_tannino'],
+    ['chipsSapidita', 'gusto_sapidita'],
+    ['chipsChiusura', 'gusto_chiusura'],
+    ['chipsProspettive', 'prospettive_consumo'],
+    ['chipsRicomprerei', 'ricomprerei'],
+  ];
+  for (const [containerId, field] of chipConfig) {
+    const c = document.getElementById(containerId);
+    if (!c) continue;
+    const val = D[field];
+    if (val === null || val === undefined) continue;
+    c.querySelectorAll('.chip').forEach(chip => {
+      const chipVal = chip.dataset.v;
+      const match = (typeof val === 'boolean')
+        ? (chipVal === String(val))
+        : (chipVal === String(val));
+      if (match) chip.classList.add('sel');
+    });
+  }
+
+  // Input testuali
+  const inputs = {
+    luogo: 'luogo',
+    commensali: 'commensali',
+    abbinamento: 'abbinamento_cibo',
+    tempoApertura: 'tempo_apertura_min',
+    olfattoNote: 'olfatto_note',
+    noteConclusive: 'note_conclusive',
+    extNome: 'nome_vino_esterno',
+    extProduttore: 'produttore_esterno',
+    extAnnata: 'annata_esterna',
+    extTipologia: 'tipologia_esterna',
+    dataDegustazione: 'data_degustazione',
+  };
+  for (const [elId, field] of Object.entries(inputs)) {
+    const el = document.getElementById(elId);
+    if (el && D[field] !== null && D[field] !== undefined) {
+      el.value = D[field];
+    }
+  }
+
+  // Temperatura
+  const tempEl = document.getElementById('tempSlider');
+  if (tempEl && D.temperatura_servizio !== null) tempEl.value = D.temperatura_servizio;
+
+  // Sentori olfatto: re-render della ruota aromi tiene conto di D.olfatto_sentori
+  if (typeof renderFamiglieAromi === 'function') renderFamiglieAromi();
+  if (typeof aggiornaCounterSentori === 'function') aggiornaCounterSentori();
+
+  // Stelle voto piacere
+  if (D.voto_piacere_personale) {
+    document.querySelectorAll('.star').forEach(s => {
+      if (parseInt(s.dataset.v) <= D.voto_piacere_personale) s.classList.add('sel');
+    });
+  }
 }

@@ -213,12 +213,14 @@
     /* BOTTOM NAV */
     .bottom-nav {
       position: fixed;
-      bottom: 0; left: 0; right: 0;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
       background: var(--bianco);
       border-top: 1px solid var(--bordo);
       display: flex;
+      width: 100%;
       max-width: 480px;
-      margin: 0 auto;
       z-index: 90;
     }
     .nav-item {
@@ -284,8 +286,14 @@
     <i class="ti ti-glass-full"></i>
     Bevute
   </a>
+  <a href="aggiungi.html" class="nav-item nav-add" aria-label="Aggiungi bottiglia">
+    <span class="nav-add-circle">
+      <i class="ti ti-plus"></i>
+    </span>
+    Aggiungi
+  </a>
   <a href="degusta.html" class="nav-item">
-    <i class="ti ti-plus" style="background:var(--bordeaux);color:#fff;border-radius:50%;width:32px;height:32px;line-height:32px;margin:0 auto 4px"></i>
+    <i class="ti ti-wine"></i>
     Degusta
   </a>
   <a href="teoria.html" class="nav-item">

@@ -13,12 +13,20 @@
 </head>
 <body>
   <style>
+    html {
+      background: #0F0405;
+      min-height: 100vh;
+    }
     body {
-      margin: 0;
+      margin: 0 auto;
       padding: 0;
       background: var(--nero, #1a0608);
       color: var(--avorio, #faf7f4);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 480px;
+      min-height: 100vh;
+      position: relative;
+      box-shadow: 0 0 60px rgba(0,0,0,0.5);
     }
     .teoria-header {
       background: var(--nero, #1a0608);
@@ -65,12 +73,14 @@
     }
     .bottom-nav {
       position: fixed;
-      bottom: 0; left: 0; right: 0;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
       background: var(--bianco, #fff);
       border-top: 1px solid var(--bordo, rgba(0,0,0,0.08));
       display: flex;
+      width: 100%;
       max-width: 480px;
-      margin: 0 auto;
       z-index: 90;
     }
     .nav-item {
@@ -116,8 +126,14 @@
       <i class="ti ti-glass-full"></i>
       Bevute
     </a>
+    <a href="aggiungi.html" class="nav-item nav-add" aria-label="Aggiungi bottiglia">
+      <span class="nav-add-circle">
+        <i class="ti ti-plus"></i>
+      </span>
+      Aggiungi
+    </a>
     <a href="degusta.html" class="nav-item">
-      <i class="ti ti-plus" style="background:var(--bordeaux);color:#fff;border-radius:50%;width:32px;height:32px;line-height:32px;margin:0 auto 4px"></i>
+      <i class="ti ti-wine"></i>
       Degusta
     </a>
     <a href="teoria.html" class="nav-item active">
