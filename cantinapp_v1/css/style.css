@@ -647,3 +647,221 @@ input[type=range]::-webkit-slider-thumb {
   text-decoration: none;
   cursor: pointer;
 }
+
+/* ============================================================
+   TEORIA - icona ⓘ e bottom-sheet
+   ============================================================ */
+.teoria-info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  font-size: 14px;
+  color: var(--accent, #C9A84C);
+  background: rgba(201, 168, 76, 0.15);
+  border-radius: 50%;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
+  line-height: 1;
+  transition: all 0.15s;
+}
+.teoria-info-icon:active {
+  background: rgba(201, 168, 76, 0.4);
+  transform: scale(0.92);
+}
+.field-label .teoria-info-icon {
+  font-size: 13px;
+  width: 16px;
+  height: 16px;
+}
+
+/* Overlay scuro */
+.teoria-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.teoria-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Sheet che sale dal basso */
+.teoria-sheet {
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  background: #1a0608;
+  border-radius: 18px 18px 0 0;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+  border-top: 2px solid var(--accent, #C9A84C);
+}
+.teoria-overlay.open .teoria-sheet {
+  transform: translateY(0);
+}
+
+.teoria-handle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 28px;
+  cursor: grab;
+  flex-shrink: 0;
+}
+.teoria-handle::before {
+  content: '';
+  width: 42px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.teoria-content {
+  padding: 0 20px 16px;
+  overflow-y: auto;
+  flex: 1;
+  color: #faf7f4;
+  -webkit-overflow-scrolling: touch;
+}
+
+.teoria-content h3 {
+  font-size: 20px;
+  margin: 0 0 16px 0;
+  color: var(--accent, #C9A84C);
+  font-weight: 600;
+}
+
+.teoria-sezione {
+  margin-bottom: 18px;
+}
+.teoria-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(250, 247, 244, 0.5);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.teoria-testo {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #faf7f4;
+}
+
+.teoria-pagina {
+  font-size: 11px;
+  color: rgba(250, 247, 244, 0.4);
+  font-style: italic;
+  margin-top: 12px;
+}
+
+.teoria-close {
+  margin: 0 20px 20px;
+  padding: 14px;
+  background: var(--accent, #C9A84C);
+  color: #1a0608;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.teoria-close:active {
+  opacity: 0.85;
+}
+
+/* Pulsante Teoria nell'header */
+.btn-teoria-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(201, 168, 76, 0.15);
+  color: var(--accent, #C9A84C);
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.btn-teoria-header:active {
+  background: rgba(201, 168, 76, 0.3);
+}
+
+/* Pagina Teoria — lista voci */
+.teoria-pagina-sezione {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.teoria-pagina-sezione-titolo {
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent, #C9A84C);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(201, 168, 76, 0.08);
+}
+.teoria-voce {
+  padding: 14px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.teoria-voce:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+.teoria-voce-titolo {
+  font-size: 15px;
+  color: #faf7f4;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.teoria-voce-preview {
+  font-size: 12.5px;
+  color: rgba(250, 247, 244, 0.55);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.teoria-search {
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #faf7f4;
+  font-size: 15px;
+  font-family: inherit;
+  margin-bottom: 16px;
+  -webkit-appearance: none;
+}
+.teoria-search:focus {
+  outline: none;
+  border-color: var(--accent, #C9A84C);
+}
+.teoria-search::placeholder {
+  color: rgba(250, 247, 244, 0.4);
+}
