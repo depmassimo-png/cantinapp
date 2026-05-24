@@ -554,9 +554,15 @@ function renderSentoriContainer() {
   const vitigni = bottigliaCorrente?.vitigni || [];
   const profili = vitigni.map(v => getProfiloVitigno(v)).filter(Boolean);
 
+  // Usa il dataset FILTRATO per tipologia, così le sottocategorie non
+  // compatibili (es. Bacche rosse per uno spumante bianco) non compaiono.
+  const tipologia = determinaTipologia();
+  const famigliePerFiltro = tipologia ? getFamiglieCompatibili(tipologia) : AROMI;
+
   // Per ogni famiglia aperta, mostra le sottocategorie e sentori
   for (const key of D.olfatto_famiglie_aperte) {
-    const fam = AROMI[key];
+    // Recupero famiglia filtrata se esiste, altrimenti fallback al dataset originale
+    const fam = famigliePerFiltro[key] || AROMI[key];
     if (!fam) continue;
 
     const block = document.createElement('div');
