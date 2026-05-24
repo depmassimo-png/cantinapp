@@ -205,6 +205,12 @@ window.TEORIA = {
   },
 
   // ============ OLFATTO - COMPLESSITÀ ============
+  "complessita.intro": {
+    titolo: "Complessità olfattiva",
+    definizione: "La complessità del vino è data dal numero delle famiglie di descrittori riconoscibili e percepibili nella prima fase dello sviluppo olfattivo. Più un vino ha descrittori riconoscibili, più è complesso.",
+    cosa_significa: "Valutazione: diverse inspirazioni profonde e brevi (per evitare assuefazione). Nel giro di 4-5 inspirazioni, oltre il 90% degli aromi dovrebbe essere espresso. Alcuni vini regalano sentori sempre diversi nel tempo (apertura del bouquet, temperatura che sale): si fa una prima valutazione e si segnala nelle note. La complessità è un fattore che INFLUENZA la qualità: se un vino è AMPIO non necessariamente è grande, ma se non ha buona complessità difficilmente raggiungerà l'eccellenza. La VINOSITÀ (ricordo di mosto/gioventù) NON va considerata nella definizione della complessità.",
+    pagina: 96
+  },
   "complessita.facile": {
     titolo: "Facile (complessità)",
     definizione: "Un vino è facile quando esprime fruttato e floreale dovuti alla fermentazione, con tre/quattro descrittori totali percettibili.",
@@ -231,6 +237,12 @@ window.TEORIA = {
   },
 
   // ============ OLFATTO - QUALITÀ ============
+  "qualita_olf.intro": {
+    titolo: "Qualità olfattiva",
+    definizione: "Giudizio che il degustatore esprime sul profumo del vino. NON è funzione della complessità: possono esistere vini più che complessi ma con sentori prevalenti o non raffinati (non più che fine), e per contro vini di complessità facile possono presentare sentori di qualità più che fine.",
+    cosa_significa: "È l'espressione della PIACEVOLEZZA, ELEGANZA, SCANSIONE, EQUILIBRIO e ARMONIA dei profumi. Un vino di qualità eccellente deve essere variegato, accattivante: il degustatore torna col naso nel bicchiere con grande piacere. Tutti i descrittori devono essere in totale amalgama, senza che uno sia più evidente degli altri. Il GRANDE VINO ha anche un PERCORSO OLFATTIVO: i suoi profumi evolvono nel breve tempo esprimendo un naso profondo e qualità evolutiva.",
+    pagina: 97
+  },
   "qualita_olf.accettabile": {
     titolo: "Accettabile (qualità olfattiva)",
     definizione: "Il vino risulta accettabile quando l'eleganza e la piacevolezza sono ordinari, e nell'insieme olfattivo ci sono profumi dominanti e di non grande eleganza.",
