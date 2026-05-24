@@ -1,5 +1,5 @@
 // ============================================================
-// CantinApp - Dati teorici Assosommelier (Manuale "Missione Vino")
+// CantinApp - Dati teorici Assosommelier
 // Estratti dalle pagine 76, 96-118 del manuale ufficiale
 // ============================================================
 // Ogni voce ha:

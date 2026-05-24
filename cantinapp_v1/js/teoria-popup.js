@@ -80,7 +80,7 @@
       csWrap.style.display = 'none';
     }
     const pg = document.getElementById('teoria-pagina');
-    pg.textContent = data.pagina ? `Manuale Assosommelier "Missione Vino" — pagina ${data.pagina}` : '';
+    pg.textContent = data.pagina ? `Manuale Assosommelier — pagina ${data.pagina}` : '';
 
     document.getElementById('teoria-overlay').classList.add('open');
     document.body.style.overflow = 'hidden';
