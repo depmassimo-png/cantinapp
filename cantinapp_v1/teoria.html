@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CantinApp">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <title>Teoria - CantinApp</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <a href="index.html" class="back-btn">‹</a>
+      <img src="logo.png" alt="CantinApp" class="logo-header">
+      <span class="header-title">Teoria</span>
+    </header>
+
+    <main class="content">
+      <div class="intro-text" style="margin-bottom:14px; color:rgba(250,247,244,0.7); font-size:13.5px; line-height:1.5">
+        Definizioni ufficiali Assosommelier dal manuale "Missione Vino". Tocca una voce per leggere la definizione completa.
+      </div>
+
+      <input type="search" class="teoria-search" id="teoriaSearch" placeholder="🔍 Cerca un termine (es. tannino, dorato, equilibrio)..." autocomplete="off">
+
+      <div id="teoriaContainer"></div>
+    </main>
+  </div>
+
+  <script src="js/teoria-data.js"></script>
+  <script src="js/teoria-popup.js"></script>
+  <script>
+    // Struttura categorie con ordine logico
+    const SEZIONI = [
+      {
+        titolo: '📖 Introduzione',
+        chiavi: ['visivo.intro', 'visivo.tecnica', 'visivo.densita_vino', 'visivo.colore_intro']
+      },
+      {
+        titolo: '👁️ Esame Visivo - Colori',
+        chiavi: [
+          'colore.paglierino', 'colore.dorato', 'colore.aranciato',
+          'colore.cerasuolo', 'colore.ramato',
+          'colore.porpora', 'colore.rubino', 'colore.granato',
+        ]
+      },
+      {
+        titolo: '👁️ Esame Visivo - Riflessi',
+        chiavi: ['riflesso.intro', 'riflesso.verdolino', 'riflesso.dorato', 'riflesso.aranciato', 'riflesso.porpora', 'riflesso.granato']
+      },
+      {
+        titolo: '👁️ Esame Visivo - Densità cromatica',
+        chiavi: ['densita_cromatica.intro', 'densita_cromatica.trasparente', 'densita_cromatica.compatto']
+      },
+      {
+        titolo: '👁️ Esame Visivo - Limpidezza',
+        chiavi: ['limpidezza.intro', 'limpidezza.opaco', 'limpidezza.limpido']
+      },
+      {
+        titolo: '👁️ Esame Visivo - Vivacità',
+        chiavi: ['vivacita.intro', 'vivacita.cupo', 'vivacita.vivace', 'vivacita.luminoso']
+      },
+      {
+        titolo: '👁️ Esame Visivo - Perlage (spumanti)',
+        chiavi: ['perlage.intro', 'perlage.grandi', 'perlage.fini']
+      },
+      {
+        titolo: '👃 Esame Olfattivo - Introduzione',
+        chiavi: ['olfatto.intro', 'olfatto.retronasale', 'olfatto.come_si_dice', 'olfatto.difetti']
+      },
+      {
+        titolo: '👃 Esame Olfattivo - Famiglie',
+        chiavi: [
+          'olfatto.fruttato', 'olfatto.floreale', 'olfatto.vegetale',
+          'olfatto.erbe_aromatiche', 'olfatto.minerale', 'olfatto.speziato',
+          'olfatto.tostato', 'olfatto.balsamico', 'olfatto.etereo',
+          'olfatto.sentori_diversi'
+        ]
+      },
+      {
+        titolo: '👃 Esame Olfattivo - Complessità',
+        chiavi: ['complessita.facile', 'complessita.complesso', 'complessita.piu_che_complesso', 'complessita.ampio']
+      },
+      {
+        titolo: '👃 Esame Olfattivo - Qualità',
+        chiavi: ['qualita_olf.accettabile', 'qualita_olf.fine', 'qualita_olf.piu_che_fine', 'qualita_olf.eccellente']
+      },
+      {
+        titolo: '👅 Gusto - Mappa e Sensazioni',
+        chiavi: ['tattili.intro', 'tattili.mappa_sapori']
+      },
+      {
+        titolo: '👅 Gusto - Zucchero percepito',
+        chiavi: ['zucchero.secco', 'zucchero.tendente_al_dolce', 'zucchero.dolce', 'zucchero.molto_dolce']
+      },
+      {
+        titolo: '👅 Gusto - Alcol percepito',
+        chiavi: ['alcol.contenuto', 'alcol.caldo', 'alcol.piu_che_caldo', 'alcol.molto_caldo']
+      },
+      {
+        titolo: '👅 Gusto - Acidità percepita',
+        chiavi: ['acidita.intro', 'acidita.contenuto', 'acidita.fresco', 'acidita.piu_che_fresco', 'acidita.molto_fresco']
+      },
+      {
+        titolo: '👅 Gusto - Tannino',
+        chiavi: ['tannino.descrizione_generale', 'tannino.amaro', 'tannino.vegetale', 'tannino.maturo', 'tannino.raffinato']
+      },
+      {
+        titolo: '👅 Gusto - Equilibrio',
+        chiavi: ['equilibrio.intro', 'equilibrio.dinamica', 'equilibrio.tipologie', 'equilibrio.squilibrato', 'equilibrio.in_fase_di_equilibrio', 'equilibrio.bilanciato', 'equilibrio.equilibrato']
+      },
+      {
+        titolo: '👅 Gusto - Persistenza',
+        chiavi: ['persistenza.intro', 'persistenza.accettabile', 'persistenza.persistente', 'persistenza.piu_che_persistente', 'persistenza.lungo']
+      },
+      {
+        titolo: '👅 Gusto - Sapidità',
+        chiavi: ['sapidita.intro', 'sapidita.non_avvertibile', 'sapidita.contenuta', 'sapidita.sapida', 'sapidita.piu_che_sapida']
+      },
+      {
+        titolo: '👅 Gusto - Chiusura di bocca',
+        chiavi: ['chiusura.intro', 'chiusura.imprecisa', 'chiusura.buona', 'chiusura.precisa', 'chiusura.elegante']
+      },
+      {
+        titolo: '👅 Gusto - Qualità gustativa',
+        chiavi: ['qualita_gust.intro', 'qualita_gust.accettabile', 'qualita_gust.fine', 'qualita_gust.piu_che_fine', 'qualita_gust.eccellente']
+      },
+      {
+        titolo: '👅 Gusto - Dimensione',
+        chiavi: ['dimensione.intro', 'dimensione.strutturato', 'dimensione.sottile', 'dimensione.distinto', 'dimensione.suggestivo']
+      },
+      {
+        titolo: '🏆 Conclusioni - Prospettive di consumo',
+        chiavi: ['prospettive.intro', 'prospettive.da_bere_subito', 'prospettive.brevi_prospettive', 'prospettive.medie_prospettive', 'prospettive.lunghe_prospettive']
+      },
+      {
+        titolo: '🧪 Esercizi pratici',
+        chiavi: ['esercizio.sei_bicchierini']
+      }
+    ];
+
+    function render(filtro = '') {
+      const container = document.getElementById('teoriaContainer');
+      container.innerHTML = '';
+      const filtroLower = filtro.toLowerCase().trim();
+
+      SEZIONI.forEach(sez => {
+        const voci = sez.chiavi
+          .filter(k => window.TEORIA[k])
+          .filter(k => {
+            if (!filtroLower) return true;
+            const v = window.TEORIA[k];
+            return (
+              (v.titolo || '').toLowerCase().includes(filtroLower) ||
+              (v.definizione || '').toLowerCase().includes(filtroLower) ||
+              (v.cosa_significa || '').toLowerCase().includes(filtroLower)
+            );
+          });
+        if (voci.length === 0) return;
+
+        const div = document.createElement('div');
+        div.className = 'teoria-pagina-sezione';
+        div.innerHTML = `<div class="teoria-pagina-sezione-titolo">${sez.titolo}</div>`;
+        voci.forEach(k => {
+          const v = window.TEORIA[k];
+          const preview = (v.definizione || '').substring(0, 120);
+          const voce = document.createElement('div');
+          voce.className = 'teoria-voce';
+          voce.innerHTML = `
+            <div class="teoria-voce-titolo">${v.titolo}</div>
+            <div class="teoria-voce-preview">${preview}${v.definizione.length > 120 ? '...' : ''}</div>
+          `;
+          voce.addEventListener('click', () => window.openTeoria(k));
+          div.appendChild(voce);
+        });
+        container.appendChild(div);
+      });
+
+      if (filtroLower && container.children.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:40px 20px; color:rgba(250,247,244,0.5)">Nessun risultato per "${filtro}"</div>`;
+      }
+    }
+
+    document.getElementById('teoriaSearch').addEventListener('input', (e) => {
+      render(e.target.value);
+    });
+
+    render();
+  </script>
+</body>
+</html>
