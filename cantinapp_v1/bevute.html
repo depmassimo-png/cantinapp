@@ -240,6 +240,53 @@
     }
     .nav-item.active { color: var(--bordeaux); }
     .nav-item.active i { color: var(--bordeaux); }
+
+    /* TITOLO SEZIONE */
+    .bev-section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 18px 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: var(--testo-2);
+    }
+    .bev-section-title:first-of-type { margin-top: 4px; }
+    .bev-section-title i {
+      color: var(--oro);
+      font-size: 16px;
+    }
+    .bev-section-count {
+      margin-left: auto;
+      background: var(--avorio);
+      color: var(--testo-2);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    /* CARD BEVUTA SENZA SCHEDA (pending) */
+    .degust-card-pending {
+      border-left: 4px solid var(--oro) !important;
+      background: rgba(201, 168, 76, 0.04);
+    }
+    .degust-pending-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--oro);
+      color: var(--nero);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .degust-pending-pill i { font-size: 13px; }
   </style>
 </head>
 <body>
@@ -293,7 +340,7 @@
     Aggiungi
   </a>
   <a href="degusta.html" class="nav-item">
-    <i class="ti ti-wine"></i>
+    <i class="ti ti-sparkles"></i>
     Degusta
   </a>
   <a href="teoria.html" class="nav-item">

@@ -1,15 +1,18 @@
 // ============================================================
-// CantinApp — Bevute (lista degustazioni)
+// CantinApp — Bevute (degustazioni + bottiglie consumate senza scheda)
 // ============================================================
 
 let currentUser = null;
 let degustazioni = [];
+let bevuteSenzaScheda = []; // bottiglie con stato='bevuta' ma senza scheda
 
 (async function init() {
   const session = await requireAuth();
   if (!session) return;
   currentUser = session.user;
-  await loadDegustazioni();
+  await Promise.all([loadDegustazioni(), loadBevuteSenzaScheda()]);
+  updateStats();
+  renderList();
 })();
 
 async function loadDegustazioni() {
@@ -29,10 +32,34 @@ async function loadDegustazioni() {
       `<div class="empty"><i class="ti ti-alert-circle"></i><h3>Errore</h3><p>${error.message}</p></div>`;
     return;
   }
-
   degustazioni = data || [];
-  updateStats();
-  renderList();
+}
+
+// Carica le bottiglie segnate come "bevuta" che NON hanno ancora una scheda di degustazione
+async function loadBevuteSenzaScheda() {
+  // 1. Lista bottiglie con stato bevuta
+  const { data: bottiglieBevute, error: e1 } = await sb
+    .from('bottiglie')
+    .select('id, nome_vino, produttore, annata, tipologia, etichetta_url, updated_at, created_at')
+    .eq('user_id', currentUser.id)
+    .eq('stato', 'bevuta')
+    .order('updated_at', { ascending: false });
+
+  if (e1 || !bottiglieBevute) {
+    bevuteSenzaScheda = [];
+    return;
+  }
+
+  // 2. Lista degustazioni già esistenti (per filtrare quelle bottiglie)
+  const { data: idsDeg } = await sb
+    .from('degustazioni')
+    .select('bottiglia_id')
+    .not('bottiglia_id', 'is', null);
+
+  const idsConScheda = new Set((idsDeg || []).map(d => d.bottiglia_id));
+
+  // 3. Filtra: tieni solo le bevute SENZA degustazione associata
+  bevuteSenzaScheda = bottiglieBevute.filter(b => !idsConScheda.has(b.id));
 }
 
 function updateStats() {
@@ -56,22 +83,28 @@ function renderList() {
   const search = document.getElementById('searchInput').value.toLowerCase().trim();
   const area = document.getElementById('listArea');
 
-  let filtered = degustazioni;
+  let filteredDeg = degustazioni;
+  let filteredBev = bevuteSenzaScheda;
   if (search) {
-    filtered = filtered.filter(d => {
+    filteredDeg = filteredDeg.filter(d => {
       const nome = (d.bottiglia?.nome_vino || d.nome_vino_esterno || '').toLowerCase();
       const prod = (d.bottiglia?.produttore || d.produttore_esterno || '').toLowerCase();
       return nome.includes(search) || prod.includes(search);
     });
+    filteredBev = filteredBev.filter(b => {
+      const nome = (b.nome_vino || '').toLowerCase();
+      const prod = (b.produttore || '').toLowerCase();
+      return nome.includes(search) || prod.includes(search);
+    });
   }
 
-  if (filtered.length === 0) {
-    if (degustazioni.length === 0) {
+  if (filteredDeg.length === 0 && filteredBev.length === 0) {
+    if (degustazioni.length === 0 && bevuteSenzaScheda.length === 0) {
       area.innerHTML = `
         <div class="empty">
           <i class="ti ti-glass-full"></i>
-          <h3>Ancora nessuna degustazione</h3>
-          <p>Apri una bottiglia dalla tua cantina<br>e tocca <strong>Degusta ora</strong> per cominciare</p>
+          <h3>Ancora nessuna bottiglia bevuta</h3>
+          <p>Apri una bottiglia dalla tua cantina<br>e tocca <strong>Bevuta</strong> per cominciare</p>
         </div>`;
     } else {
       area.innerHTML = `
@@ -85,8 +118,53 @@ function renderList() {
   }
 
   let html = '';
-  for (const d of filtered) html += cardHtml(d);
+
+  // SEZIONE 1: bottiglie bevute senza scheda (in cima, perché richiedono azione)
+  if (filteredBev.length > 0) {
+    html += `<div class="bev-section-title">
+      <i class="ti ti-pencil"></i> Da valutare
+      <span class="bev-section-count">${filteredBev.length}</span>
+    </div>`;
+    for (const b of filteredBev) html += cardBevutaSenzaScheda(b);
+  }
+
+  // SEZIONE 2: degustazioni complete
+  if (filteredDeg.length > 0) {
+    if (filteredBev.length > 0) {
+      // separator visibile solo se ci sono anche le altre
+      html += `<div class="bev-section-title">
+        <i class="ti ti-checks"></i> Degustazioni complete
+        <span class="bev-section-count">${filteredDeg.length}</span>
+      </div>`;
+    }
+    for (const d of filteredDeg) html += cardHtml(d);
+  }
+
   area.innerHTML = html;
+}
+
+// Card per una bottiglia bevuta senza scheda compilata
+function cardBevutaSenzaScheda(b) {
+  const data = b.updated_at ? formatDate(b.updated_at) : '';
+  const annata = b.annata || '';
+  const tipologia = b.tipologia || '';
+
+  return `
+    <a class="degust-card degust-card-pending" href="degusta.html?bottiglia_id=${b.id}">
+      <div class="degust-top">
+        <div class="degust-info">
+          <div class="degust-name">${esc(b.nome_vino || 'Vino senza nome')}</div>
+          <div class="degust-prod">${esc(b.produttore || '')}${annata ? ' · ' + annata : ''}</div>
+        </div>
+        <div class="degust-right">
+          <div class="degust-data">${data}</div>
+        </div>
+      </div>
+      <div class="degust-meta">
+        ${tipologia ? `<span class="badge badge-${tipologia}">${cap(tipologia)}</span>` : ''}
+        <span class="degust-pending-pill"><i class="ti ti-pencil"></i> Compila scheda</span>
+      </div>
+    </a>`;
 }
 
 function cardHtml(d) {

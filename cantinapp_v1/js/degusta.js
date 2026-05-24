@@ -70,22 +70,16 @@ const D = {
       document.getElementById('wineId').textContent =
         `${data.nome_vino} · ${data.produttore}${data.annata ? ' · ' + data.annata : ''}`;
 
-      // Nascondi tannino per non-rossi e mostra perlage per spumanti
-      if (data.tipologia !== 'rosso') {
-        document.getElementById('boxTannino').style.display = 'none';
-      } else {
-        document.getElementById('boxDensita').style.display = 'block';
-      }
-      if (data.tipologia === 'spumante') {
-        document.getElementById('boxPerlage').style.display = 'block';
-      }
+      // Mostra TUTTI i box (densità, tannino, perlage), gestiamo poi
+      // l'abilitazione tramite applicaRegoleTipologia()
+      document.getElementById('boxDensita').style.display = 'block';
+      document.getElementById('boxPerlage').style.display = 'block';
     }
   } else {
     document.getElementById('wineId').textContent = 'Degustazione alla cieca';
-    // Mostra la box per inserire i dati del vino in step 5
     document.getElementById('boxVinoEsterno').style.display = 'block';
-    // In degustazione cieca mostra sempre densità cromatica (valutabile anche per altri vini)
     document.getElementById('boxDensita').style.display = 'block';
+    document.getElementById('boxPerlage').style.display = 'block';
   }
 
   // Data oggi
@@ -108,6 +102,9 @@ const D = {
     ripristinaUI();
     showToast('Degustazione ripresa');
   }
+
+  // Applica regole di tipologia (disabilita chip non pertinenti)
+  applicaRegoleTipologia();
 
   // Attiva il salvataggio automatico in background
   attivaAutosave();
@@ -141,6 +138,11 @@ function setupChips() {
     if (!c) continue;
     c.querySelectorAll('.chip').forEach(chip => {
       chip.addEventListener('click', () => {
+        // Se il chip è disabilitato (non pertinente alla tipologia), ignora il click
+        if (chip.classList.contains('chip-disabled')) {
+          mostraTooltipNonApplicabile(chip);
+          return;
+        }
         c.querySelectorAll('.chip').forEach(x => x.classList.remove('sel'));
         chip.classList.add('sel');
         const v = chip.dataset.v;
@@ -852,4 +854,147 @@ function ripristinaUI() {
       if (parseInt(s.dataset.v) <= D.voto_piacere_personale) s.classList.add('sel');
     });
   }
+}
+
+
+// ============================================================
+// REGOLE DI COMPATIBILITÀ TIPOLOGIA → CHIP DISABILITATI
+// ============================================================
+// Mostra tutta la scheda Assosommelier ma disabilita i chip che
+// non sono pertinenti alla tipologia in degustazione.
+// In degustazione cieca tutto resta selezionabile (devi capire tu).
+// ============================================================
+
+const COMPATIBILITA = {
+  // Per ogni tipologia, lista dei VALORI COMPATIBILI di ogni dimensione
+  bianco: {
+    colore: ['paglierino', 'dorato', 'aranciato'],
+    riflesso: ['non_rilevato', 'verdolino', 'dorato', 'aranciato'],
+    densita: [],          // nessuno: densità non si valuta sui bianchi
+    tannino: [],          // nessuno: tannino non si valuta sui bianchi
+    perlage: [],          // nessuno: solo spumanti
+  },
+  rosato: {
+    colore: ['cerasuolo', 'ramato', 'aranciato'],
+    riflesso: ['non_rilevato', 'aranciato'],
+    densita: [],
+    tannino: [],
+    perlage: [],
+  },
+  rosso: {
+    colore: ['porpora', 'rubino', 'granato', 'aranciato'],
+    riflesso: ['non_rilevato', 'aranciato', 'porpora', 'granato'],
+    densita: ['trasparente', 'compatto'],  // tutti ammessi
+    tannino: '*',                          // tutti ammessi
+    perlage: [],
+  },
+  spumante: {
+    // gli spumanti possono essere bianchi, rosati o rossi
+    colore: ['paglierino', 'dorato', 'aranciato', 'cerasuolo', 'ramato', 'porpora', 'rubino'],
+    riflesso: '*',                         // tutti ammessi
+    densita: ['trasparente', 'compatto'],  // se rosso base
+    tannino: '*',                          // se rosso base
+    perlage: ['grandi', 'fini'],           // sempre
+  },
+  passito: { colore: '*', riflesso: '*', densita: '*', tannino: '*', perlage: [] },
+  liquoroso: { colore: '*', riflesso: '*', densita: '*', tannino: '*', perlage: [] },
+};
+
+function applicaRegoleTipologia() {
+  // Determina la tipologia base. Se non c'è (es. degustazione cieca senza colore), abilita tutto.
+  const tipologia = bottigliaCorrente?.tipologia || D.tipologia_esterna;
+
+  // Se siamo in cieca senza tipologia nota, non disabilitare nulla
+  if (!tipologia) {
+    abilitaTuttiIChip();
+    return;
+  }
+
+  const regole = COMPATIBILITA[tipologia];
+  if (!regole) {
+    abilitaTuttiIChip();
+    return;
+  }
+
+  applicaRegolaChip('chipsColore', regole.colore, 'colore');
+  applicaRegolaChip('chipsRiflesso', regole.riflesso, 'riflesso');
+  applicaRegolaChip('chipsDensita', regole.densita, 'densita_cromatica');
+  applicaRegolaChip('chipsTannino', regole.tannino, 'gusto_tannino');
+  applicaRegolaChip('chipsPerlage', regole.perlage, 'perlage_grana');
+
+  // Aggiungi etichetta "non applicabile" alle box intere se la tipologia esclude proprio quella valutazione
+  marcaBoxDisabilitato('boxDensita', regole.densita.length === 0 || regole.densita === false);
+  marcaBoxDisabilitato('boxTannino', !regole.tannino || (Array.isArray(regole.tannino) && regole.tannino.length === 0));
+  marcaBoxDisabilitato('boxPerlage', regole.perlage.length === 0 || regole.perlage === false);
+}
+
+function applicaRegolaChip(containerId, valoriAmmessi, fieldName) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+
+  const chips = c.querySelectorAll('.chip');
+  const tuttiAmmessi = valoriAmmessi === '*';
+  const nessunoAmmesso = Array.isArray(valoriAmmessi) && valoriAmmessi.length === 0;
+
+  chips.forEach(chip => {
+    const val = chip.dataset.v;
+    const ammesso = tuttiAmmessi || (Array.isArray(valoriAmmessi) && valoriAmmessi.includes(val));
+
+    if (ammesso) {
+      chip.classList.remove('chip-disabled');
+      chip.removeAttribute('aria-disabled');
+    } else {
+      chip.classList.add('chip-disabled');
+      chip.setAttribute('aria-disabled', 'true');
+      // Se era selezionato, deselezionalo automaticamente
+      if (chip.classList.contains('sel')) {
+        chip.classList.remove('sel');
+        D[fieldName] = null;
+      }
+    }
+  });
+
+  // Se TUTTI i chip sono disabilitati, marca il container come "non applicabile"
+  if (nessunoAmmesso) {
+    c.classList.add('chips-all-disabled');
+  } else {
+    c.classList.remove('chips-all-disabled');
+  }
+}
+
+function marcaBoxDisabilitato(boxId, disabilitato) {
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  if (disabilitato) {
+    box.classList.add('box-non-applicabile');
+  } else {
+    box.classList.remove('box-non-applicabile');
+  }
+}
+
+function abilitaTuttiIChip() {
+  document.querySelectorAll('.chip').forEach(c => {
+    c.classList.remove('chip-disabled');
+    c.removeAttribute('aria-disabled');
+  });
+  document.querySelectorAll('.box-non-applicabile').forEach(b => {
+    b.classList.remove('box-non-applicabile');
+  });
+}
+
+
+// Mostra un toast esplicativo quando si tenta di selezionare un chip non pertinente
+function mostraTooltipNonApplicabile(chip) {
+  const tipologia = bottigliaCorrente?.tipologia || D.tipologia_esterna;
+  if (!tipologia) return;
+  const tipoLabel = {
+    bianco: 'vini bianchi',
+    rosato: 'vini rosati',
+    rosso: 'vini rossi',
+    spumante: 'spumanti',
+    passito: 'passiti',
+    liquoroso: 'vini liquorosi',
+  }[tipologia] || tipologia;
+  const valLabel = chip.textContent.trim();
+  showToast(`"${valLabel}" non si applica ai ${tipoLabel}`);
 }

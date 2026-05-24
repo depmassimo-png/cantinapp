@@ -179,21 +179,38 @@ async function cambiaQuantita(delta) {
 
 async function segnaBevuta() {
   if (!confirm(`Vuoi segnare una bottiglia di "${bottiglia.nome_vino}" come bevuta?\n\nLa quantità verrà ridotta di 1.`)) return;
+
   const nuova = Math.max(0, (bottiglia.quantita || 0) - 1);
   const update = { quantita: nuova };
   if (nuova === 0) update.stato = 'bevuta';
+
   const { error } = await sb
     .from('bottiglie')
     .update(update)
     .eq('id', bottiglia.id);
   if (error) { showToast('Errore: ' + error.message, true); return; }
+
   showToast('Bottiglia segnata come bevuta');
-  if (nuova === 0) {
-    setTimeout(() => location.href = 'cantina.html', 1200);
-  } else {
-    bottiglia.quantita = nuova;
-    document.getElementById('qtyDisplay').textContent = nuova;
-  }
+
+  // Proponi compilazione scheda di degustazione
+  setTimeout(() => {
+    const compila = confirm(
+      `Vuoi compilare la scheda di degustazione di "${bottiglia.nome_vino}" adesso?\n\n` +
+      `Premi OK per iniziare subito, oppure Annulla per compilarla in seguito ` +
+      `(la troverai nella sezione "Bevute").`
+    );
+    if (compila) {
+      // Vai al wizard di degustazione
+      location.href = 'degusta.html?bottiglia_id=' + bottiglia.id;
+    } else if (nuova === 0) {
+      // Se finita e non vuole compilare ora, torna alla cantina
+      location.href = 'cantina.html';
+    } else {
+      // Aggiorna solo il display della quantità
+      bottiglia.quantita = nuova;
+      document.getElementById('qtyDisplay').textContent = nuova;
+    }
+  }, 600);
 }
 
 function iniziaDegustazione() {

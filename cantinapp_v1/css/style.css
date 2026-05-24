@@ -177,6 +177,50 @@ input::placeholder, textarea::placeholder { color: var(--testo-3); }
   color: var(--nero);
 }
 
+/* Chip non compatibile con la tipologia in degustazione */
+.chip-disabled {
+  opacity: 0.32;
+  background: var(--avorio) !important;
+  color: var(--testo-3, #999) !important;
+  border-color: var(--bordo) !important;
+  border-style: dashed !important;
+  cursor: not-allowed !important;
+  text-decoration: line-through;
+  text-decoration-thickness: 0.5px;
+  text-decoration-color: var(--testo-3, #999);
+}
+.chip-disabled .color-dot {
+  opacity: 0.4;
+}
+.chip-disabled:active {
+  background: var(--avorio) !important;
+  color: var(--testo-3, #999) !important;
+}
+
+/* Box intera non applicabile (es. Densità per bianchi) */
+.box-non-applicabile {
+  position: relative;
+}
+.box-non-applicabile::after {
+  content: 'Non applicabile a questa tipologia';
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 10px;
+  color: var(--testo-3, #999);
+  font-style: italic;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  vertical-align: middle;
+}
+.box-non-applicabile .field-label::after {
+  content: ' · non applicabile';
+  color: var(--testo-3, #999);
+  font-size: 10px;
+  font-weight: 400;
+  font-style: italic;
+}
+
 /* ---- SCALE BUTTONS (punteggi) ---- */
 .scale-row { display: flex; gap: 5px; }
 .scale-btn {
