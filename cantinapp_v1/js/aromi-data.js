@@ -245,11 +245,20 @@ function tipologiaDaColore(colore) {
 // Una famiglia che non ha sottocategorie compatibili viene mostrata vuota (consente comunque la selezione manuale).
 function getFamiglieCompatibili(tipologia) {
   if (!tipologia) return AROMI;
+
+  // Gli spumanti specifici (spumante_bianco/rosato/rosso) si comportano come
+  // i loro corrispondenti fermi, perché i sentori dipendono dal vino base
+  // e non dalla presenza di anidride carbonica.
+  let tipoFiltro = tipologia;
+  if (tipologia === 'spumante_bianco') tipoFiltro = 'bianco';
+  else if (tipologia === 'spumante_rosato') tipoFiltro = 'rosato';
+  else if (tipologia === 'spumante_rosso') tipoFiltro = 'rosso';
+
   const result = {};
   for (const [key, fam] of Object.entries(AROMI)) {
     const newFam = { label: fam.label, color: fam.color, subcategories: {} };
     for (const [subKey, sub] of Object.entries(fam.subcategories)) {
-      if (sub.compat && !sub.compat.includes(tipologia)) continue;
+      if (sub.compat && !sub.compat.includes(tipoFiltro)) continue;
       newFam.subcategories[subKey] = sub;
     }
     // Includi SEMPRE la famiglia (anche se vuota) — fedeltà alla scheda Assosommelier

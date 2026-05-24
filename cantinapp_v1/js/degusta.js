@@ -147,6 +147,13 @@ function setupChips() {
         chip.classList.add('sel');
         const v = chip.dataset.v;
         D[field] = transform ? transform(v) : v;
+
+        // Se è cambiato il colore o la tipologia esterna, ricalcola le regole
+        // (importante per gli spumanti: bianco vs rosato vs rosso e per la cieca)
+        if (field === 'colore' || field === 'tipologia_esterna') {
+          if (typeof applicaRegoleTipologia === 'function') applicaRegoleTipologia();
+          if (typeof renderFamiglieAromi === 'function') renderFamiglieAromi();
+        }
       });
     });
   }
@@ -665,10 +672,24 @@ function aggiornaContatori() {
 // 3. Tipologia dedotta dal colore osservato (utile in degustazione alla cieca)
 // ============================================================
 function determinaTipologia() {
-  if (bottigliaCorrente?.tipologia) return bottigliaCorrente.tipologia;
-  if (D.tipologia_esterna) return D.tipologia_esterna;
-  if (D.colore) return tipologiaDaColore(D.colore);
-  return null;
+  // Tipologia base
+  let tipo = null;
+  if (bottigliaCorrente?.tipologia) tipo = bottigliaCorrente.tipologia;
+  else if (D.tipologia_esterna) tipo = D.tipologia_esterna;
+  else if (D.colore) tipo = tipologiaDaColore(D.colore);
+
+  if (!tipo) return null;
+
+  // Per gli spumanti, specifica il sottotipo in base al colore osservato
+  if (tipo === 'spumante') {
+    const c = D.colore;
+    if (!c) return 'spumante_bianco'; // default: stragrande maggioranza
+    if (['cerasuolo', 'ramato'].includes(c)) return 'spumante_rosato';
+    if (['porpora', 'rubino', 'granato'].includes(c)) return 'spumante_rosso';
+    return 'spumante_bianco';
+  }
+
+  return tipo;
 }
 
 
@@ -866,13 +887,12 @@ function ripristinaUI() {
 // ============================================================
 
 const COMPATIBILITA = {
-  // Per ogni tipologia, lista dei VALORI COMPATIBILI di ogni dimensione
   bianco: {
     colore: ['paglierino', 'dorato', 'aranciato'],
     riflesso: ['non_rilevato', 'verdolino', 'dorato', 'aranciato'],
-    densita: [],          // nessuno: densità non si valuta sui bianchi
-    tannino: [],          // nessuno: tannino non si valuta sui bianchi
-    perlage: [],          // nessuno: solo spumanti
+    densita: [],
+    tannino: [],
+    perlage: [],
   },
   rosato: {
     colore: ['cerasuolo', 'ramato', 'aranciato'],
@@ -884,27 +904,43 @@ const COMPATIBILITA = {
   rosso: {
     colore: ['porpora', 'rubino', 'granato', 'aranciato'],
     riflesso: ['non_rilevato', 'aranciato', 'porpora', 'granato'],
-    densita: ['trasparente', 'compatto'],  // tutti ammessi
-    tannino: '*',                          // tutti ammessi
+    densita: ['trasparente', 'compatto'],
+    tannino: '*',
     perlage: [],
   },
-  spumante: {
-    // gli spumanti possono essere bianchi, rosati o rossi
-    colore: ['paglierino', 'dorato', 'aranciato', 'cerasuolo', 'ramato', 'porpora', 'rubino'],
-    riflesso: '*',                         // tutti ammessi
-    densita: ['trasparente', 'compatto'],  // se rosso base
-    tannino: '*',                          // se rosso base
-    perlage: ['grandi', 'fini'],           // sempre
+  // Spumante BIANCO: comportamento simile al bianco fermo, ma con perlage attivo
+  spumante_bianco: {
+    colore: ['paglierino', 'dorato', 'aranciato'],
+    riflesso: ['non_rilevato', 'verdolino', 'dorato', 'aranciato'],
+    densita: [],
+    tannino: [],
+    perlage: ['grandi', 'fini'],
+  },
+  // Spumante ROSATO: rosato fermo + perlage
+  spumante_rosato: {
+    colore: ['cerasuolo', 'ramato', 'aranciato'],
+    riflesso: ['non_rilevato', 'aranciato'],
+    densita: [],
+    tannino: [],
+    perlage: ['grandi', 'fini'],
+  },
+  // Spumante ROSSO: rosso fermo + perlage (Lambrusco, Brachetto)
+  spumante_rosso: {
+    colore: ['porpora', 'rubino', 'granato', 'aranciato'],
+    riflesso: ['non_rilevato', 'aranciato', 'porpora', 'granato'],
+    densita: ['trasparente', 'compatto'],
+    tannino: '*',
+    perlage: ['grandi', 'fini'],
   },
   passito: { colore: '*', riflesso: '*', densita: '*', tannino: '*', perlage: [] },
   liquoroso: { colore: '*', riflesso: '*', densita: '*', tannino: '*', perlage: [] },
 };
 
 function applicaRegoleTipologia() {
-  // Determina la tipologia base. Se non c'è (es. degustazione cieca senza colore), abilita tutto.
-  const tipologia = bottigliaCorrente?.tipologia || D.tipologia_esterna;
+  // Determina la tipologia EFFETTIVA (per gli spumanti distingue bianco/rosato/rosso in base al colore)
+  const tipologia = determinaTipologia();
 
-  // Se siamo in cieca senza tipologia nota, non disabilitare nulla
+  // Se non c'è una tipologia chiara (es. degustazione cieca senza colore), abilita tutto
   if (!tipologia) {
     abilitaTuttiIChip();
     return;
@@ -922,10 +958,9 @@ function applicaRegoleTipologia() {
   applicaRegolaChip('chipsTannino', regole.tannino, 'gusto_tannino');
   applicaRegolaChip('chipsPerlage', regole.perlage, 'perlage_grana');
 
-  // Aggiungi etichetta "non applicabile" alle box intere se la tipologia esclude proprio quella valutazione
-  marcaBoxDisabilitato('boxDensita', regole.densita.length === 0 || regole.densita === false);
+  marcaBoxDisabilitato('boxDensita', !regole.densita || (Array.isArray(regole.densita) && regole.densita.length === 0));
   marcaBoxDisabilitato('boxTannino', !regole.tannino || (Array.isArray(regole.tannino) && regole.tannino.length === 0));
-  marcaBoxDisabilitato('boxPerlage', regole.perlage.length === 0 || regole.perlage === false);
+  marcaBoxDisabilitato('boxPerlage', !regole.perlage || (Array.isArray(regole.perlage) && regole.perlage.length === 0));
 }
 
 function applicaRegolaChip(containerId, valoriAmmessi, fieldName) {
@@ -985,13 +1020,16 @@ function abilitaTuttiIChip() {
 
 // Mostra un toast esplicativo quando si tenta di selezionare un chip non pertinente
 function mostraTooltipNonApplicabile(chip) {
-  const tipologia = bottigliaCorrente?.tipologia || D.tipologia_esterna;
+  const tipologia = determinaTipologia();
   if (!tipologia) return;
   const tipoLabel = {
     bianco: 'vini bianchi',
     rosato: 'vini rosati',
     rosso: 'vini rossi',
     spumante: 'spumanti',
+    spumante_bianco: 'spumanti bianchi',
+    spumante_rosato: 'spumanti rosati',
+    spumante_rosso: 'spumanti rossi',
     passito: 'passiti',
     liquoroso: 'vini liquorosi',
   }[tipologia] || tipologia;
