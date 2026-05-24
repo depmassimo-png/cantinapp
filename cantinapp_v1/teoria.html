@@ -9,6 +9,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <title>Teoria - CantinApp</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 </head>
 <body>
   <style>
@@ -60,7 +61,35 @@
       padding: 16px;
       max-width: 720px;
       margin: 0 auto;
+      padding-bottom: 80px;
     }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--bianco, #fff);
+      border-top: 1px solid var(--bordo, rgba(0,0,0,0.08));
+      display: flex;
+      max-width: 480px;
+      margin: 0 auto;
+      z-index: 90;
+    }
+    .nav-item {
+      flex: 1;
+      padding: 10px 4px 12px;
+      text-align: center;
+      color: var(--testo-2, #777);
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 500;
+      transition: color .15s;
+    }
+    .nav-item i {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 2px;
+    }
+    .nav-item.active { color: var(--bordeaux, #8B2635); }
+    .nav-item.active i { color: var(--bordeaux, #8B2635); }
   </style>
 
   <header class="teoria-header">
@@ -75,8 +104,27 @@
 
     <input type="search" class="teoria-search" id="teoriaSearch" placeholder="🔍 Cerca un termine (es. tannino, dorato, equilibrio)..." autocomplete="off">
 
-    <div id="teoriaContainer" style="margin-top: 14px;"></div>
+    <div id="teoriaContainer" style="margin-top: 14px; padding-bottom: 80px;"></div>
   </main>
+
+  <nav class="bottom-nav">
+    <a href="cantina.html" class="nav-item">
+      <i class="ti ti-building-warehouse"></i>
+      Cantina
+    </a>
+    <a href="bevute.html" class="nav-item">
+      <i class="ti ti-glass-full"></i>
+      Bevute
+    </a>
+    <a href="degusta.html" class="nav-item">
+      <i class="ti ti-plus" style="background:var(--bordeaux);color:#fff;border-radius:50%;width:32px;height:32px;line-height:32px;margin:0 auto 4px"></i>
+      Degusta
+    </a>
+    <a href="teoria.html" class="nav-item active">
+      <i class="ti ti-book"></i>
+      Teoria
+    </a>
+  </nav>
 
   <script src="js/teoria-data.js"></script>
   <script src="js/teoria-popup.js"></script>
