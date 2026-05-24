@@ -20,11 +20,13 @@ let currentUser = null;
 })();
 
 async function loadUserName() {
+  const el = document.getElementById('userName');
+  if (!el) return;
   const { data } = await sb.from('profiles').select('username').eq('id', currentUser.id).single();
   if (data) {
-    document.getElementById('userName').textContent = 'Ciao, ' + data.username;
+    el.textContent = 'Ciao, ' + data.username;
   } else {
-    document.getElementById('userName').textContent = currentUser.email;
+    el.textContent = currentUser.email;
   }
 }
 
@@ -94,23 +96,10 @@ function renderBottiglie() {
     return;
   }
 
-  // Raggruppa per tipologia se filtro = all
-  let html = '';
-  if (filtroAttivo === 'all') {
-    const gruppi = groupByTipologia(filtered);
-    for (const tip of ['rosso', 'bianco', 'rosato', 'spumante', 'passito', 'liquoroso']) {
-      if (gruppi[tip] && gruppi[tip].length) {
-        html += `<p class="section-label">${labelTipologia(tip)} · ${gruppi[tip].length}</p>`;
-        html += '<div class="wine-list">';
-        for (const b of gruppi[tip]) html += cardHtml(b);
-        html += '</div>';
-      }
-    }
-  } else {
-    html = '<div class="wine-list" style="padding-top:8px">';
-    for (const b of filtered) html += cardHtml(b);
-    html += '</div>';
-  }
+  // Lista piatta (no raggruppamenti)
+  let html = '<div class="wine-list">';
+  for (const b of filtered) html += cardHtml(b);
+  html += '</div>';
 
   area.innerHTML = html;
 }
@@ -148,19 +137,17 @@ function cardHtml(b) {
 
   return `
     <a class="wine-card" href="bottiglia.html?id=${b.id}">
+      <span class="wine-stripe stripe-${tipologia}"></span>
       <div class="wine-thumb ${tipologia}">${img}</div>
       <div class="wine-info">
         <div class="wine-name">${escapeHtml(b.nome_vino)}</div>
         <div class="wine-producer">${escapeHtml(b.produttore)}</div>
-        <div class="wine-meta">
-          <span class="badge ${badgeClass(tipologia)}">${capitalize(tipologia)}</span>
-          <span class="badge badge-anno">${annata}</span>
-          ${gradi ? `<span class="badge badge-anno">${gradi}</span>` : ''}
+        <div class="wine-meta-row">
+          <span class="tipo-label tipo-${tipologia}">${capitalize(tipologia)}</span>
+          <span class="wine-extra">${annata}${gradi ? ' · ' + gradi : ''}</span>
         </div>
       </div>
-      <div class="wine-right">
-        <span class="badge badge-qty">×${qty}</span>
-      </div>
+      <div class="wine-qty">×${qty}</div>
     </a>`;
 }
 

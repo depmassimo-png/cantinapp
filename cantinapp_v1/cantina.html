@@ -13,54 +13,57 @@
   <meta name="apple-mobile-web-app-title" content="CantinApp">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <style>
+    /* === Sfondo scuro coerente === */
+    body {
+      background: var(--nero, #1a0608);
+      color: var(--avorio, #faf7f4);
+      min-height: 100vh;
+    }
+
+    /* === Header slim === */
     .header-cantina {
-      background: var(--nero);
-      padding: 16px 20px 14px;
+      background: var(--nero, #1a0608);
+      padding: 14px 16px 12px;
       position: sticky;
       top: 0;
       z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
     .header-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 4px;
     }
     .header-title {
-      font-size: 18px;
-      font-weight: 500;
+      font-size: 17px;
+      font-weight: 600;
       color: #fff;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 10px;
     }
-    .header-title i { color: var(--oro); }
     .header-count {
-      font-size: 12px;
-      color: var(--oro);
-      background: rgba(201,168,76,.12);
+      font-size: 11px;
+      color: var(--oro, #C9A84C);
+      background: rgba(201,168,76,.14);
       padding: 3px 10px;
-      border-radius: var(--radius-pill);
+      border-radius: 999px;
       border: 1px solid rgba(201,168,76,.3);
-    }
-    .header-user {
-      font-size: 12px;
-      color: rgba(255,255,255,.5);
-      font-style: italic;
+      font-weight: 600;
     }
     .logout-btn {
       background: none;
       border: none;
-      color: var(--oro);
+      color: var(--oro, #C9A84C);
       cursor: pointer;
       font-size: 18px;
-      padding: 4px;
+      padding: 4px 8px;
     }
 
+    /* === Search bar === */
     .search-bar {
-      background: var(--bianco);
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--bordo);
+      background: var(--nero, #1a0608);
+      padding: 10px 16px 8px;
       display: flex;
       gap: 8px;
       align-items: center;
@@ -70,84 +73,103 @@
       position: relative;
     }
     .search-input-wrap input {
-      padding-left: 38px;
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      box-sizing: border-box;
     }
+    .search-input-wrap input::placeholder { color: rgba(255,255,255,0.4); }
     .search-input-wrap i {
       position: absolute;
       left: 12px;
       top: 50%;
       transform: translateY(-50%);
-      color: var(--testo-3);
-      font-size: 18px;
+      color: rgba(255,255,255,0.4);
+      font-size: 16px;
     }
 
+    /* === Filtri chip === */
     .filter-btns {
       display: flex;
       gap: 6px;
-      padding: 12px 16px;
+      padding: 10px 16px;
       overflow-x: auto;
-      background: var(--avorio);
-      border-bottom: 1px solid var(--bordo);
+      background: var(--nero, #1a0608);
       scrollbar-width: none;
     }
     .filter-btns::-webkit-scrollbar { display: none; }
     .filter-btn {
       flex-shrink: 0;
-      padding: 7px 14px;
-      border-radius: var(--radius-pill);
+      padding: 6px 14px;
+      border-radius: 999px;
       font-size: 12px;
       font-weight: 500;
       cursor: pointer;
-      border: 1px solid var(--bordo);
-      background: var(--bianco);
-      color: var(--testo-2);
+      border: 1px solid rgba(255,255,255,0.15);
+      background: transparent;
+      color: rgba(255,255,255,0.7);
       transition: all .15s;
       user-select: none;
     }
     .filter-btn.active {
-      background: var(--bordeaux);
-      border-color: var(--bordeaux);
+      background: var(--bordeaux, #8B2635);
+      border-color: var(--bordeaux, #8B2635);
       color: #fff;
     }
 
-    .section-label {
-      padding: 14px 20px 6px;
-      font-size: 11px;
-      color: var(--testo-2);
-      font-weight: 600;
-      letter-spacing: .6px;
-      text-transform: uppercase;
-    }
-
+    /* === Lista vini === */
     .wine-list {
-      padding: 0 16px 100px;
+      padding: 10px 16px 100px;
     }
     .wine-card {
-      background: var(--bianco);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--bordo);
-      margin-bottom: 10px;
-      padding: 12px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      padding: 10px 14px 10px 18px;
       display: flex;
       gap: 12px;
       cursor: pointer;
       transition: all .15s;
       text-decoration: none;
       color: inherit;
+      position: relative;
+      overflow: hidden;
+      align-items: center;
     }
-    .wine-card:active { transform: scale(0.98); }
+    .wine-card:active { background: rgba(255,255,255,0.07); }
+
+    /* Strip colorata laterale */
+    .wine-stripe {
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 4px;
+      border-radius: 2px;
+    }
+    .stripe-rosso { background: #8B2635; }
+    .stripe-bianco { background: #C9A84C; }
+    .stripe-rosato { background: #D88FAE; }
+    .stripe-spumante { background: #5B9FB5; }
+    .stripe-passito { background: #B97324; }
+    .stripe-liquoroso { background: #6B4226; }
+
+    /* Miniatura bottiglia */
     .wine-thumb {
-      width: 52px;
-      height: 70px;
+      width: 44px;
+      height: 56px;
       border-radius: 6px;
-      background: var(--avorio-dk);
-      border: 1px solid var(--bordo);
+      background: rgba(255,255,255,0.06);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
       overflow: hidden;
-      position: relative;
     }
     .wine-thumb img {
       width: 100%;
@@ -155,66 +177,132 @@
       object-fit: cover;
     }
     .wine-thumb i {
-      font-size: 24px;
-      color: var(--testo-3);
+      font-size: 22px;
+      color: rgba(255,255,255,0.3);
     }
-    .wine-thumb.rosso { background: #f5eaec; }
-    .wine-thumb.bianco { background: var(--oro-lt); }
-    .wine-thumb.rosato { background: #fce8ee; }
-    .wine-thumb.spumante { background: #e8f5ea; }
+
     .wine-info {
       flex: 1;
       min-width: 0;
     }
     .wine-name {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--testo);
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #fff;
       margin-bottom: 2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: 1.25;
     }
     .wine-producer {
       font-size: 12px;
-      color: var(--testo-2);
-      margin-bottom: 6px;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 4px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .wine-meta {
+    .wine-meta-row {
       display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-    }
-    .wine-right {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      justify-content: space-between;
-      flex-shrink: 0;
+      align-items: center;
       gap: 8px;
-    }
-    .stars-small {
-      color: var(--oro);
       font-size: 11px;
-      letter-spacing: -1px;
+    }
+    .tipo-label {
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .tipo-rosso { color: #C66270; }
+    .tipo-bianco { color: #D9B95C; }
+    .tipo-rosato { color: #E0A4BB; }
+    .tipo-spumante { color: #82BFD3; }
+    .tipo-passito { color: #D38E4E; }
+    .tipo-liquoroso { color: #A07853; }
+    .wine-extra {
+      color: rgba(255,255,255,0.5);
+    }
+    .wine-qty {
+      flex-shrink: 0;
+      color: var(--oro, #C9A84C);
+      font-weight: 700;
+      font-size: 13px;
+      padding-left: 8px;
     }
 
+    /* FAB a sinistra */
+    .fab {
+      position: fixed;
+      left: 20px;
+      bottom: 88px;
+      width: 56px;
+      height: 56px;
+      background: var(--bordeaux, #8B2635);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 2px rgba(201,168,76,0.3);
+      z-index: 95;
+      transition: transform .15s;
+    }
+    .fab:active { transform: scale(0.92); }
+
+    /* Loading + empty state */
     .loading {
       text-align: center;
       padding: 40px 20px;
-      color: var(--testo-2);
+      color: rgba(255,255,255,0.6);
     }
     .loading i {
       font-size: 32px;
       animation: spin .7s linear infinite;
       display: block;
       margin-bottom: 8px;
-      color: var(--bordeaux);
+      color: var(--oro, #C9A84C);
+    }
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: rgba(255,255,255,0.5);
+    }
+    .empty i {
+      font-size: 40px;
+      display: block;
+      margin-bottom: 8px;
+      color: rgba(255,255,255,0.2);
+    }
+    .empty h3 {
+      color: #fff;
+      margin: 0 0 4px;
+      font-size: 16px;
+    }
+    .empty p {
+      margin: 0;
+      font-size: 13px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Bottom-nav dark theme */
+    .bottom-nav {
+      background: var(--nero, #1a0608) !important;
+      border-top: 1px solid rgba(255,255,255,0.08) !important;
+    }
+    .nav-item {
+      color: rgba(255,255,255,0.5) !important;
+    }
+    .nav-item i {
+      color: rgba(255,255,255,0.7);
+    }
+    .nav-item.active {
+      color: var(--oro, #C9A84C) !important;
+    }
+    .nav-item.active i {
+      color: var(--oro, #C9A84C) !important;
+    }
   </style>
 </head>
 <body>
@@ -222,18 +310,15 @@
 <div class="header-cantina">
   <div class="header-row">
     <div class="header-title">
-      <img src="logo.png" alt="" style="width:24px;height:24px;border-radius:4px;display:inline-block;vertical-align:middle">
+      <img src="logo.png" alt="" style="width:28px;height:28px;border-radius:5px;display:inline-block;vertical-align:middle">
       La mia cantina
     </div>
-    <div style="display:flex;align-items:center;gap:8px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="header-count" id="totalCount">0 bottiglie</span>
       <button class="logout-btn" onclick="confirmLogout()" aria-label="Logout">
         <i class="ti ti-logout"></i>
       </button>
     </div>
-  </div>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-    <span class="header-user" id="userName">...</span>
-    <span class="header-count" id="totalCount">0 bottiglie</span>
   </div>
 </div>
 
@@ -260,7 +345,7 @@
   </div>
 </div>
 
-<a href="aggiungi.html" class="fab" aria-label="Aggiungi bottiglia" style="bottom:88px">
+<a href="aggiungi.html" class="fab" aria-label="Aggiungi bottiglia">
   <i class="ti ti-plus" aria-hidden="true"></i>
 </a>
 
