@@ -42,8 +42,11 @@ async function loadBottiglie() {
     return;
   }
   bottiglie = data || [];
-  document.getElementById('totalCount').textContent =
-    bottiglie.length + (bottiglie.length === 1 ? ' bottiglia' : ' bottiglie');
+  const n = bottiglie.length;
+  const label = n === 0
+    ? 'Nessuna bottiglia in cantina'
+    : (n === 1 ? '1 bottiglia in cantina' : n + ' bottiglie in cantina');
+  document.getElementById('totalCount').textContent = label;
   renderBottiglie();
 }
 
