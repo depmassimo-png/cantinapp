@@ -11,23 +11,72 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="app">
-    <header class="app-header">
-      <a href="index.html" class="back-btn">‹</a>
-      <img src="logo.png" alt="CantinApp" class="logo-header">
-      <span class="header-title">Teoria</span>
-    </header>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--nero, #1a0608);
+      color: var(--avorio, #faf7f4);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .teoria-header {
+      background: var(--nero, #1a0608);
+      padding: 14px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .teoria-back {
+      background: rgba(255,255,255,0.08);
+      border: none;
+      color: var(--avorio, #faf7f4);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      line-height: 1;
+    }
+    .teoria-header-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--avorio, #faf7f4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .teoria-header-title .icon {
+      font-size: 20px;
+    }
+    .teoria-content {
+      padding: 16px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+  </style>
 
-    <main class="content">
-      <div class="intro-text" style="margin-bottom:14px; color:rgba(250,247,244,0.7); font-size:13.5px; line-height:1.5">
-        Definizioni ufficiali dal manuale Assosommelier. Tocca una voce per leggere la definizione completa.
-      </div>
+  <header class="teoria-header">
+    <a href="cantina.html" class="teoria-back">‹</a>
+    <span class="teoria-header-title"><span class="icon">📖</span> Teoria</span>
+  </header>
 
-      <input type="search" class="teoria-search" id="teoriaSearch" placeholder="🔍 Cerca un termine (es. tannino, dorato, equilibrio)..." autocomplete="off">
+  <main class="teoria-content">
+    <div class="intro-text" style="margin-bottom:14px; color:rgba(250,247,244,0.7); font-size:13.5px; line-height:1.5">
+      Definizioni ufficiali dal manuale Assosommelier. Tocca una voce per leggere la definizione completa.
+    </div>
 
-      <div id="teoriaContainer"></div>
-    </main>
-  </div>
+    <input type="search" class="teoria-search" id="teoriaSearch" placeholder="🔍 Cerca un termine (es. tannino, dorato, equilibrio)..." autocomplete="off">
+
+    <div id="teoriaContainer" style="margin-top: 14px;"></div>
+  </main>
 
   <script src="js/teoria-data.js"></script>
   <script src="js/teoria-popup.js"></script>
