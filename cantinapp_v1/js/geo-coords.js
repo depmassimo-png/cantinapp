@@ -226,11 +226,16 @@ function trovaCoordinate(bottiglia) {
         if (k.includes(zona)) return { ...ZONE_VINICOLE_IT[zona], label: capFirst(zona), level: 'zona' };
       }
     }
-    // Fallback: regione
-    if (bottiglia.regione && REGIONI_IT_COORDS[bottiglia.regione]) {
-      return { ...REGIONI_IT_COORDS[bottiglia.regione], label: bottiglia.regione, level: 'regione' };
+    // Fallback: regione (matching robusto)
+    if (bottiglia.regione) {
+      const coords = trovaRegioneIT(bottiglia.regione);
+      if (coords) {
+        return { ...coords, label: bottiglia.regione, level: 'regione' };
+      }
+      console.warn(`[geo-coords] Regione non riconosciuta: "${bottiglia.regione}" (bottiglia: ${bottiglia.nome_vino})`);
     }
     // Ultimo fallback: centro Italia
+    console.warn(`[geo-coords] Bottiglia senza regione/zona riconosciuta, fallback Italia:`, bottiglia.nome_vino, '| regione:', bottiglia.regione);
     return { ...NAZIONI_COORDS['Italia'], label: 'Italia', level: 'nazione' };
   }
 
@@ -239,7 +244,54 @@ function trovaCoordinate(bottiglia) {
     return { ...NAZIONI_COORDS[naz], label: naz, level: 'nazione' };
   }
 
+  console.warn(`[geo-coords] Nazione non riconosciuta: "${naz}"`);
   return { lat: 0, lng: 0, label: naz || 'Sconosciuto', level: 'nazione' };
+}
+
+// Matching robusto della regione: gestisce varianti di scrittura
+function trovaRegioneIT(regioneStr) {
+  if (!regioneStr) return null;
+
+  // 1. Match esatto
+  if (REGIONI_IT_COORDS[regioneStr]) return REGIONI_IT_COORDS[regioneStr];
+
+  // 2. Match normalizzato (lowercase, no accenti, no spazi/trattini extra)
+  const normalize = (s) => s.toLowerCase()
+    .replace(/[àáâ]/g, 'a').replace(/[èéê]/g, 'e').replace(/[ìíî]/g, 'i')
+    .replace(/[òóô]/g, 'o').replace(/[ùúû]/g, 'u')
+    .replace(/[üöä]/g, '')   // ignora dieresi (Südtirol → sudtirol)
+    .replace(/[/\-_,]/g, ' ') // unifica separatori
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const target = normalize(regioneStr);
+
+  for (const [nome, coords] of Object.entries(REGIONI_IT_COORDS)) {
+    const norm = normalize(nome);
+    if (norm === target) return coords;
+    // Match parziale: "Trentino" matcha "Trentino-Alto Adige", e vv.
+    if (norm.includes(target) || target.includes(norm)) return coords;
+  }
+
+  // 3. Match parole-chiave per casi speciali (Sudtirol, Alto Adige da soli, ecc.)
+  const KEYWORDS = {
+    'sudtirol': 'Trentino-Alto Adige',
+    'sdtirol': 'Trentino-Alto Adige',   // dieresi rimossa
+    'alto adige': 'Trentino-Alto Adige',
+    'trentino': 'Trentino-Alto Adige',
+    'bolzano': 'Trentino-Alto Adige',
+    'friuli': 'Friuli-Venezia Giulia',
+    'venezia giulia': 'Friuli-Venezia Giulia',
+    'romagna': 'Emilia-Romagna',
+    'emilia': 'Emilia-Romagna',
+    'aosta': "Valle d'Aosta",
+    'vallee d aoste': "Valle d'Aosta",
+  };
+  for (const [kw, regione] of Object.entries(KEYWORDS)) {
+    if (target.includes(kw)) return REGIONI_IT_COORDS[regione];
+  }
+
+  return null;
 }
 
 function capFirst(s) {

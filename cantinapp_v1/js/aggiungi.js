@@ -213,14 +213,25 @@ async function analizzaConAI() {
     if (dati.regione) {
       const naz = document.getElementById('nazione').value;
       if (naz === 'Italia') {
-        // Cerca match case-insensitive nelle 20 regioni
-        const r = REGIONI_IT.find(rg => rg.toLowerCase() === String(dati.regione).toLowerCase());
+        // 1) Match esatto case-insensitive nelle 20 regioni ufficiali
+        let r = REGIONI_IT.find(rg => rg.toLowerCase() === String(dati.regione).toLowerCase());
+        // 2) Matching robusto (gestisce "Trentino", "Südtirol", "Alto Adige", "Romagna", ecc.)
+        if (!r && typeof trovaRegioneIT === 'function') {
+          const coords = trovaRegioneIT(dati.regione);
+          if (coords) {
+            // trovaRegioneIT non restituisce il nome, lo ricavo dalle 20 ufficiali
+            // confrontando le coordinate
+            r = Object.entries(REGIONI_IT_COORDS).find(([nome, c]) => c.lat === coords.lat && c.lng === coords.lng)?.[0];
+          }
+        }
         if (r) {
           document.getElementById('regioneSelect').value = r;
+          console.log('[AI] Regione normalizzata:', dati.regione, '→', r);
           campiCompilati++;
         } else {
-          // valore non standard → aggiungi come personalizzato
+          // valore non riconoscibile → aggiungi come personalizzato
           document.getElementById('regioneSelect').innerHTML = regioniOptionsHtml(dati.regione);
+          console.warn('[AI] Regione non riconosciuta, aggiunta come personalizzata:', dati.regione);
           campiCompilati++;
         }
       } else {
