@@ -135,26 +135,28 @@ async function esportaPDF() {
       doc.setFillColor(...col);
       doc.rect(cx + 0.3, boxY, sw - 0.6, SCALE_H, 'F');
 
-      if (isSel) {
-        doc.setDrawColor(...C.nero);
-        doc.setLineWidth(1.2);
-        doc.rect(cx + 0.3, boxY, sw - 0.6, SCALE_H);
-        // X bianca CENTRATA con dimensione fissa (non deformata dalla larghezza del box)
-        doc.setDrawColor(...C.nero);
-        doc.setLineWidth(1.2);
-        const xSize = 2.0; // semi-lato della X (fissa)
-        const xcx = cx + sw / 2;
-        const xcy = boxY + SCALE_H / 2;
-        doc.line(xcx - xSize, xcy - xSize, xcx + xSize, xcy + xSize);
-        doc.line(xcx + xSize, xcy - xSize, xcx - xSize, xcy + xSize);
-        doc.setLineWidth(0.2);
-      }
+      // Numero centrato PRIMA della X (così la X starà sopra)
       doc.setTextColor(255);
       doc.setFont('helvetica', isSel ? 'bold' : 'normal');
       doc.setFontSize(9);
       const nt = String(num);
       const nw = doc.getTextWidth(nt);
       doc.text(nt, cx + sw / 2 - nw / 2, boxY + SCALE_H / 2 + 1.2);
+
+      if (isSel) {
+        // Bordo nero spesso
+        doc.setDrawColor(...C.nero);
+        doc.setLineWidth(1.2);
+        doc.rect(cx + 0.3, boxY, sw - 0.6, SCALE_H);
+        // X nera CENTRATA con dimensione fissa, sopra il numero
+        doc.setLineWidth(1.4);
+        const xSize = 2.0;
+        const xcx = cx + sw / 2;
+        const xcy = boxY + SCALE_H / 2;
+        doc.line(xcx - xSize, xcy - xSize, xcx + xSize, xcy + xSize);
+        doc.line(xcx + xSize, xcy - xSize, xcx - xSize, xcy + xSize);
+        doc.setLineWidth(0.2);
+      }
     }
     return boxY + SCALE_H;
   }
@@ -473,12 +475,21 @@ async function esportaPDF() {
     const col = isSel ? C.bluDark : (i < 2 ? C.bluChiaro : (i === 2 ? C.bluMedio : C.bluScuro));
     doc.setFillColor(...col);
     doc.rect(M + i * dimSw + 0.3, y, dimSw - 0.6, SCALE_H, 'F');
+
+    // Numero PRIMA
+    doc.setTextColor(255);
+    doc.setFont('helvetica', isSel ? 'bold' : 'normal');
+    doc.setFontSize(10);
+    const nt = String(it.punti);
+    const nw = doc.getTextWidth(nt);
+    doc.text(nt, M + i * dimSw + dimSw/2 - nw/2, y + SCALE_H/2 + 1.5);
+
     if (isSel) {
+      // Bordo + X nera sopra il numero
       doc.setDrawColor(...C.nero);
       doc.setLineWidth(1.2);
       doc.rect(M + i * dimSw + 0.3, y, dimSw - 0.6, SCALE_H);
-      doc.setDrawColor(...C.nero);
-      doc.setLineWidth(1.2);
+      doc.setLineWidth(1.4);
       const xSize = 2.0;
       const xcx = M + i * dimSw + dimSw / 2;
       const xcy = y + SCALE_H / 2;
@@ -486,12 +497,6 @@ async function esportaPDF() {
       doc.line(xcx + xSize, xcy - xSize, xcx - xSize, xcy + xSize);
       doc.setLineWidth(0.2);
     }
-    doc.setTextColor(255);
-    doc.setFont('helvetica', isSel ? 'bold' : 'normal');
-    doc.setFontSize(10);
-    const nt = String(it.punti);
-    const nw = doc.getTextWidth(nt);
-    doc.text(nt, M + i * dimSw + dimSw/2 - nw/2, y + SCALE_H/2 + 1.5);
   }
   // Colonna Punti dedicata
   boxPuntiVerticale(d.gusto_dimensioni_punti, yDimStart, (y + SCALE_H) - yDimStart);
