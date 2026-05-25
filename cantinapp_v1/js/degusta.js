@@ -236,8 +236,9 @@ function setupStars() {
       const v = parseInt(star.dataset.v);
       D.voto_piacere_personale = v;
       document.querySelectorAll('#stars .star').forEach(s => {
-        s.classList.toggle('lit', parseInt(s.dataset.v) <= v);
+        s.classList.toggle('sel', parseInt(s.dataset.v) <= v);
       });
+      draftDirty = true;
     });
   });
 }

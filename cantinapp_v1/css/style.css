@@ -429,6 +429,7 @@ input::placeholder, textarea::placeholder { color: var(--testo-3); }
   line-height: 1;
 }
 .star.lit { color: var(--oro); }
+.star.sel { color: var(--oro); }
 
 /* ---- SCORE BOX ---- */
 .score-box {
