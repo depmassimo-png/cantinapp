@@ -119,6 +119,10 @@ function initLeaflet() {
     mapInstance.setView(bounds[0], 5);
   }
 
+  // Forza ricalcolo dimensioni (fix per layout flex su desktop)
+  setTimeout(() => mapInstance.invalidateSize(), 100);
+  setTimeout(() => mapInstance.invalidateSize(), 500);
+
   // Rimuovi loading text
   const loading = document.querySelector('.loading-mappa');
   if (loading) loading.remove();
