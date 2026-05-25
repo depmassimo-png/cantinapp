@@ -60,7 +60,7 @@ function render() {
   if (stelle > 0) {
     document.getElementById('starsBig').innerHTML =
       Array.from({length: 5}, (_, i) =>
-        i < stelle ? '<span>★</span>' : '<span class="empty">★</span>'
+        i < stelle ? '<span>★</span>' : '<span class="star-empty">★</span>'
       ).join('');
   } else {
     document.getElementById('starsBig').style.display = 'none';

@@ -197,7 +197,7 @@ function cardHtml(d) {
   const punti = d.punteggio_totale || 0;
   const stelle = d.voto_piacere_personale || 0;
   const stelleHtml = stelle > 0
-    ? Array.from({length: 5}, (_, i) => i < stelle ? '★' : '<span class="empty">★</span>').join('')
+    ? Array.from({length: 5}, (_, i) => i < stelle ? '★' : '<span class="star-empty">★</span>').join('')
     : '';
 
   return `

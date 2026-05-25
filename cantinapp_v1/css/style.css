@@ -620,6 +620,13 @@ input[type=range]::-webkit-slider-thumb {
   padding: 60px 20px;
   color: var(--testo-2);
 }
+/* Reset: se .empty viene usato accidentalmente su uno span inline (es. dentro
+   .stars-big o card di lista) NON deve applicare padding/text-align */
+span.empty {
+  text-align: inherit;
+  padding: 0;
+  display: inline;
+}
 .empty i { font-size: 48px; color: var(--bordo); display: block; margin-bottom: 12px; }
 .empty h3 { font-size: 17px; font-weight: 500; margin-bottom: 6px; color: var(--testo); }
 .empty p { font-size: 14px; line-height: 1.6; }
