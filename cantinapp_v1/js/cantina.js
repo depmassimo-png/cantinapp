@@ -42,12 +42,45 @@ async function loadBottiglie() {
     return;
   }
   bottiglie = data || [];
+
+  // Counter bottiglie
   const n = bottiglie.length;
+  const totQty = bottiglie.reduce((s, b) => s + (b.quantita || 1), 0);
   const label = n === 0
     ? 'Nessuna bottiglia in cantina'
-    : (n === 1 ? '1 bottiglia in cantina' : n + ' bottiglie in cantina');
+    : (totQty === 1 ? '1 bottiglia in cantina' : totQty + ' bottiglie in cantina');
   document.getElementById('totalCount').textContent = label;
+
+  // Valore totale stimato
+  let valore = 0;
+  for (const b of bottiglie) {
+    if (b.prezzo_acquisto && b.prezzo_acquisto > 0) {
+      valore += b.prezzo_acquisto * (b.quantita || 1);
+    }
+  }
+  const elValore = document.getElementById('totalValue');
+  if (elValore) {
+    if (valore > 0) {
+      elValore.textContent = `Valore stimato: €${valore.toFixed(0)}`;
+      elValore.style.display = 'block';
+    } else {
+      elValore.style.display = 'none';
+    }
+  }
+
   renderBottiglie();
+}
+
+// Determina se una bottiglia è "pronta da bere" in base al range pronto_da/pronto_fino_a
+function isBottigliaPronta(b) {
+  const annoCorrente = new Date().getFullYear();
+  const da = b.pronto_da;
+  const fino = b.pronto_fino_a;
+  // Se mancano entrambi, non sappiamo: non è "pronta certa"
+  if (!da && !fino) return false;
+  if (da && annoCorrente < da) return false;
+  if (fino && annoCorrente > fino) return false;
+  return true;
 }
 
 function setFilter(filter, btn) {
@@ -67,7 +100,9 @@ function renderBottiglie() {
 
   // Filtri
   let filtered = bottiglie;
-  if (filtroAttivo !== 'all') {
+  if (filtroAttivo === 'pronti') {
+    filtered = filtered.filter(isBottigliaPronta);
+  } else if (filtroAttivo !== 'all') {
     filtered = filtered.filter(b => b.tipologia === filtroAttivo);
   }
   if (search) {
@@ -87,6 +122,13 @@ function renderBottiglie() {
           <i class="ti ti-bottle-wine" aria-hidden="true"></i>
           <h3>La tua cantina è vuota</h3>
           <p>Aggiungi la tua prima bottiglia<br>toccando il pulsante <strong>+</strong> in basso</p>
+        </div>`;
+    } else if (filtroAttivo === 'pronti') {
+      area.innerHTML = `
+        <div class="empty">
+          <i class="ti ti-clock" aria-hidden="true"></i>
+          <h3>Nessuna bottiglia pronta</h3>
+          <p>Nessuno dei tuoi vini è nel range ottimale di consumo<br>secondo i campi "Pronto da / Pronto fino a"</p>
         </div>`;
     } else {
       area.innerHTML = `
@@ -132,18 +174,23 @@ function cardHtml(b) {
   const annata = b.annata || 'NM';
   const gradi = b.gradazione ? b.gradazione.toString().replace('.', ',') + '°' : '';
   const qty = b.quantita || 1;
+  const pronta = isBottigliaPronta(b);
   const img = b.etichetta_url
     ? `<img src="${b.etichetta_url}" alt="">`
     : (b.controetichetta_url
         ? `<img src="${b.controetichetta_url}" alt="">`
         : `<i class="ti ti-bottle-wine" aria-hidden="true"></i>`);
 
+  const badgePronto = pronta
+    ? `<span class="wine-badge-pronto" title="Nel range ottimale di consumo"><i class="ti ti-circle-check" style="font-size:11px"></i> Pronto</span>`
+    : '';
+
   return `
     <a class="wine-card" href="bottiglia.html?id=${b.id}">
       <span class="wine-stripe stripe-${tipologia}"></span>
       <div class="wine-thumb ${tipologia}">${img}</div>
       <div class="wine-info">
-        <div class="wine-name">${escapeHtml(b.nome_vino)}</div>
+        <div class="wine-name">${escapeHtml(b.nome_vino)}${badgePronto}</div>
         <div class="wine-producer">${escapeHtml(b.produttore)}</div>
         <div class="wine-meta-row">
           <span class="tipo-label tipo-${tipologia}">${capitalize(tipologia)}</span>

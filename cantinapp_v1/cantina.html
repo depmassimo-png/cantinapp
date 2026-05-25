@@ -70,6 +70,57 @@
       color: rgba(255,255,255,0.55);
       line-height: 1.1;
     }
+    .brand-value {
+      font-size: 11px;
+      color: var(--oro, #C9A84C);
+      line-height: 1.2;
+      margin-top: 2px;
+      font-weight: 600;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .header-icon-btn {
+      background: none;
+      border: none;
+      color: var(--oro, #C9A84C);
+      cursor: pointer;
+      font-size: 20px;
+      padding: 6px 8px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+    .header-icon-btn:active { opacity: 0.6; }
+
+    /* Filtro 'Pronti' speciale */
+    .filter-pronti {
+      border-color: var(--oro, #C9A84C) !important;
+      color: var(--oro, #C9A84C) !important;
+    }
+    .filter-pronti.active {
+      background: var(--oro, #C9A84C) !important;
+      color: var(--nero, #1a0608) !important;
+      border-color: var(--oro, #C9A84C) !important;
+    }
+
+    /* Badge 'Pronto' sulle card delle bottiglie nel range */
+    .wine-badge-pronto {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      background: rgba(201, 168, 76, 0.18);
+      color: var(--oro, #C9A84C);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 999px;
+      margin-left: 6px;
+      vertical-align: middle;
+      letter-spacing: 0.2px;
+    }
     .logout-btn {
       background: none;
       border: none;
@@ -340,11 +391,17 @@
       <div class="brand-text">
         <div class="brand-name">CantinApp</div>
         <div class="brand-sub" id="totalCount">0 bottiglie in cantina</div>
+        <div class="brand-value" id="totalValue" style="display:none">Valore stimato: €0</div>
       </div>
     </div>
-    <button class="logout-btn" onclick="confirmLogout()" aria-label="Logout">
-      <i class="ti ti-logout"></i>
-    </button>
+    <div class="header-actions">
+      <a href="statistiche.html" class="header-icon-btn" aria-label="Statistiche">
+        <i class="ti ti-chart-pie"></i>
+      </a>
+      <button class="logout-btn" onclick="confirmLogout()" aria-label="Logout">
+        <i class="ti ti-logout"></i>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -357,6 +414,9 @@
 
 <div class="filter-btns" id="filterBtns">
   <span class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">Tutti</span>
+  <span class="filter-btn filter-pronti" data-filter="pronti" onclick="setFilter('pronti', this)">
+    <i class="ti ti-circle-check" style="font-size:13px;vertical-align:middle"></i> Pronti
+  </span>
   <span class="filter-btn" data-filter="rosso" onclick="setFilter('rosso', this)">Rossi</span>
   <span class="filter-btn" data-filter="bianco" onclick="setFilter('bianco', this)">Bianchi</span>
   <span class="filter-btn" data-filter="rosato" onclick="setFilter('rosato', this)">Rosati</span>
