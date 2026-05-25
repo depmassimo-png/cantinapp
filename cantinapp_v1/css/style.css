@@ -958,3 +958,351 @@ input[type=range]::-webkit-slider-thumb {
 .teoria-search::placeholder {
   color: rgba(250, 247, 244, 0.4);
 }
+
+/* ============================================================
+   CantinApp — DARK THEME (applicato via body.dark)
+   Override globali per coerenza visiva su tutte le pagine
+   ============================================================ */
+
+body.dark {
+  background: var(--nero);
+  color: var(--avorio);
+}
+
+/* Container generici */
+body.dark .container,
+body.dark .page-content,
+body.dark .content,
+body.dark main {
+  background: var(--nero);
+  color: var(--avorio);
+}
+
+/* Topbar */
+body.dark .topbar {
+  background: var(--nero);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+body.dark .topbar-title,
+body.dark .topbar h1 {
+  color: var(--oro);
+}
+body.dark .topbar-subtitle,
+body.dark .topbar-sub {
+  color: rgba(255,255,255,0.55);
+}
+body.dark .topbar-icon,
+body.dark .topbar-action {
+  color: var(--oro);
+}
+
+/* Card generiche */
+body.dark .card,
+body.dark .info-card,
+body.dark .form-card,
+body.dark .step-card,
+body.dark .panel {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.08);
+  color: var(--avorio);
+}
+body.dark .card-title,
+body.dark .info-card-title,
+body.dark .form-card-title,
+body.dark .section-title {
+  color: var(--avorio);
+}
+
+/* Etichette campi */
+body.dark .field-label,
+body.dark label {
+  color: rgba(255,255,255,0.7);
+}
+
+/* Sezioni con titolo small caps */
+body.dark .info-card-title i,
+body.dark .section-title i {
+  color: var(--oro);
+}
+
+/* Input, textarea, select */
+body.dark input[type="text"],
+body.dark input[type="number"],
+body.dark input[type="email"],
+body.dark input[type="password"],
+body.dark input[type="date"],
+body.dark input[type="tel"],
+body.dark input[type="url"],
+body.dark input[type="search"],
+body.dark textarea,
+body.dark select {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--avorio);
+}
+body.dark input::placeholder,
+body.dark textarea::placeholder {
+  color: rgba(255,255,255,0.35);
+}
+body.dark input:focus,
+body.dark textarea:focus,
+body.dark select:focus {
+  border-color: var(--oro);
+  background: rgba(255,255,255,0.06);
+  outline: none;
+}
+
+/* Bottoni */
+body.dark .btn-outline,
+body.dark .btn-secondary {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--avorio);
+}
+body.dark .btn-outline:active {
+  background: rgba(255,255,255,0.08);
+}
+
+/* Chip / Filter */
+body.dark .chip {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.15);
+  color: var(--avorio);
+}
+body.dark .chip.sel,
+body.dark .chip:active {
+  background: var(--bordeaux);
+  border-color: var(--bordeaux);
+  color: #fff;
+}
+
+body.dark .filter-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.65);
+}
+body.dark .filter-btn.active {
+  background: var(--bordeaux);
+  border-color: var(--bordeaux);
+  color: #fff;
+}
+
+/* Divisori */
+body.dark hr,
+body.dark .divider {
+  border-color: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.08);
+}
+
+/* Empty state */
+body.dark .empty,
+body.dark .empty-state {
+  color: rgba(255,255,255,0.5);
+}
+body.dark .empty h3,
+body.dark .empty-state h3 {
+  color: rgba(255,255,255,0.75);
+}
+body.dark .empty i,
+body.dark .empty-state i {
+  color: rgba(255,255,255,0.18);
+}
+
+/* Modal overlay */
+body.dark .modal-overlay {
+  background: rgba(0,0,0,0.7);
+}
+body.dark .modal-content {
+  background: var(--nero);
+  color: var(--avorio);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+body.dark .modal-title {
+  color: var(--oro);
+}
+body.dark .modal-close {
+  color: rgba(255,255,255,0.6);
+}
+
+/* Bottom nav scura */
+body.dark .bottom-nav {
+  background: var(--nero);
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+body.dark .nav-item {
+  color: rgba(255,255,255,0.5);
+}
+body.dark .nav-item.active,
+body.dark .nav-item.active i {
+  color: var(--oro);
+}
+body.dark .nav-add {
+  color: var(--bordeaux) !important;
+}
+
+/* Step indicator / progress bar */
+body.dark .step-dot {
+  background: rgba(255,255,255,0.15);
+}
+body.dark .step-dot.active {
+  background: var(--oro);
+}
+body.dark .progress-bar-track {
+  background: rgba(255,255,255,0.08);
+}
+
+/* Toast (mantiene il suo stile ma compatibile) */
+body.dark .toast {
+  background: rgba(0,0,0,0.85);
+  color: var(--avorio);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Links generici */
+body.dark a {
+  color: var(--oro);
+}
+body.dark a:visited {
+  color: var(--oro);
+}
+
+/* Sezione danger zone (elimina) */
+body.dark .danger-zone {
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+body.dark .btn-danger {
+  background: rgba(196,86,50,0.15);
+  border: 1px solid rgba(196,86,50,0.4);
+  color: #e89685;
+}
+
+/* Wine info nel dettaglio */
+body.dark .info-row {
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+body.dark .info-key {
+  color: rgba(255,255,255,0.55);
+}
+body.dark .info-value {
+  color: var(--avorio);
+}
+
+/* Image placeholder e wine-thumb scuri */
+body.dark .wine-thumb,
+body.dark .image-placeholder {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+body.dark .wine-thumb i {
+  color: rgba(255,255,255,0.3);
+}
+
+/* Login card scura */
+body.dark .login-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--avorio);
+}
+body.dark .tabs {
+  background: rgba(255,255,255,0.04);
+}
+body.dark .tab {
+  color: rgba(255,255,255,0.6);
+}
+body.dark .tab.tab-active {
+  background: var(--bordeaux);
+  color: #fff;
+}
+
+/* Wizard degustazione: card step e progress */
+body.dark .step-card {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.1);
+}
+body.dark .step-title,
+body.dark .wizard-title {
+  color: var(--oro);
+}
+body.dark .step-counter {
+  color: rgba(255,255,255,0.5);
+}
+
+/* Famiglie aromatiche chip */
+body.dark .fam-chip {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.12);
+  color: var(--avorio);
+}
+body.dark .fam-chip.sel {
+  background: rgba(201,168,76,0.15);
+  border-color: var(--oro);
+  color: var(--avorio);
+}
+body.dark .fam-chip.has-sentori {
+  background: rgba(201,168,76,0.08);
+  border-color: rgba(201,168,76,0.5);
+}
+body.dark .fam-chip .fam-count {
+  background: var(--oro);
+  color: var(--nero);
+}
+body.dark .fam-expanded {
+  background: rgba(0,0,0,0.25);
+  border-color: rgba(255,255,255,0.08);
+}
+body.dark .fam-expanded-header {
+  color: var(--avorio);
+}
+body.dark .subcat-label {
+  color: rgba(255,255,255,0.55);
+}
+body.dark .sentore-chip {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--avorio);
+}
+body.dark .sentore-chip.sel {
+  background: var(--bordeaux);
+  color: #fff;
+  border-color: var(--bordeaux);
+}
+body.dark .sentore-chip.tipico {
+  border-color: var(--oro);
+}
+
+/* Chip disabilitati su tema scuro */
+body.dark .chip-disabled {
+  background: rgba(255,255,255,0.02) !important;
+  color: rgba(255,255,255,0.25) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  text-decoration: line-through;
+  text-decoration-color: rgba(255,255,255,0.25);
+}
+
+/* Box "non applicabile" su tema scuro */
+body.dark .box-non-applicabile .field-label::after {
+  color: rgba(255,255,255,0.35);
+}
+
+/* Stelle voto */
+body.dark .star {
+  color: rgba(255,255,255,0.2);
+}
+body.dark .star.sel {
+  color: var(--oro);
+}
+
+/* Scale numeriche/punteggio */
+body.dark .scale-num {
+  color: var(--avorio);
+}
+
+/* Wine card (dettaglio bottiglia) */
+body.dark .wine-detail-card,
+body.dark .info-section {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+body.dark .wine-detail-title {
+  color: var(--oro);
+}
