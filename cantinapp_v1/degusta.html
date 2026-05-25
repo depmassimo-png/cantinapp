@@ -460,6 +460,22 @@
           </select>
         </div>
       </div>
+
+      <label class="field-label" style="margin-top:12px">Foto della bottiglia</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+        <div class="upload-area" id="extUploadFronte">
+          <i class="ti ti-camera upload-icon" aria-hidden="true"></i>
+          <p style="font-size:13px">Fronte</p>
+          <small>Etichetta principale</small>
+          <input type="file" accept="image/*" onchange="handleExtPhotoSelect(event, 'fronte')">
+        </div>
+        <div class="upload-area" id="extUploadRetro">
+          <i class="ti ti-camera upload-icon" aria-hidden="true"></i>
+          <p style="font-size:13px">Retro</p>
+          <small>Controetichetta</small>
+          <input type="file" accept="image/*" onchange="handleExtPhotoSelect(event, 'retro')">
+        </div>
+      </div>
     </div>
 
     <label class="field-label">Piacere personale</label>

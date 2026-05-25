@@ -149,21 +149,32 @@ function cardBevutaSenzaScheda(b) {
   const annata = b.annata || '';
   const tipologia = b.tipologia || 'default';
 
+  const img = b.etichetta_url
+    ? `<img src="${b.etichetta_url}" alt="">`
+    : (b.controetichetta_url
+        ? `<img src="${b.controetichetta_url}" alt="">`
+        : `<i class="ti ti-bottle-wine" aria-hidden="true"></i>`);
+
   return `
     <a class="degust-card degust-card-pending" href="degusta.html?bottiglia_id=${b.id}">
       <div class="degust-stripe stripe-${tipologia}"></div>
-      <div class="degust-top">
-        <div class="degust-info">
-          <div class="degust-name">${esc(b.nome_vino || 'Vino senza nome')}</div>
-          <div class="degust-prod">${esc(b.produttore || '')}${annata ? ' · ' + annata : ''}</div>
+      <div class="degust-row">
+        <div class="degust-thumb ${tipologia}">${img}</div>
+        <div class="degust-body">
+          <div class="degust-top">
+            <div class="degust-info">
+              <div class="degust-name">${esc(b.nome_vino || 'Vino senza nome')}</div>
+              <div class="degust-prod">${esc(b.produttore || '')}${annata ? ' · ' + annata : ''}</div>
+            </div>
+            <div class="degust-right">
+              <div class="degust-data">${data}</div>
+            </div>
+          </div>
+          <div class="degust-meta">
+            ${tipologia !== 'default' ? `<span class="tipo-label tipo-${tipologia}">${cap(tipologia)}</span>` : ''}
+            <span class="degust-pending-pill"><i class="ti ti-pencil"></i> Compila scheda</span>
+          </div>
         </div>
-        <div class="degust-right">
-          <div class="degust-data">${data}</div>
-        </div>
-      </div>
-      <div class="degust-meta">
-        ${tipologia !== 'default' ? `<span class="tipo-label tipo-${tipologia}">${cap(tipologia)}</span>` : ''}
-        <span class="degust-pending-pill"><i class="ti ti-pencil"></i> Compila scheda</span>
       </div>
     </a>`;
 }
@@ -174,6 +185,15 @@ function cardHtml(d) {
   const annata = d.bottiglia?.annata || d.annata_esterna || '';
   const tipologia = d.bottiglia?.tipologia || 'default';
 
+  // Foto: prima cerca nella bottiglia collegata, poi nelle foto esterne salvate sulla degustazione
+  const etichetta = d.bottiglia?.etichetta_url || d.etichetta_url_esterna;
+  const controetichetta = d.bottiglia?.controetichetta_url || d.controetichetta_url_esterna;
+  const img = etichetta
+    ? `<img src="${etichetta}" alt="">`
+    : (controetichetta
+        ? `<img src="${controetichetta}" alt="">`
+        : `<i class="ti ti-bottle-wine" aria-hidden="true"></i>`);
+
   const punti = d.punteggio_totale || 0;
   const stelle = d.voto_piacere_personale || 0;
   const stelleHtml = stelle > 0
@@ -183,20 +203,25 @@ function cardHtml(d) {
   return `
     <a class="degust-card" href="scheda.html?id=${d.id}">
       <div class="degust-stripe stripe-${tipologia}"></div>
-      <div class="degust-top">
-        <div class="degust-info">
-          <div class="degust-name">${esc(nome)}</div>
-          <div class="degust-prod">${esc(prod)}${annata ? ' · ' + annata : ''}</div>
+      <div class="degust-row">
+        <div class="degust-thumb ${tipologia}">${img}</div>
+        <div class="degust-body">
+          <div class="degust-top">
+            <div class="degust-info">
+              <div class="degust-name">${esc(nome)}</div>
+              <div class="degust-prod">${esc(prod)}${annata ? ' · ' + annata : ''}</div>
+            </div>
+            <div class="degust-right">
+              ${punti > 0 ? `<div class="degust-punti">${punti}<span class="degust-punti-max">/100</span></div>` : ''}
+              <div class="degust-data">${formatDate(d.data_degustazione)}</div>
+            </div>
+          </div>
+          <div class="degust-meta">
+            ${tipologia !== 'default' ? `<span class="tipo-label tipo-${tipologia}">${cap(tipologia)}</span>` : ''}
+            ${d.luogo ? `<span class="degust-tag"><i class="ti ti-map-pin"></i>${esc(d.luogo)}</span>` : ''}
+            ${stelleHtml ? `<span class="stars-line">${stelleHtml}</span>` : ''}
+          </div>
         </div>
-        <div class="degust-right">
-          ${punti > 0 ? `<div class="degust-punti">${punti}<span class="degust-punti-max">/100</span></div>` : ''}
-          <div class="degust-data">${formatDate(d.data_degustazione)}</div>
-        </div>
-      </div>
-      <div class="degust-meta">
-        ${tipologia !== 'default' ? `<span class="tipo-label tipo-${tipologia}">${cap(tipologia)}</span>` : ''}
-        ${d.luogo ? `<span class="degust-tag"><i class="ti ti-map-pin"></i>${esc(d.luogo)}</span>` : ''}
-        ${stelleHtml ? `<span class="stars-line">${stelleHtml}</span>` : ''}
       </div>
     </a>`;
 }

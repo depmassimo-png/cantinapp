@@ -1052,6 +1052,13 @@ body.dark select:focus {
   outline: none;
 }
 
+/* Option del menu select (il browser non eredita dal parent: 
+   forziamo sfondo scuro e testo chiaro) */
+body.dark select option {
+  background: #1a0608;
+  color: var(--avorio);
+}
+
 /* Bottoni */
 body.dark .btn-outline,
 body.dark .btn-secondary {

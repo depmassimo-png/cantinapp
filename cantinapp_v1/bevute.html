@@ -203,6 +203,38 @@
       align-items: flex-start;
       gap: 10px;
     }
+    /* Layout con thumbnail */
+    .degust-row {
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
+    }
+    .degust-thumb {
+      width: 52px;
+      min-width: 52px;
+      height: 70px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .degust-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .degust-thumb i {
+      color: rgba(255,255,255,0.3);
+      font-size: 26px;
+    }
+    .degust-body {
+      flex: 1;
+      min-width: 0;
+    }
     .degust-info {
       flex: 1;
       min-width: 0;

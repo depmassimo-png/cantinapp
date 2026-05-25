@@ -7,6 +7,10 @@ let bottigliaCorrente = null;
 let stepAttuale = 1;
 const TOT_STEP = 5;
 
+// Foto della bottiglia in caso di degustazione cieca/libera (rivelazione finale)
+let extFotoFronte = null;
+let extFotoRetro = null;
+
 // Stato della degustazione
 const D = {
   // intestazione
@@ -356,9 +360,44 @@ async function salvaDegustazione() {
   const punti = calcolaPunteggio();
   const fascia = calcolaFascia(punti);
 
+  let bottigliaIdFinale = D.bottiglia_id;
+
+  // Se è una degustazione cieca/libera (no bottiglia in cantina) e l'utente ha
+  // rivelato l'identità del vino (nome o foto), creiamo la bottiglia in cantina
+  // direttamente con stato 'bevuta', includendo le foto
+  if (!D.bottiglia_id && (D.nome_vino_esterno || extFotoFronte || extFotoRetro)) {
+    try {
+      const urlFronte = extFotoFronte ? await uploadFotoEsterna(extFotoFronte, 'fronte') : null;
+      const urlRetro  = extFotoRetro  ? await uploadFotoEsterna(extFotoRetro,  'retro')  : null;
+
+      const nuovaBott = {
+        user_id: currentUser.id,
+        nome_vino: D.nome_vino_esterno || 'Vino in degustazione cieca',
+        produttore: D.produttore_esterno || null,
+        annata: D.annata_esterna || null,
+        tipologia: D.tipologia_esterna || 'rosso',
+        stato: 'bevuta',
+        quantita: 0,
+        etichetta_url: urlFronte,
+        controetichetta_url: urlRetro,
+      };
+      const { data: bot, error: errBot } = await sb
+        .from('bottiglie')
+        .insert(nuovaBott)
+        .select()
+        .single();
+      if (errBot) throw errBot;
+      bottigliaIdFinale = bot.id;
+    } catch (e) {
+      console.error('Errore creazione bottiglia da degustazione cieca:', e);
+      showToast('Errore salvataggio foto: ' + (e.message || ''), true);
+      // Non blocchiamo: continuiamo a salvare la degustazione senza foto
+    }
+  }
+
   const payload = {
     user_id: currentUser.id,
-    bottiglia_id: D.bottiglia_id,
+    bottiglia_id: bottigliaIdFinale,
     nome_vino_esterno: D.nome_vino_esterno,
     produttore_esterno: D.produttore_esterno,
     annata_esterna: D.annata_esterna,
@@ -416,12 +455,68 @@ async function salvaDegustazione() {
   cancellaDraft();
   draftDirty = false;
   setTimeout(() => {
-    if (bottigliaCorrente) {
-      location.href = 'bottiglia.html?id=' + bottigliaCorrente.id;
-    } else {
-      location.href = 'cantina.html';
-    }
+    // Dopo il salvataggio andiamo sempre nella sezione Bevute
+    // (sia per degustazioni di bottiglie in cantina sia per quelle cieche)
+    location.href = 'bevute.html';
   }, 1200);
+}
+
+// ====== FOTO ESTERNE (degustazione cieca/libera) ======
+function handleExtPhotoSelect(e, lato) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Foto troppo grande (max 5MB)', true);
+    return;
+  }
+  if (lato === 'fronte') extFotoFronte = file;
+  else extFotoRetro = file;
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const areaId = lato === 'fronte' ? 'extUploadFronte' : 'extUploadRetro';
+    const area = document.getElementById(areaId);
+    if (!area) return;
+    area.classList.add('has-image');
+    area.innerHTML = `
+      <img src="${evt.target.result}" class="preview-img" alt="Etichetta ${lato}">
+      <button type="button" class="preview-remove" onclick="rimuoviExtFoto(event, '${lato}')" aria-label="Rimuovi foto">
+        <i class="ti ti-x"></i>
+      </button>
+    `;
+  };
+  reader.readAsDataURL(file);
+  draftDirty = true;
+}
+
+function rimuoviExtFoto(e, lato) {
+  e.stopPropagation();
+  e.preventDefault();
+  const areaId = lato === 'fronte' ? 'extUploadFronte' : 'extUploadRetro';
+  const area = document.getElementById(areaId);
+  if (lato === 'fronte') extFotoFronte = null;
+  else extFotoRetro = null;
+  const label = lato === 'fronte' ? 'Fronte' : 'Retro';
+  const sub = lato === 'fronte' ? 'Etichetta principale' : 'Controetichetta';
+  area.classList.remove('has-image');
+  area.innerHTML = `
+    <i class="ti ti-camera upload-icon" aria-hidden="true"></i>
+    <p style="font-size:13px">${label}</p>
+    <small>${sub}</small>
+    <input type="file" accept="image/*" onchange="handleExtPhotoSelect(event, '${lato}')">
+  `;
+  draftDirty = true;
+}
+
+async function uploadFotoEsterna(file, lato) {
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const fileName = `${currentUser.id}/${Date.now()}_${lato}.${ext}`;
+  const { error: errUp } = await sb.storage
+    .from('etichette')
+    .upload(fileName, file, { cacheControl: '3600', upsert: false });
+  if (errUp) throw errUp;
+  const { data: publ } = sb.storage.from('etichette').getPublicUrl(fileName);
+  return publ.publicUrl;
 }
 
 // ============================================================
