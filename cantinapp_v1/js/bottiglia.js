@@ -284,6 +284,8 @@ function chiudiModifica() {
 
 async function salvaModifica(e) {
   e.preventDefault();
+  console.log('[salvaModifica] inizio');
+
   const update = {
     nome_vino: document.getElementById('mNome').value.trim(),
     produttore: document.getElementById('mProduttore').value.trim(),
@@ -300,13 +302,33 @@ async function salvaModifica(e) {
     posizione: nullIfEmpty(document.getElementById('mPosizione').value),
     note: nullIfEmpty(document.getElementById('mNote').value),
   };
+  console.log('[salvaModifica] payload:', update);
 
-  const { error } = await sb
+  let { error } = await sb
     .from('bottiglie')
     .update(update)
     .eq('id', bottiglia.id);
 
-  if (error) { showToast('Errore: ' + error.message, true); return; }
+  // Se l'errore è per la colonna 'nazione' inesistente (migration non applicata),
+  // riprova senza quel campo
+  if (error && /nazione/i.test(error.message || '')) {
+    console.warn('[salvaModifica] colonna nazione assente, retry senza nazione');
+    delete update.nazione;
+    const retry = await sb
+      .from('bottiglie')
+      .update(update)
+      .eq('id', bottiglia.id);
+    error = retry.error;
+    if (!error) {
+      showToast('Salvato (nota: il campo Nazione richiede una migration SQL)', true);
+    }
+  }
+
+  if (error) {
+    console.error('[salvaModifica] errore:', error);
+    showToast('Errore: ' + error.message, true);
+    return;
+  }
 
   Object.assign(bottiglia, update);
   render();
