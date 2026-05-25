@@ -263,27 +263,34 @@ async function esportaPDF() {
   checkboxRow(M, y, riflessi, d.riflesso, C.rossoChiaro, CW);
   y += ROW_H + 2;
 
-  const colW = CW / 4;
-  sezioneSottoTitolo(doc, M, y, 'DENSITÀ CROMATICA', C.rosso);
+  // DENSITÀ/LIMPIDEZZA/VIVACITÀ/PERLAGE in 4 colonne con larghezze proporzionali
+  // VIVACITÀ ha 3 opzioni quindi le diamo più spazio (28% invece di 25%)
+  const colWidths = [0.24, 0.22, 0.30, 0.24]; // proporzioni: 24% / 22% / 30% / 24%
+  const colStarts = [0];
+  for (let i = 1; i < 4; i++) colStarts.push(colStarts[i-1] + colWidths[i-1]);
+  const xCol = (i) => M + colStarts[i] * CW;
+  const wCol = (i) => colWidths[i] * CW;
+
+  sezioneSottoTitolo(doc, xCol(0), y, 'DENSITÀ CROMATICA', C.rosso);
   doc.setFontSize(6);
   doc.setTextColor(120);
-  doc.text('(vini rossi)', M + 27, y + 2);
+  doc.text(' (vini rossi)', xCol(0) + 28, y + 2);
   doc.setTextColor(...C.nero);
-  sezioneSottoTitolo(doc, M + colW, y, 'LIMPIDEZZA', C.rosso);
-  sezioneSottoTitolo(doc, M + colW * 2, y, 'VIVACITÀ', C.rosso);
-  sezioneSottoTitolo(doc, M + colW * 3, y, 'PERLAGE', C.rosso);
+  sezioneSottoTitolo(doc, xCol(1), y, 'LIMPIDEZZA', C.rosso);
+  sezioneSottoTitolo(doc, xCol(2), y, 'VIVACITÀ', C.rosso);
+  sezioneSottoTitolo(doc, xCol(3), y, 'PERLAGE', C.rosso);
   y += 5;
 
   doc.setDrawColor(...C.bordo);
   doc.setLineWidth(0.25);
-  doc.line(M + colW, y - 5, M + colW, y + 6);
-  doc.line(M + colW * 2, y - 5, M + colW * 2, y + 6);
-  doc.line(M + colW * 3, y - 5, M + colW * 3, y + 6);
+  doc.line(xCol(1), y - 5, xCol(1), y + 6);
+  doc.line(xCol(2), y - 5, xCol(2), y + 6);
+  doc.line(xCol(3), y - 5, xCol(3), y + 6);
 
-  checkboxRow(M, y, ['Trasparente', 'Compatto'], d.densita_cromatica, C.rossoChiaro, colW - 1);
-  checkboxRow(M + colW, y, ['Opaco', 'Limpido'], d.limpidezza, C.rossoChiaro, colW - 1);
-  checkboxRow(M + colW * 2, y, ['Cupo', 'Vivace', 'Luminoso'], d.vivacita, C.rossoChiaro, colW - 1);
-  checkboxRow(M + colW * 3, y, ['Grandi', 'Fini'], d.perlage_grana, C.rossoChiaro, colW - 1);
+  checkboxRow(xCol(0), y, ['Trasparente', 'Compatto'], d.densita_cromatica, C.rossoChiaro, wCol(0) - 1);
+  checkboxRow(xCol(1), y, ['Opaco', 'Limpido'], d.limpidezza, C.rossoChiaro, wCol(1) - 1);
+  checkboxRow(xCol(2), y, ['Cupo', 'Vivace', 'Luminoso'], d.vivacita, C.rossoChiaro, wCol(2) - 1);
+  checkboxRow(xCol(3), y, ['Grandi', 'Fini'], d.perlage_grana, C.rossoChiaro, wCol(3) - 1);
   y += 9;
 
   // ===== OLFATTO =====
@@ -526,16 +533,11 @@ async function esportaPDF() {
     doc.setFillColor(...col);
     doc.rect(M + i * fascW + 0.3, y, fascW - 0.6, SCALE_H, 'F');
     if (isSel) {
+      // Bordo nero spesso (SENZA X — il testo dell'etichetta è già abbastanza visibile,
+      // e una X la oscurerebbe. Il bordo + bold sono indicatori sufficienti)
       doc.setDrawColor(...C.nero);
       doc.setLineWidth(1.2);
       doc.rect(M + i * fascW + 0.3, y, fascW - 0.6, SCALE_H);
-      doc.setDrawColor(255);
-      doc.setLineWidth(1.2);
-      const xSize = 2.0;
-      const xcx = M + i * fascW + fascW / 2;
-      const xcy = y + SCALE_H / 2;
-      doc.line(xcx - xSize, xcy - xSize, xcx + xSize, xcy + xSize);
-      doc.line(xcx + xSize, xcy - xSize, xcx - xSize, xcy + xSize);
       doc.setLineWidth(0.2);
     }
     doc.setTextColor(255);
