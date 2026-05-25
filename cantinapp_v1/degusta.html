@@ -66,12 +66,12 @@
     .step-title {
       font-size: 22px;
       font-weight: 600;
-      color: var(--testo);
+      color: var(--avorio);
       margin-bottom: 4px;
     }
     .step-sub {
       font-size: 14px;
-      color: var(--testo-2);
+      color: rgba(255,255,255,0.55);
       margin-bottom: 20px;
     }
 
@@ -83,12 +83,12 @@
       width: 100%;
       padding: 12px;
       border-radius: var(--radius-md);
-      border: 1px solid var(--bordo);
-      background: var(--bianco);
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
       font-size: 14px;
       font-family: inherit;
       resize: none;
-      color: var(--testo);
+      color: var(--avorio);
     }
 
     .punti-row {
@@ -122,7 +122,7 @@
       padding: 12px 14px;
       margin-bottom: 14px;
       font-size: 12px;
-      color: var(--testo-2);
+      color: rgba(255,255,255,0.55);
       line-height: 1.6;
     }
     .summary-box .lbl { color: var(--bordeaux); font-weight: 600; }
@@ -224,7 +224,7 @@
     </div>
 
     <div id="boxDensita" style="display:none">
-      <label class="field-label">Densità cromatica <span style="color:var(--testo-2);font-size:11px;font-weight:400">(vini rossi)</span></label>
+      <label class="field-label">Densità cromatica <span style="color:rgba(255,255,255,0.55);font-size:11px;font-weight:400">(vini rossi)</span></label>
       <div class="chips" id="chipsDensita">
         <span class="chip" data-v="trasparente">Trasparente</span>
         <span class="chip" data-v="compatto">Compatto</span>
@@ -273,7 +273,7 @@
     <div id="sentoriContainer"></div>
 
     <!-- Riepilogo sentori scelti -->
-    <div id="sentoriRiepilogo" style="display:none;margin-top:14px;padding:12px;background:var(--bianco);border:1px solid var(--bordo);border-radius:var(--radius-md)">
+    <div id="sentoriRiepilogo" style="display:none;margin-top:14px;padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius-md)">
       <div style="font-size:11px;font-weight:600;color:var(--bordeaux);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">
         Sentori riconosciuti (<span id="sentoriCount">0</span>)
       </div>
@@ -427,12 +427,12 @@
     <div class="summary-box" id="summaryBox"></div>
 
     <!-- Sezione vino esterno (solo se degustazione cieca/libera) -->
-    <div id="boxVinoEsterno" style="display:none;background:var(--bianco);border:1px solid var(--bordo);border-radius:var(--radius-lg);padding:16px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:600;color:var(--bordeaux);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+    <div id="boxVinoEsterno" style="display:none;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--oro);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
         <i class="ti ti-bottle-wine" style="color:var(--oro);font-size:16px"></i>
         Identità del vino
       </div>
-      <div style="font-size:12px;color:var(--testo-2);margin-bottom:12px;font-style:italic">
+      <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:12px;font-style:italic">
         Ora che hai espresso il tuo giudizio, riveli quale vino hai degustato?
       </div>
 

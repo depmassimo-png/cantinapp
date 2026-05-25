@@ -28,16 +28,16 @@
       font-weight: 500;
       cursor: pointer;
       border-radius: var(--radius-sm);
-      color: var(--testo-2);
+      color: rgba(255,255,255,0.55);
       transition: all .2s;
       border: none;
       background: transparent;
       font-family: inherit;
     }
     .tab.tab-active {
-      background: var(--bianco);
+      background: rgba(255,255,255,0.04);
       color: var(--bordeaux);
-      border: 1px solid var(--bordo);
+      border: 1px solid rgba(255,255,255,0.1);
     }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -133,7 +133,7 @@
   <div id="formForgot" style="display:none">
     <div class="login-card">
       <div style="margin-bottom:14px">
-        <div style="font-size:16px;font-weight:500;color:var(--testo);margin-bottom:4px">Reimposta password</div>
+        <div style="font-size:16px;font-weight:500;color:var(--avorio);margin-bottom:4px">Reimposta password</div>
         <div style="font-size:13px;color:var(--testo-2)">Ti mandiamo un link via email</div>
       </div>
       <label class="field-label">Email</label>
