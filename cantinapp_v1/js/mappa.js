@@ -77,22 +77,22 @@ function initLeaflet() {
     center: [20, 20],
     zoom: 2,
     minZoom: 1,
+    maxZoom: 18,
     zoomControl: true,
     attributionControl: true,
     worldCopyJump: false,
-    // Limita lo scroll ai confini del mondo (impedisce di vedere ripetizioni)
-    maxBounds: [[-85, -180], [85, 180]],
+    // bounds di scroll: usa le costanti CRS reali per evitare tagli
+    maxBounds: [[-90, -180], [90, 180]],
     maxBoundsViscosity: 1.0,
   });
 
-  // Tile CartoDB Positron: chiaro, neutro, professionale, GRATIS no API key
-  // NB: non uso noWrap perché taglierebbe le tile dell'estremo Est (Giappone, NZ)
-  // La ripetizione viene impedita da maxBounds + maxBoundsViscosity:1.0
+  // CartoDB Positron. NO 'bounds' qui: era lui a tagliare il Giappone.
+  // 'noWrap: true' impedisce la ripetizione orizzontale del mondo.
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19,
-    minZoom: 1,
+    noWrap: true,
   }).addTo(mapInstance);
 
   // Aggiungi cerchi
