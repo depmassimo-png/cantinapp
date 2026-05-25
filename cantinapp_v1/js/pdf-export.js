@@ -51,6 +51,14 @@ async function esportaPDF() {
     bordo: [180, 180, 180],
   };
 
+  // Sceglie il colore della X (nero o bianco) in base alla luminanza dello sfondo:
+  // sfondi chiari → X nera (alto contrasto), sfondi scuri → X bianca
+  function coloreXContrasto(rgb) {
+    const [r, g, b] = rgb;
+    const luminanza = 0.299 * r + 0.587 * g + 0.114 * b;
+    return luminanza > 140 ? C.nero : [255, 255, 255];
+  }
+
   function checkBox(x, y, sel, fillColor) {
     fillColor = fillColor || C.grigioChiaro;
     if (sel) {
@@ -148,7 +156,9 @@ async function esportaPDF() {
         doc.setDrawColor(...C.nero);
         doc.setLineWidth(1.2);
         doc.rect(cx + 0.3, boxY, sw - 0.6, SCALE_H);
-        // X nera CENTRATA con dimensione fissa, sopra il numero
+        // X centrata con colore in base alla luminanza dello sfondo
+        const xColor = coloreXContrasto(col);
+        doc.setDrawColor(...xColor);
         doc.setLineWidth(1.4);
         const xSize = 2.0;
         const xcx = cx + sw / 2;
@@ -485,10 +495,12 @@ async function esportaPDF() {
     doc.text(nt, M + i * dimSw + dimSw/2 - nw/2, y + SCALE_H/2 + 1.5);
 
     if (isSel) {
-      // Bordo + X nera sopra il numero
+      // Bordo + X colorata sopra il numero
       doc.setDrawColor(...C.nero);
       doc.setLineWidth(1.2);
       doc.rect(M + i * dimSw + 0.3, y, dimSw - 0.6, SCALE_H);
+      const xColor = coloreXContrasto(col);
+      doc.setDrawColor(...xColor);
       doc.setLineWidth(1.4);
       const xSize = 2.0;
       const xcx = M + i * dimSw + dimSw / 2;
