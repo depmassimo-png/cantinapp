@@ -140,7 +140,7 @@ async function esportaPDF() {
         doc.setLineWidth(1.2);
         doc.rect(cx + 0.3, boxY, sw - 0.6, SCALE_H);
         // X bianca CENTRATA con dimensione fissa (non deformata dalla larghezza del box)
-        doc.setDrawColor(255, 255, 255);
+        doc.setDrawColor(...C.nero);
         doc.setLineWidth(1.2);
         const xSize = 2.0; // semi-lato della X (fissa)
         const xcx = cx + sw / 2;
@@ -477,7 +477,7 @@ async function esportaPDF() {
       doc.setDrawColor(...C.nero);
       doc.setLineWidth(1.2);
       doc.rect(M + i * dimSw + 0.3, y, dimSw - 0.6, SCALE_H);
-      doc.setDrawColor(255);
+      doc.setDrawColor(...C.nero);
       doc.setLineWidth(1.2);
       const xSize = 2.0;
       const xcx = M + i * dimSw + dimSw / 2;

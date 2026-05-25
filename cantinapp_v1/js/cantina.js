@@ -71,11 +71,11 @@ async function loadBottiglie() {
   renderBottiglie();
 }
 
-// Determina se una bottiglia è "pronta da bere" in base al range pronto_da/pronto_fino_a
+// Determina se una bottiglia è "pronta da bere" in base al range anno_pronto_da/anno_pronto_a
 function isBottigliaPronta(b) {
   const annoCorrente = new Date().getFullYear();
-  const da = b.pronto_da;
-  const fino = b.pronto_fino_a;
+  const da = b.anno_pronto_da;
+  const fino = b.anno_pronto_a;
   // Se mancano entrambi, non sappiamo: non è "pronta certa"
   if (!da && !fino) return false;
   if (da && annoCorrente < da) return false;

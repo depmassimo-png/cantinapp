@@ -51,17 +51,17 @@ function renderStats() {
 
   // ========== Pronti da bere ==========
   const pronte = bottiglie.filter(b => {
-    if (!b.pronto_da && !b.pronto_fino_a) return false;
-    if (b.pronto_da && annoCorrente < b.pronto_da) return false;
-    if (b.pronto_fino_a && annoCorrente > b.pronto_fino_a) return false;
+    if (!b.anno_pronto_da && !b.anno_pronto_a) return false;
+    if (b.anno_pronto_da && annoCorrente < b.anno_pronto_da) return false;
+    if (b.anno_pronto_a && annoCorrente > b.anno_pronto_a) return false;
     return true;
   });
   const prontoQty = pronte.reduce((s, b) => s + (b.quantita || 1), 0);
 
   // ========== In scadenza (entro 2 anni) ==========
   const inScadenza = bottiglie.filter(b => {
-    if (!b.pronto_fino_a) return false;
-    const yearsLeft = b.pronto_fino_a - annoCorrente;
+    if (!b.anno_pronto_a) return false;
+    const yearsLeft = b.anno_pronto_a - annoCorrente;
     return yearsLeft >= 0 && yearsLeft <= 2;
   });
 
@@ -225,12 +225,34 @@ function renderStats() {
     html += `</div></div>`;
   }
 
-  // 5. BOTTIGLIE IN SCADENZA (lista)
+  // 5. BOTTIGLIE PRONTE DA BERE (lista)
+  if (pronte.length > 0) {
+    html += `<div class="stat-section">
+      <div class="stat-section-title">✓ Pronte da bere — nel range ottimale</div>`;
+    for (const b of pronte.sort((a, c) => (a.anno_pronto_a || 9999) - (c.anno_pronto_a || 9999)).slice(0, 8)) {
+      const tipologia = b.tipologia || 'rosso';
+      html += `<div class="stat-record">
+        <div class="stat-record-icon" style="background:rgba(201,168,76,0.15);color:#C9A84C">
+          <i class="ti ti-circle-check"></i>
+        </div>
+        <div class="stat-record-content">
+          <div class="stat-record-name">${esc(b.nome_vino)}</div>
+          <div class="stat-record-meta">${esc(b.produttore || '')}${b.annata ? ' · ' + b.annata : ''} · ${capitalize(tipologia)}</div>
+        </div>
+        <div class="stat-record-value" style="font-size:11px;color:rgba(255,255,255,0.55)">
+          ${b.anno_pronto_da || '?'}-${b.anno_pronto_a || '?'}
+        </div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  // 6. BOTTIGLIE IN SCADENZA (lista)
   if (inScadenza.length > 0) {
     html += `<div class="stat-section">
       <div class="stat-section-title">⚠️ In scadenza — da bere presto</div>`;
-    for (const b of inScadenza.sort((a, c) => (a.pronto_fino_a || 9999) - (c.pronto_fino_a || 9999)).slice(0, 5)) {
-      const yearsLeft = b.pronto_fino_a - annoCorrente;
+    for (const b of inScadenza.sort((a, c) => (a.anno_pronto_a || 9999) - (c.anno_pronto_a || 9999)).slice(0, 5)) {
+      const yearsLeft = b.anno_pronto_a - annoCorrente;
       const label = yearsLeft === 0 ? 'quest\'anno' : (yearsLeft === 1 ? 'entro 1 anno' : 'entro ' + yearsLeft + ' anni');
       html += `<div class="stat-record">
         <div class="stat-record-icon" style="background:rgba(196,86,50,0.15);color:#c45632">

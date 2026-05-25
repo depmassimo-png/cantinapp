@@ -229,6 +229,8 @@ function apriModifica() {
   document.getElementById('mQuantita').value = bottiglia.quantita || 0;
   document.getElementById('mProntoDa').value = bottiglia.anno_pronto_da || '';
   document.getElementById('mProntoA').value = bottiglia.anno_pronto_a || '';
+  document.getElementById('mPrezzo').value = bottiglia.prezzo_acquisto || '';
+  document.getElementById('mPosizione').value = bottiglia.posizione || '';
   document.getElementById('mNote').value = bottiglia.note || '';
   document.getElementById('modalModifica').classList.add('show');
 }
@@ -250,6 +252,8 @@ async function salvaModifica(e) {
     quantita: parseInt(document.getElementById('mQuantita').value) || 0,
     anno_pronto_da: parseIntOrNull(document.getElementById('mProntoDa').value),
     anno_pronto_a: parseIntOrNull(document.getElementById('mProntoA').value),
+    prezzo_acquisto: parseFloatOrNull(document.getElementById('mPrezzo').value),
+    posizione: nullIfEmpty(document.getElementById('mPosizione').value),
     note: nullIfEmpty(document.getElementById('mNote').value),
   };
 
