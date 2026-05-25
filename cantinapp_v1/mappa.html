@@ -20,6 +20,12 @@
   body.dark {
     background: var(--nero);
     color: var(--avorio);
+    margin: 0;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .header-mappa {
@@ -29,9 +35,7 @@
     padding: 12px 16px;
     background: var(--nero);
     border-bottom: 1px solid rgba(255,255,255,0.08);
-    position: sticky;
-    top: 0;
-    z-index: 1001;
+    flex-shrink: 0;
   }
   .header-mappa .left {
     display: flex;
@@ -60,6 +64,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
   }
   .totale-box .label {
     font-size: 10px;
@@ -109,8 +114,10 @@
   /* Mappa container - occupa tutto lo spazio rimanente */
   #map {
     width: 100%;
-    height: calc(100vh - 140px - env(safe-area-inset-bottom));
+    flex: 1;
+    min-height: 0;
     background: #1a0608;
+    position: relative;
   }
 
   /* Stili custom per i marker cerchi (sopra Leaflet) */
@@ -183,6 +190,9 @@
   /* Vista lista alternativa */
   #lista {
     display: none;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     padding: 16px;
   }
   #lista.show { display: block; }

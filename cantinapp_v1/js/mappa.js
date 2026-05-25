@@ -76,15 +76,24 @@ function initLeaflet() {
   mapInstance = L.map('map', {
     center: [30, 10],
     zoom: 2,
+    minZoom: 2,
     zoomControl: true,
     attributionControl: true,
+    worldCopyJump: false,
+    // Limita lo scroll ai confini reali del mondo (no ripetizione)
+    maxBounds: [[-85, -180], [85, 180]],
+    maxBoundsViscosity: 1.0,
   });
 
   // Tile CartoDB Positron: chiaro, neutro, professionale, GRATIS no API key
+  // noWrap: true → non ripete il mondo orizzontalmente
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19,
+    minZoom: 2,
+    noWrap: true,
+    bounds: [[-85, -180], [85, 180]],
   }).addTo(mapInstance);
 
   // Aggiungi cerchi
