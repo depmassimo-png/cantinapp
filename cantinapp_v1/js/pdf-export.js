@@ -139,11 +139,14 @@ async function esportaPDF() {
         doc.setDrawColor(...C.nero);
         doc.setLineWidth(1.2);
         doc.rect(cx + 0.3, boxY, sw - 0.6, SCALE_H);
+        // X bianca CENTRATA con dimensione fissa (non deformata dalla larghezza del box)
         doc.setDrawColor(255, 255, 255);
-        doc.setLineWidth(1.0);
-        const xPad = 1.8;
-        doc.line(cx + xPad, boxY + 1.0, cx + sw - xPad, boxY + SCALE_H - 1.0);
-        doc.line(cx + sw - xPad, boxY + 1.0, cx + xPad, boxY + SCALE_H - 1.0);
+        doc.setLineWidth(1.2);
+        const xSize = 2.0; // semi-lato della X (fissa)
+        const xcx = cx + sw / 2;
+        const xcy = boxY + SCALE_H / 2;
+        doc.line(xcx - xSize, xcy - xSize, xcx + xSize, xcy + xSize);
+        doc.line(xcx + xSize, xcy - xSize, xcx - xSize, xcy + xSize);
         doc.setLineWidth(0.2);
       }
       doc.setTextColor(255);
@@ -156,15 +159,29 @@ async function esportaPDF() {
     return boxY + SCALE_H;
   }
 
-  function boxPuntiInline(label, valore, xRight, yTop) {
-    doc.setFontSize(7);
+  // Larghezza riservata alla colonna "Punti" sulla destra
+  const PUNTI_W = 22;
+  const SCALE_W = CW - PUNTI_W - 2;  // -2 per separatore visivo
+
+  // Disegna il box "Punti" verticale a destra di una scala numerica
+  // Va chiamato DOPO aver disegnato la scala, allineato alla stessa y
+  function boxPuntiVerticale(valore, yTop, hScala) {
+    const xCol = M + CW - PUNTI_W;
+    // Sfondo grigio chiaro
+    doc.setFillColor(...C.grigioMolto);
+    doc.setDrawColor(...C.bordo);
+    doc.setLineWidth(0.3);
+    doc.rect(xCol, yTop, PUNTI_W, hScala, 'FD');
+    // Etichetta "Punti" in alto, valore grande in basso
+    doc.setFontSize(6);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...C.nero);
-    doc.text(label, xRight - 18, yTop);
+    doc.setTextColor(...C.grigio);
+    doc.text('PUNTI', xCol + PUNTI_W / 2, yTop + 2.5, { align: 'center' });
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
+    doc.setFontSize(11);
+    doc.setTextColor(...C.headerDark);
     const v = valore != null ? String(valore) : '—';
-    doc.text(v, xRight - 4, yTop, { align: 'right' });
+    doc.text(v, xCol + PUNTI_W / 2, yTop + hScala - 1.5, { align: 'center' });
   }
 
   function drawColumnChecks(x, y, w, opts, selected, color) {
@@ -310,8 +327,8 @@ async function esportaPDF() {
   doc.setFontSize(8);
   doc.setTextColor(...C.nero);
   doc.text('COMPLESSITÀ', M, y);
-  boxPuntiInline('Punti', d.olfatto_complessita_punti, W - M, y);
   y += 2;
+  const yScalaStart = y;
   const complPalette = [C.verdeChiaro, [180,195,135], [165,185,110], [145,170,90], C.verdeScuro];
   const complLabels = [
     {label:'Facile', count:1},
@@ -319,14 +336,15 @@ async function esportaPDF() {
     {label:'Più che complesso', count:2},
     {label:'Ampio', count:1}
   ];
-  y = scalaNumerica(M, y, [12,13,14,15,16], d.olfatto_complessita_punti, complPalette, CW, complLabels);
+  y = scalaNumerica(M, y, [12,13,14,15,16], d.olfatto_complessita_punti, complPalette, SCALE_W, complLabels);
+  boxPuntiVerticale(d.olfatto_complessita_punti, yScalaStart, y - yScalaStart);
   y += 3;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.text('QUALITÀ OLFATTIVA', M, y);
-  boxPuntiInline('Punti', d.olfatto_qualita_punti, W - M, y);
   y += 2;
+  const yQualStart = y;
   const qualPalette = [C.verdeChiaro, [195,210,150], [180,200,130], [165,190,110], [150,180,95], [135,170,85], C.verdeScuro];
   const qualLabels = [
     {label:'Accettabile', count:1},
@@ -334,7 +352,8 @@ async function esportaPDF() {
     {label:'Più che fine', count:2},
     {label:'Eccellente', count:2}
   ];
-  y = scalaNumerica(M, y, [14,15,16,17,18,19,20], d.olfatto_qualita_punti, qualPalette, CW, qualLabels);
+  y = scalaNumerica(M, y, [14,15,16,17,18,19,20], d.olfatto_qualita_punti, qualPalette, SCALE_W, qualLabels);
+  boxPuntiVerticale(d.olfatto_qualita_punti, yQualStart, y - yQualStart);
   y += 4;
 
   // ===== GUSTO =====
@@ -365,8 +384,8 @@ async function esportaPDF() {
   doc.setFontSize(8);
   doc.setTextColor(...C.nero);
   doc.text('EQUILIBRIO', M, y);
-  boxPuntiInline('Punti', d.gusto_equilibrio_punti, W - M, y);
   y += 2;
+  const yEquiStart = y;
   const equiPalette = [C.bluChiaro, [165,185,210], [140,165,195], [115,145,180], [90,125,165], [70,105,145], C.bluDark];
   const equiLabels = [
     {label:'Squilibrato', count:1},
@@ -374,21 +393,23 @@ async function esportaPDF() {
     {label:'Bilanciato', count:2},
     {label:'Equilibrato', count:2}
   ];
-  y = scalaNumerica(M, y, [12,13,14,15,16,17,18], d.gusto_equilibrio_punti, equiPalette, CW, equiLabels);
+  y = scalaNumerica(M, y, [12,13,14,15,16,17,18], d.gusto_equilibrio_punti, equiPalette, SCALE_W, equiLabels);
+  boxPuntiVerticale(d.gusto_equilibrio_punti, yEquiStart, y - yEquiStart);
   y += 3;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.text('PERSISTENZA', M, y);
-  boxPuntiInline('Punti', d.gusto_persistenza_punti, W - M, y);
   y += 2;
+  const yPersStart = y;
   const persLabels = [
     {label:'Accettabile', count:1},
     {label:'Persistente', count:2},
     {label:'Più che persistente', count:2},
     {label:'Lungo', count:2}
   ];
-  y = scalaNumerica(M, y, [10,11,12,13,14,15,16], d.gusto_persistenza_punti, equiPalette, CW, persLabels);
+  y = scalaNumerica(M, y, [10,11,12,13,14,15,16], d.gusto_persistenza_punti, equiPalette, SCALE_W, persLabels);
+  boxPuntiVerticale(d.gusto_persistenza_punti, yPersStart, y - yPersStart);
   y += 3;
 
   const halfW = CW / 2;
@@ -405,22 +426,23 @@ async function esportaPDF() {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.text('QUALITÀ GUSTATIVA', M, y);
-  boxPuntiInline('Punti', d.gusto_qualita_punti, W - M, y);
   y += 2;
+  const yQGStart = y;
   const qgLabels = [
     {label:'Accettabile', count:1},
     {label:'Fine', count:2},
     {label:'Più che fine', count:2},
     {label:'Eccellente', count:2}
   ];
-  y = scalaNumerica(M, y, [18,19,20,21,22,23,24], d.gusto_qualita_punti, equiPalette, CW, qgLabels);
+  y = scalaNumerica(M, y, [18,19,20,21,22,23,24], d.gusto_qualita_punti, equiPalette, SCALE_W, qgLabels);
+  boxPuntiVerticale(d.gusto_qualita_punti, yQGStart, y - yQGStart);
   y += 3;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.text('DIMENSIONE', M, y);
-  boxPuntiInline('Punti', d.gusto_dimensioni_punti, W - M, y);
   y += 2;
+  const yDimStart = y;
   const dimLabel = d.gusto_dimensioni_label;
   const dimItems = [
     { label: 'strutturato', display:'Strutturato', punti: 3 },
@@ -428,7 +450,7 @@ async function esportaPDF() {
     { label: 'distinto', display:'Distinto', punti: 5 },
     { label: 'suggestivo', display:'Suggestivo', punti: 6 }
   ];
-  const dimSw = CW / 4;
+  const dimSw = SCALE_W / 4;
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...C.nero);
@@ -449,9 +471,12 @@ async function esportaPDF() {
       doc.setLineWidth(1.2);
       doc.rect(M + i * dimSw + 0.3, y, dimSw - 0.6, SCALE_H);
       doc.setDrawColor(255);
-      doc.setLineWidth(1.0);
-      doc.line(M + i * dimSw + 2, y + 1.0, M + i * dimSw + dimSw - 2, y + SCALE_H - 1.0);
-      doc.line(M + i * dimSw + dimSw - 2, y + 1.0, M + i * dimSw + 2, y + SCALE_H - 1.0);
+      doc.setLineWidth(1.2);
+      const xSize = 2.0;
+      const xcx = M + i * dimSw + dimSw / 2;
+      const xcy = y + SCALE_H / 2;
+      doc.line(xcx - xSize, xcy - xSize, xcx + xSize, xcy + xSize);
+      doc.line(xcx + xSize, xcy - xSize, xcx - xSize, xcy + xSize);
       doc.setLineWidth(0.2);
     }
     doc.setTextColor(255);
@@ -461,6 +486,8 @@ async function esportaPDF() {
     const nw = doc.getTextWidth(nt);
     doc.text(nt, M + i * dimSw + dimSw/2 - nw/2, y + SCALE_H/2 + 1.5);
   }
+  // Colonna Punti dedicata
+  boxPuntiVerticale(d.gusto_dimensioni_punti, yDimStart, (y + SCALE_H) - yDimStart);
   y += SCALE_H + 3;
 
   doc.setFont('helvetica', 'bold');
@@ -503,10 +530,12 @@ async function esportaPDF() {
       doc.setLineWidth(1.2);
       doc.rect(M + i * fascW + 0.3, y, fascW - 0.6, SCALE_H);
       doc.setDrawColor(255);
-      doc.setLineWidth(1.0);
-      const cxFasc = M + i * fascW + (fascW - 0.6) / 2;
-      doc.line(cxFasc - 2.5, y + 1.0, cxFasc + 2.5, y + SCALE_H - 1.0);
-      doc.line(cxFasc + 2.5, y + 1.0, cxFasc - 2.5, y + SCALE_H - 1.0);
+      doc.setLineWidth(1.2);
+      const xSize = 2.0;
+      const xcx = M + i * fascW + fascW / 2;
+      const xcy = y + SCALE_H / 2;
+      doc.line(xcx - xSize, xcy - xSize, xcx + xSize, xcy + xSize);
+      doc.line(xcx + xSize, xcy - xSize, xcx - xSize, xcy + xSize);
       doc.setLineWidth(0.2);
     }
     doc.setTextColor(255);
