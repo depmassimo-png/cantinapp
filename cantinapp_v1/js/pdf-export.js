@@ -152,19 +152,10 @@ async function esportaPDF() {
       doc.text(nt, cx + sw / 2 - nw / 2, boxY + SCALE_H / 2 + 1.2);
 
       if (isSel) {
-        // Bordo nero spesso
+        // Solo bordo nero spesso, niente X (il numero in bold è già evidente)
         doc.setDrawColor(...C.nero);
         doc.setLineWidth(1.2);
         doc.rect(cx + 0.3, boxY, sw - 0.6, SCALE_H);
-        // X centrata con colore in base alla luminanza dello sfondo
-        const xColor = coloreXContrasto(col);
-        doc.setDrawColor(...xColor);
-        doc.setLineWidth(1.4);
-        const xSize = 2.0;
-        const xcx = cx + sw / 2;
-        const xcy = boxY + SCALE_H / 2;
-        doc.line(xcx - xSize, xcy - xSize, xcx + xSize, xcy + xSize);
-        doc.line(xcx + xSize, xcy - xSize, xcx - xSize, xcy + xSize);
         doc.setLineWidth(0.2);
       }
     }
@@ -299,10 +290,12 @@ async function esportaPDF() {
   doc.line(xCol(2), y - 5, xCol(2), y + 6);
   doc.line(xCol(3), y - 5, xCol(3), y + 6);
 
-  checkboxRow(xCol(0), y, ['Trasparente', 'Compatto'], d.densita_cromatica, C.rossoChiaro, wCol(0) - 1);
-  checkboxRow(xCol(1), y, ['Opaco', 'Limpido'], d.limpidezza, C.rossoChiaro, wCol(1) - 1);
-  checkboxRow(xCol(2), y, ['Cupo', 'Vivace', 'Luminoso'], d.vivacita, C.rossoChiaro, wCol(2) - 1);
-  checkboxRow(xCol(3), y, ['Grandi', 'Fini'], d.perlage_grana, C.rossoChiaro, wCol(3) - 1);
+  // Padding orizzontale per non attaccare i checkbox alle linee verticali
+  const PAD_COL = 2.5;
+  checkboxRow(xCol(0) + PAD_COL, y, ['Trasparente', 'Compatto'], d.densita_cromatica, C.rossoChiaro, wCol(0) - PAD_COL * 2);
+  checkboxRow(xCol(1) + PAD_COL, y, ['Opaco', 'Limpido'], d.limpidezza, C.rossoChiaro, wCol(1) - PAD_COL * 2);
+  checkboxRow(xCol(2) + PAD_COL, y, ['Cupo', 'Vivace', 'Luminoso'], d.vivacita, C.rossoChiaro, wCol(2) - PAD_COL * 2);
+  checkboxRow(xCol(3) + PAD_COL, y, ['Grandi', 'Fini'], d.perlage_grana, C.rossoChiaro, wCol(3) - PAD_COL * 2);
   y += 9;
 
   // ===== OLFATTO =====
@@ -331,14 +324,37 @@ async function esportaPDF() {
   doc.setFont('helvetica', 'normal');
   doc.text('Note', M, y);
   drawUnderline(doc, M + 8, y + 0.5, W - M);
+
+  // Compone il testo completo (sentori + note)
+  let noteText = '';
   if (d.olfatto_sentori && d.olfatto_sentori.length) {
-    doc.setFont('helvetica', 'italic');
-    const noteText = d.olfatto_sentori.join(', ') + (d.olfatto_note ? ' — ' + d.olfatto_note : '');
-    const lines = doc.splitTextToSize(noteText, W - M - M - 10);
-    doc.text(lines[0] || '', M + 10, y - 0.5);
+    noteText = d.olfatto_sentori.join(', ');
+    if (d.olfatto_note) noteText += ' — ' + d.olfatto_note;
   } else if (d.olfatto_note) {
+    noteText = d.olfatto_note;
+  }
+
+  if (noteText) {
     doc.setFont('helvetica', 'italic');
-    doc.text(d.olfatto_note.substring(0, 80), M + 10, y - 0.5);
+    // Suddivide su 2 righe massimo
+    const lines = doc.splitTextToSize(noteText, W - M - M - 10);
+    // Prima riga: sopra la sottolineatura
+    doc.text(lines[0] || '', M + 10, y - 0.5);
+    // Seconda riga (se serve): subito sotto la prima, con propria sottolineatura
+    if (lines.length > 1) {
+      y += 5;
+      let line2 = lines[1];
+      // Se c'è una terza riga, aggiunge "…" alla fine della seconda
+      if (lines.length > 2) {
+        // Tronca line2 per fare spazio a "…"
+        while (doc.getTextWidth(line2 + '…') > W - M - M - 2 && line2.length > 5) {
+          line2 = line2.slice(0, -1);
+        }
+        line2 += '…';
+      }
+      doc.text(line2, M, y - 0.5);
+      drawUnderline(doc, M, y + 0.5, W - M);
+    }
   }
   y += 6;
 
@@ -346,7 +362,7 @@ async function esportaPDF() {
   doc.setFontSize(8);
   doc.setTextColor(...C.nero);
   doc.text('COMPLESSITÀ', M, y);
-  y += 2;
+  y += 3.5;
   const yScalaStart = y;
   const complPalette = [C.verdeChiaro, [180,195,135], [165,185,110], [145,170,90], C.verdeScuro];
   const complLabels = [
@@ -362,7 +378,7 @@ async function esportaPDF() {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.text('QUALITÀ OLFATTIVA', M, y);
-  y += 2;
+  y += 3.5;
   const yQualStart = y;
   const qualPalette = [C.verdeChiaro, [195,210,150], [180,200,130], [165,190,110], [150,180,95], [135,170,85], C.verdeScuro];
   const qualLabels = [
@@ -403,7 +419,7 @@ async function esportaPDF() {
   doc.setFontSize(8);
   doc.setTextColor(...C.nero);
   doc.text('EQUILIBRIO', M, y);
-  y += 2;
+  y += 3.5;
   const yEquiStart = y;
   const equiPalette = [C.bluChiaro, [165,185,210], [140,165,195], [115,145,180], [90,125,165], [70,105,145], C.bluDark];
   const equiLabels = [
@@ -419,7 +435,7 @@ async function esportaPDF() {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.text('PERSISTENZA', M, y);
-  y += 2;
+  y += 3.5;
   const yPersStart = y;
   const persLabels = [
     {label:'Accettabile', count:1},
@@ -445,7 +461,7 @@ async function esportaPDF() {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.text('QUALITÀ GUSTATIVA', M, y);
-  y += 2;
+  y += 3.5;
   const yQGStart = y;
   const qgLabels = [
     {label:'Accettabile', count:1},
@@ -460,7 +476,7 @@ async function esportaPDF() {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.text('DIMENSIONE', M, y);
-  y += 2;
+  y += 3.5;
   const yDimStart = y;
   const dimLabel = d.gusto_dimensioni_label;
   const dimItems = [
@@ -495,18 +511,10 @@ async function esportaPDF() {
     doc.text(nt, M + i * dimSw + dimSw/2 - nw/2, y + SCALE_H/2 + 1.5);
 
     if (isSel) {
-      // Bordo + X colorata sopra il numero
+      // Solo bordo nero spesso
       doc.setDrawColor(...C.nero);
       doc.setLineWidth(1.2);
       doc.rect(M + i * dimSw + 0.3, y, dimSw - 0.6, SCALE_H);
-      const xColor = coloreXContrasto(col);
-      doc.setDrawColor(...xColor);
-      doc.setLineWidth(1.4);
-      const xSize = 2.0;
-      const xcx = M + i * dimSw + dimSw / 2;
-      const xcy = y + SCALE_H / 2;
-      doc.line(xcx - xSize, xcy - xSize, xcx + xSize, xcy + xSize);
-      doc.line(xcx + xSize, xcy - xSize, xcx - xSize, xcy + xSize);
       doc.setLineWidth(0.2);
     }
   }
