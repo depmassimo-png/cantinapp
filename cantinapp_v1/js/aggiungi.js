@@ -462,16 +462,19 @@ async function salvaBottiglia(e) {
       msg.textContent = 'Upload foto fronte...';
       const ext = fotoFronte.name.split('.').pop().toLowerCase();
       const fileName = `${currentUser.id}/${Date.now()}_fronte.${ext}`;
+      console.log('[upload] fronte:', fileName, 'size:', fotoFronte.size);
       const { error: upErr } = await sb.storage
         .from('etichette')
-        .upload(fileName, fotoFronte, { upsert: false });
+        .upload(fileName, fotoFronte, { upsert: false, contentType: fotoFronte.type });
       if (upErr) {
-        console.error('Upload fronte error:', upErr);
-        showToast('Errore upload fronte: ' + upErr.message, true);
-      } else {
-        const { data: { publicUrl } } = sb.storage.from('etichette').getPublicUrl(fileName);
-        dati.etichetta_url = publicUrl;
+        overlay.classList.remove('show');
+        console.error('[upload] errore fronte:', upErr);
+        showToast('Errore upload foto fronte: ' + upErr.message, true);
+        return; // STOP: non salvare la bottiglia senza la foto richiesta
       }
+      const { data: pub1 } = sb.storage.from('etichette').getPublicUrl(fileName);
+      dati.etichetta_url = pub1.publicUrl;
+      console.log('[upload] fronte OK:', pub1.publicUrl);
     }
 
     // Upload foto RETRO se presente
@@ -479,16 +482,19 @@ async function salvaBottiglia(e) {
       msg.textContent = 'Upload foto retro...';
       const ext = fotoRetro.name.split('.').pop().toLowerCase();
       const fileName = `${currentUser.id}/${Date.now()}_retro.${ext}`;
+      console.log('[upload] retro:', fileName, 'size:', fotoRetro.size);
       const { error: upErr } = await sb.storage
         .from('etichette')
-        .upload(fileName, fotoRetro, { upsert: false });
+        .upload(fileName, fotoRetro, { upsert: false, contentType: fotoRetro.type });
       if (upErr) {
-        console.error('Upload retro error:', upErr);
-        showToast('Errore upload retro: ' + upErr.message, true);
-      } else {
-        const { data: { publicUrl } } = sb.storage.from('etichette').getPublicUrl(fileName);
-        dati.controetichetta_url = publicUrl;
+        overlay.classList.remove('show');
+        console.error('[upload] errore retro:', upErr);
+        showToast('Errore upload foto retro: ' + upErr.message, true);
+        return;
       }
+      const { data: pub2 } = sb.storage.from('etichette').getPublicUrl(fileName);
+      dati.controetichetta_url = pub2.publicUrl;
+      console.log('[upload] retro OK:', pub2.publicUrl);
     }
 
     // Insert
