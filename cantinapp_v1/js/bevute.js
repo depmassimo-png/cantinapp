@@ -147,10 +147,11 @@ function renderList() {
 function cardBevutaSenzaScheda(b) {
   const data = b.updated_at ? formatDate(b.updated_at) : '';
   const annata = b.annata || '';
-  const tipologia = b.tipologia || '';
+  const tipologia = b.tipologia || 'default';
 
   return `
     <a class="degust-card degust-card-pending" href="degusta.html?bottiglia_id=${b.id}">
+      <div class="degust-stripe stripe-${tipologia}"></div>
       <div class="degust-top">
         <div class="degust-info">
           <div class="degust-name">${esc(b.nome_vino || 'Vino senza nome')}</div>
@@ -161,7 +162,7 @@ function cardBevutaSenzaScheda(b) {
         </div>
       </div>
       <div class="degust-meta">
-        ${tipologia ? `<span class="badge badge-${tipologia}">${cap(tipologia)}</span>` : ''}
+        ${tipologia !== 'default' ? `<span class="tipo-label tipo-${tipologia}">${cap(tipologia)}</span>` : ''}
         <span class="degust-pending-pill"><i class="ti ti-pencil"></i> Compila scheda</span>
       </div>
     </a>`;
@@ -171,10 +172,9 @@ function cardHtml(d) {
   const nome = d.bottiglia?.nome_vino || d.nome_vino_esterno || 'Vino senza nome';
   const prod = d.bottiglia?.produttore || d.produttore_esterno || '';
   const annata = d.bottiglia?.annata || d.annata_esterna || '';
-  const tipologia = d.bottiglia?.tipologia || '';
+  const tipologia = d.bottiglia?.tipologia || 'default';
 
   const punti = d.punteggio_totale || 0;
-  const fascia = d.fascia_finale || '';
   const stelle = d.voto_piacere_personale || 0;
   const stelleHtml = stelle > 0
     ? Array.from({length: 5}, (_, i) => i < stelle ? '★' : '<span class="empty">★</span>').join('')
@@ -182,6 +182,7 @@ function cardHtml(d) {
 
   return `
     <a class="degust-card" href="scheda.html?id=${d.id}">
+      <div class="degust-stripe stripe-${tipologia}"></div>
       <div class="degust-top">
         <div class="degust-info">
           <div class="degust-name">${esc(nome)}</div>
@@ -193,12 +194,10 @@ function cardHtml(d) {
         </div>
       </div>
       <div class="degust-meta">
-        ${tipologia ? `<span class="badge badge-${tipologia}">${cap(tipologia)}</span>` : ''}
-        ${fascia ? `<span class="degust-fascia f-${fascia}">${labelFascia(fascia)}</span>` : ''}
-        ${d.luogo ? `<span class="badge badge-anno">${esc(d.luogo)}</span>` : ''}
+        ${tipologia !== 'default' ? `<span class="tipo-label tipo-${tipologia}">${cap(tipologia)}</span>` : ''}
+        ${d.luogo ? `<span class="degust-tag"><i class="ti ti-map-pin"></i>${esc(d.luogo)}</span>` : ''}
+        ${stelleHtml ? `<span class="stars-line">${stelleHtml}</span>` : ''}
       </div>
-      ${stelleHtml ? `<div class="stars-line">${stelleHtml}</div>` : ''}
-      ${d.note_conclusive ? `<div class="degust-note">"${esc(d.note_conclusive)}"</div>` : ''}
     </a>`;
 }
 
