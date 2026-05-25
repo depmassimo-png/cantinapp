@@ -320,13 +320,12 @@ async function esportaPDF() {
   y += 6;
 
   // Spazio in più per separare le famiglie olfattive dalle note
-  y += 3;
+  y += 5;
 
   doc.setFontSize(7.5);
   doc.setTextColor(...C.nero);
   doc.setFont('helvetica', 'normal');
   doc.text('Note', M, y);
-  drawUnderline(doc, M + 8, y + 0.5, W - M);
 
   // Compone il testo completo (sentori + note personali utente)
   let noteText = '';
@@ -338,31 +337,42 @@ async function esportaPDF() {
     else noteText = d.olfatto_note;
   }
 
-  // Suddivide in righe e mostra fino a 2
+  // Suddivide il testo su larghezza disponibile
   let lines = [];
   if (noteText) {
-    lines = doc.splitTextToSize(noteText, W - M - M - 10);
-    doc.setFont('helvetica', 'italic');
-    doc.text(lines[0] || '', M + 10, y - 0.5);
+    lines = doc.splitTextToSize(noteText, W - M - M - 12);
   }
 
-  // SECONDA RIGA: sempre presente, anche se vuota (per dare spazio scrittura)
-  y += 5;
+  // PRIMA RIGA
+  if (lines[0]) {
+    doc.setFont('helvetica', 'italic');
+    doc.text(lines[0], M + 12, y);
+  }
+  // Sottolineatura riga 1 (un po' più marcata)
+  doc.setDrawColor(160);
+  doc.setLineWidth(0.3);
+  doc.line(M + 12, y + 1, W - M, y + 1);
+
+  // SECONDA RIGA: sempre presente, distanziata di 6mm
+  y += 6;
   if (lines.length > 1) {
     let line2 = lines[1];
     if (lines.length > 2) {
-      // Tronca con "…" se c'è una terza riga
       while (doc.getTextWidth(line2 + '…') > W - M - M - 2 && line2.length > 5) {
         line2 = line2.slice(0, -1);
       }
       line2 += '…';
     }
     doc.setFont('helvetica', 'italic');
-    doc.text(line2, M, y - 0.5);
+    doc.text(line2, M, y);
   }
-  // Sottolineatura sempre presente (anche se la riga è vuota)
-  drawUnderline(doc, M, y + 0.5, W - M);
-  y += 6;
+  // Sottolineatura riga 2 (sempre presente)
+  doc.setDrawColor(160);
+  doc.setLineWidth(0.3);
+  doc.line(M, y + 1, W - M, y + 1);
+  doc.setLineWidth(0.2);
+
+  y += 5;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
