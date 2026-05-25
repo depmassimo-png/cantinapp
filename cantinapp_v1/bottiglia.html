@@ -45,6 +45,88 @@
       font-weight: 500;
       color: #fff;
     }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    /* Bottoni edit mode */
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.75);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .btn-save {
+      background: var(--bordeaux);
+      border: none;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-save i { font-size: 16px; }
+
+    /* Modalità edit: bordino oro su section per evidenziare */
+    body.editing .info-card {
+      border-color: rgba(201,168,76,0.3);
+    }
+    /* Input inline nei dettagli */
+    .info-value-input,
+    .info-value-select {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: var(--avorio);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      width: 100%;
+      max-width: 200px;
+      text-align: right;
+    }
+    .info-value-input:focus,
+    .info-value-select:focus {
+      border-color: var(--oro);
+      outline: none;
+      background: rgba(255,255,255,0.08);
+    }
+    .info-row.row-stack {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+    }
+    .info-row.row-stack .info-label {
+      flex: none;
+    }
+    .info-row.row-stack .info-value-input,
+    .info-row.row-stack .info-value-select {
+      max-width: 100%;
+      text-align: left;
+    }
+    /* Banner promemoria edit mode */
+    .edit-banner {
+      background: rgba(201,168,76,0.15);
+      border: 1px solid rgba(201,168,76,0.4);
+      color: var(--oro);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .edit-banner i { font-size: 18px; }
 
     .hero-photo {
       width: 100%;
@@ -344,14 +426,29 @@
 
   <div class="header-detail">
     <div class="left">
-      <a href="cantina.html" aria-label="Indietro">
+      <a href="cantina.html" aria-label="Indietro" id="btnBack">
         <i class="ti ti-arrow-left"></i>
       </a>
-      <h1><img src="logo.png" alt="" class="logo-mini"> Dettaglio bottiglia</h1>
+      <h1><img src="logo.png" alt="" class="logo-mini"> <span id="headerTitle">Dettaglio bottiglia</span></h1>
     </div>
-    <button class="icon-btn" onclick="apriModifica()" aria-label="Modifica">
-      <i class="ti ti-edit"></i>
-    </button>
+    <!-- Bottoni dinamici: in view mode mostra matita, in edit mode mostra Annulla/Salva -->
+    <div class="header-actions">
+      <button class="icon-btn" id="btnEdit" onclick="entraInEdit()" aria-label="Modifica">
+        <i class="ti ti-edit"></i>
+      </button>
+      <button class="btn-ghost" id="btnCancelEdit" onclick="annullaEdit()" style="display:none">
+        Annulla
+      </button>
+      <button class="btn-save" id="btnSaveEdit" onclick="salvaEdit()" style="display:none">
+        <i class="ti ti-check"></i> Salva
+      </button>
+    </div>
+  </div>
+
+  <!-- Banner che appare solo in modalità edit -->
+  <div class="edit-banner" id="editBanner" style="display:none">
+    <i class="ti ti-edit"></i>
+    <div>Stai modificando questa bottiglia. Tocca <strong>Salva</strong> in alto a destra per confermare.</div>
   </div>
 
   <div class="hero-photo" id="heroPhoto">
@@ -419,103 +516,6 @@
 
 </div>
 
-<!-- MODAL MODIFICA -->
-<div class="modal-overlay" id="modalModifica">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-title">Modifica bottiglia</div>
-      <button class="modal-close" onclick="chiudiModifica()" aria-label="Chiudi">×</button>
-    </div>
-
-    <form id="formModifica" onsubmit="salvaModifica(event)">
-
-      <label class="field-label">Nome del vino</label>
-      <input type="text" id="mNome" required>
-
-      <label class="field-label">Produttore</label>
-      <input type="text" id="mProduttore" required>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label class="field-label">Annata</label>
-          <input type="number" id="mAnnata" min="1900" max="2099">
-        </div>
-        <div>
-          <label class="field-label">Tipologia</label>
-          <select id="mTipologia">
-            <option value="rosso">Rosso</option>
-            <option value="bianco">Bianco</option>
-            <option value="rosato">Rosato</option>
-            <option value="spumante">Spumante</option>
-            <option value="passito">Passito</option>
-            <option value="liquoroso">Liquoroso</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label class="field-label">Denominazione</label>
-          <input type="text" id="mDenominazione">
-        </div>
-        <div>
-          <label class="field-label">Nazione</label>
-          <select id="mNazione" onchange="aggiornaCampoRegioneModal()"></select>
-        </div>
-      </div>
-
-      <div style="margin-bottom:8px">
-        <label class="field-label" id="mRegioneLabel">Regione</label>
-        <select id="mRegioneSelect" style="display:none"></select>
-        <input type="text" id="mRegione" placeholder="es. Bordeaux, Mosella...">
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label class="field-label">Gradazione</label>
-          <input type="number" id="mGradazione" step="0.1" min="0" max="25">
-        </div>
-        <div>
-          <label class="field-label">Quantità</label>
-          <input type="number" id="mQuantita" min="0">
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label class="field-label">Pronto da</label>
-          <input type="number" id="mProntoDa" min="1900" max="2099">
-        </div>
-        <div>
-          <label class="field-label">Pronto fino a</label>
-          <input type="number" id="mProntoA" min="1900" max="2099">
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label class="field-label">Prezzo (€)</label>
-          <input type="number" id="mPrezzo" step="0.01" min="0" placeholder="es. 25.00">
-        </div>
-        <div>
-          <label class="field-label">Posizione</label>
-          <input type="text" id="mPosizione" placeholder="es. A2">
-        </div>
-      </div>
-
-      <label class="field-label">Note personali</label>
-      <textarea id="mNote" rows="3"></textarea>
-
-      <div class="modal-bottom">
-        <button type="button" class="btn btn-outline" onclick="chiudiModifica()">Annulla</button>
-        <button type="submit" class="btn btn-primary" style="flex:2">
-          <i class="ti ti-check" style="font-size:18px"></i>
-          Salva modifiche
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
 
 <div class="toast" id="toast"></div>
 
