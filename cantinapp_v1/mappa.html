@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a0608">
+<title>Mappa cantina · CantinApp</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+<!-- Leaflet CSS + JS via CDN -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""></script>
+
+<style>
+  body.dark {
+    background: var(--nero);
+    color: var(--avorio);
+  }
+
+  .header-mappa {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--nero);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1001;
+  }
+  .header-mappa .left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-mappa a {
+    color: var(--oro);
+    font-size: 22px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+  }
+  .header-mappa h1 {
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+    margin: 0;
+  }
+
+  .mappa-info {
+    padding: 12px 16px;
+    background: var(--nero);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .totale-box .label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .totale-box .value {
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--avorio);
+    line-height: 1;
+    margin-top: 2px;
+  }
+  .totale-box .sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    margin-top: 4px;
+  }
+
+  /* Toggle mappa/lista */
+  .view-toggle {
+    display: flex;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .view-toggle button {
+    background: transparent;
+    border: none;
+    padding: 8px 14px;
+    color: rgba(255,255,255,0.55);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .view-toggle button.active {
+    background: var(--bordeaux);
+    color: #fff;
+  }
+  .view-toggle button i { font-size: 16px; }
+
+  /* Mappa container - occupa tutto lo spazio rimanente */
+  #map {
+    width: 100%;
+    height: calc(100vh - 140px - env(safe-area-inset-bottom));
+    background: #1a0608;
+  }
+
+  /* Stili custom per i marker cerchi (sopra Leaflet) */
+  .docg-marker {
+    background: var(--bordeaux);
+    border: 2px solid var(--oro);
+    border-radius: 50%;
+    color: #fff;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    transition: transform 0.15s;
+  }
+  .docg-marker:hover {
+    transform: scale(1.1);
+  }
+
+  /* Popup customization */
+  .leaflet-popup-content-wrapper {
+    background: var(--nero);
+    color: var(--avorio);
+    border-radius: 10px;
+    border: 1px solid rgba(201,168,76,0.3);
+  }
+  .leaflet-popup-tip {
+    background: var(--nero);
+  }
+  .leaflet-popup-content {
+    margin: 12px 14px;
+    font-family: inherit;
+  }
+  .popup-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--oro);
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .popup-row {
+    font-size: 12px;
+    color: var(--avorio);
+    padding: 4px 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .popup-row .anno {
+    color: rgba(255,255,255,0.55);
+    font-size: 11px;
+  }
+  .popup-link {
+    display: block;
+    text-align: center;
+    margin-top: 8px;
+    padding: 6px;
+    background: var(--bordeaux);
+    color: #fff !important;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .leaflet-container a.popup-link {
+    color: #fff;
+  }
+
+  /* Vista lista alternativa */
+  #lista {
+    display: none;
+    padding: 16px;
+  }
+  #lista.show { display: block; }
+  #map.hide { display: none; }
+  .lista-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .lista-item .ranking {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--bordeaux);
+    color: var(--oro);
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .lista-item .nome { flex: 1; font-size: 14px; color: var(--avorio); }
+  .lista-item .sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+  .lista-item .count { color: var(--oro); font-weight: 600; font-size: 16px; }
+
+  .loading-mappa {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--oro);
+    font-size: 14px;
+  }
+</style>
+</head>
+<body class="dark">
+
+<div class="header-mappa">
+  <div class="left">
+    <a href="cantina.html" aria-label="Indietro">
+      <i class="ti ti-arrow-left"></i>
+    </a>
+    <h1><img src="logo.png" alt="" class="logo-mini"> Mappa cantina</h1>
+  </div>
+</div>
+
+<div class="mappa-info">
+  <div class="totale-box">
+    <div class="label">Totale</div>
+    <div class="value" id="totaleBottiglie">—</div>
+    <div class="sub" id="totaleZone">—</div>
+  </div>
+
+  <div class="view-toggle">
+    <button id="btnMappa" class="active" onclick="cambiaVista('mappa')" aria-label="Vista mappa">
+      <i class="ti ti-map"></i>
+    </button>
+    <button id="btnLista" onclick="cambiaVista('lista')" aria-label="Vista lista">
+      <i class="ti ti-list"></i>
+    </button>
+  </div>
+</div>
+
+<div id="map">
+  <div class="loading-mappa">Caricamento mappa...</div>
+</div>
+
+<div id="lista"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/geo-data.js"></script>
+<script src="js/geo-coords.js"></script>
+<script src="js/mappa.js"></script>
+</body>
+</html>
