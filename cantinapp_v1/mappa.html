@@ -120,6 +120,16 @@
     position: relative;
   }
 
+  /* Su schermi larghi (desktop) limita la larghezza dell'intera app */
+  @media (min-width: 768px) {
+    body.dark {
+      max-width: 900px;
+      margin: 0 auto;
+      border-left: 1px solid rgba(255,255,255,0.06);
+      border-right: 1px solid rgba(255,255,255,0.06);
+    }
+  }
+
   /* Stili custom per i marker cerchi (sopra Leaflet) */
   .docg-marker {
     background: var(--bordeaux);

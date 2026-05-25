@@ -74,15 +74,16 @@ function initLeaflet() {
   // Centra inizialmente sul mondo, con bias sull'Europa
   // Se ci sono bottiglie, fa fit ai gruppi alla fine
   mapInstance = L.map('map', {
-    center: [30, 10],
+    center: [20, 20],
     zoom: 2,
     minZoom: 1,
     zoomControl: true,
     attributionControl: true,
     worldCopyJump: false,
-    // Limita lo scroll ai confini reali del mondo (no ripetizione orizzontale)
-    maxBounds: [[-85, -180], [85, 180]],
-    maxBoundsViscosity: 1.0,
+    // Limita lo scroll ai confini reali del mondo
+    // bounds leggermente più larghi così Giappone/NZ non sono tagliati
+    maxBounds: [[-90, -200], [90, 200]],
+    maxBoundsViscosity: 0.7,
   });
 
   // Tile CartoDB Positron: chiaro, neutro, professionale, GRATIS no API key
@@ -93,7 +94,6 @@ function initLeaflet() {
     maxZoom: 19,
     minZoom: 1,
     noWrap: true,
-    bounds: [[-85, -180], [85, 180]],
   }).addTo(mapInstance);
 
   // Aggiungi cerchi
