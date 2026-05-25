@@ -7,17 +7,18 @@ export const config = {
   runtime: 'edge',
 };
 
-const SYSTEM_PROMPT = `Sei un sommelier esperto. Analizza l'etichetta fronte (e retro se fornito) di una bottiglia di vino italiana e estrai i seguenti dati in JSON.
+const SYSTEM_PROMPT = `Sei un sommelier esperto. Analizza l'etichetta fronte (e retro se fornito) di una bottiglia di vino ed estrai i seguenti dati in JSON.
 
 Restituisci SOLO un oggetto JSON valido, senza testo aggiuntivo, senza markdown, senza backtick. Schema:
 
 {
-  "nome_vino": "string o null - nome commerciale del vino (es. 'Barolo Riserva Monfortino', 'Brunello di Montalcino')",
-  "produttore": "string o null - nome della cantina/produttore (es. 'Giacomo Conterno', 'Biondi Santi')",
+  "nome_vino": "string o null - nome commerciale del vino (es. 'Barolo Riserva Monfortino', 'Brunello di Montalcino', 'Châteauneuf-du-Pape')",
+  "produttore": "string o null - nome della cantina/produttore (es. 'Giacomo Conterno', 'Biondi Santi', 'Château Margaux')",
   "annata": "number o null - anno di vendemmia",
   "tipologia": "rosso | bianco | rosato | spumante | passito | liquoroso - deduci dal colore della bottiglia, etichetta, denominazione",
-  "denominazione": "string o null - es. 'DOCG', 'DOC', 'IGT', 'Vino da Tavola'",
-  "regione": "string o null - regione italiana di produzione",
+  "denominazione": "string o null - es. 'DOCG', 'DOC', 'IGT', 'AOC', 'AOP', 'DO', 'DOCa', 'QbA', 'Vino da Tavola'",
+  "nazione": "string o null - paese di origine. Valori esatti da usare: 'Italia', 'Francia', 'Spagna', 'Portogallo', 'Germania', 'Austria', 'Svizzera', 'Grecia', 'Ungheria', 'Slovenia', 'Croazia', 'Georgia', 'Stati Uniti', 'Argentina', 'Cile', 'Australia', 'Nuova Zelanda', 'Sudafrica'. Se altra nazione, usa 'Altro'.",
+  "regione": "string o null - regione di produzione. Per l'Italia usa una delle 20 regioni ufficiali (es. 'Toscana', 'Piemonte', 'Trentino-Alto Adige'). Per altre nazioni usa la zona vinicola (es. 'Bordeaux', 'Borgogna', 'Champagne', 'Mosella', 'Rioja', 'Douro', 'Napa Valley')",
   "vitigni": "array di stringhe o null - vitigni indicati in etichetta o deducibili dalla denominazione",
   "gradazione": "number o null - percentuale alcol (es. 13.5)",
   "formato_ml": "number - in ml, default 750",
@@ -28,9 +29,11 @@ Restituisci SOLO un oggetto JSON valido, senza testo aggiuntivo, senza markdown,
 
 Regole:
 - Se un dato non è chiaramente leggibile, metti null
-- Per i Barolo, Brunello, ecc. deduci automaticamente vitigno e regione anche se non scritti
+- DEDUCI sempre nazione e regione anche se non scritti esplicitamente: 'Barolo'/'Brunello' → Italia/Piemonte o Toscana; 'Châteauneuf-du-Pape' → Francia/Rodano; 'Rioja' → Spagna/Rioja; 'Mosel' → Germania/Mosella
+- Per i Barolo, Brunello, ecc. deduci automaticamente anche vitigno
 - "Tipologia" è obbligatoria, deducila dal contesto
-- Non inventare dati: meglio null che ipotesi
+- "nazione" è OBBLIGATORIA: se non identifichi la nazione dall'etichetta, usa 'Italia' come default solo se ci sono segnali italiani (lingua, codici fiscali italiani, DOC/DOCG/IGT); altrimenti deduci dal nome del vino o produttore
+- Non inventare dati: meglio null che ipotesi (tranne per nazione)
 - Per i vitigni usa nomi italiani standard (es. "Nebbiolo", "Sangiovese", non "Sangiovese Grosso")`;
 
 export default async function handler(req) {
