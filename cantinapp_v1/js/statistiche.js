@@ -94,6 +94,15 @@ function renderStats() {
   const regioniOrdinate = Object.entries(perRegione).sort((a,b) => b[1] - a[1]);
   const regioneTop = regioniOrdinate[0];
 
+  // ========== Distribuzione nazioni ==========
+  const perNazione = {};
+  for (const b of bottiglie) {
+    const n = b.nazione || 'Non specificata';
+    perNazione[n] = (perNazione[n] || 0) + (b.quantita || 1);
+  }
+  const nazioniOrdinate = Object.entries(perNazione).sort((a,b) => b[1] - a[1]);
+  const nazioneTop = nazioniOrdinate[0];
+
   // ========== Distribuzione produttori ==========
   const perProduttore = {};
   for (const b of bottiglie) {
@@ -157,6 +166,20 @@ function renderStats() {
         <div class="stat-record-meta">${esc(piuCaro.produttore || '')}${piuCaro.annata ? ' · ' + piuCaro.annata : ''}</div>
       </div>
       <div class="stat-record-value">€${piuCaro.prezzo_acquisto.toFixed(0)}</div>
+    </div>`;
+  }
+
+  if (nazioneTop && nazioniOrdinate.length > 0) {
+    const naz = (typeof NAZIONI !== 'undefined') ? NAZIONI.find(n => n.name === nazioneTop[0]) : null;
+    const flag = naz ? naz.flag : '🌍';
+    html += `<div class="stat-record">
+      <div class="stat-record-icon"><i class="ti ti-flag"></i></div>
+      <div class="stat-record-content">
+        <div class="stat-record-label">Nazione più rappresentata</div>
+        <div class="stat-record-name">${flag} ${esc(nazioneTop[0])}</div>
+        <div class="stat-record-meta">${nazioneTop[1]} ${nazioneTop[1] === 1 ? 'bottiglia' : 'bottiglie'}</div>
+      </div>
+      <div class="stat-record-value">${Math.round(nazioneTop[1] / totQty * 100)}%</div>
     </div>`;
   }
 

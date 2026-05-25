@@ -454,9 +454,15 @@
           <input type="text" id="mDenominazione">
         </div>
         <div>
-          <label class="field-label">Regione</label>
-          <input type="text" id="mRegione">
+          <label class="field-label">Nazione</label>
+          <select id="mNazione" onchange="aggiornaCampoRegioneModal()"></select>
         </div>
+      </div>
+
+      <div style="margin-bottom:8px">
+        <label class="field-label" id="mRegioneLabel">Regione</label>
+        <select id="mRegioneSelect" style="display:none"></select>
+        <input type="text" id="mRegione" placeholder="es. Bordeaux, Mosella...">
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -511,6 +517,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/geo-data.js"></script>
 <script src="js/bottiglia.js"></script>
 </body>
 </html>

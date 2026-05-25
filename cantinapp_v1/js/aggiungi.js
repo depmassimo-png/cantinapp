@@ -14,7 +14,51 @@ let vitigni = [];
 
   // Imposta data acquisto a oggi di default
   document.getElementById('dataAcquisto').valueAsDate = new Date();
+
+  // Popola select Nazione e Regione (Italia di default)
+  setupGeoSelects();
 })();
+
+function setupGeoSelects() {
+  document.getElementById('nazione').innerHTML = nazioniOptionsHtml('Italia');
+  document.getElementById('regioneSelect').innerHTML = regioniOptionsHtml(null);
+  aggiornaCampoRegione();
+}
+
+// Quando si cambia nazione: mostra select Regione (Italia) o input testo (altri)
+function aggiornaCampoRegione() {
+  const naz = document.getElementById('nazione').value;
+  const sel = document.getElementById('regioneSelect');
+  const inp = document.getElementById('regione');
+  const label = document.getElementById('regioneLabel');
+
+  if (naz === 'Italia') {
+    sel.style.display = 'block';
+    inp.style.display = 'none';
+    label.textContent = 'Regione';
+    // Se l'input aveva un valore, prova a metterlo nella select
+    if (inp.value && !sel.value) {
+      sel.innerHTML = regioniOptionsHtml(inp.value);
+    }
+  } else {
+    sel.style.display = 'none';
+    inp.style.display = 'block';
+    label.textContent = naz ? 'Regione / Sub-area' : 'Regione';
+    // Se la select aveva un valore, riportalo nell'input
+    if (sel.value && !inp.value) {
+      inp.value = sel.value;
+    }
+  }
+}
+
+// Restituisce la regione effettiva (dalla select se Italia, dall'input altrimenti)
+function getRegioneValue() {
+  const naz = document.getElementById('nazione').value;
+  if (naz === 'Italia') {
+    return document.getElementById('regioneSelect').value || null;
+  }
+  return document.getElementById('regione').value.trim() || null;
+}
 
 function toggleSpumantiFields() {
   const tip = document.getElementById('tipologia').value;
@@ -157,7 +201,32 @@ async function analizzaConAI() {
       } catch (e) { console.warn('Tipologia:', e.message); }
     }
     if (safeSet('denominazione', dati.denominazione)) campiCompilati++;
-    if (safeSet('regione', dati.regione)) campiCompilati++;
+    // Nazione (dall'AI) + Regione condizionale
+    if (dati.nazione) {
+      const naz = NAZIONI.find(n => n.name.toLowerCase() === String(dati.nazione).toLowerCase());
+      if (naz) {
+        document.getElementById('nazione').value = naz.name;
+        aggiornaCampoRegione();
+        campiCompilati++;
+      }
+    }
+    if (dati.regione) {
+      const naz = document.getElementById('nazione').value;
+      if (naz === 'Italia') {
+        // Cerca match case-insensitive nelle 20 regioni
+        const r = REGIONI_IT.find(rg => rg.toLowerCase() === String(dati.regione).toLowerCase());
+        if (r) {
+          document.getElementById('regioneSelect').value = r;
+          campiCompilati++;
+        } else {
+          // valore non standard → aggiungi come personalizzato
+          document.getElementById('regioneSelect').innerHTML = regioniOptionsHtml(dati.regione);
+          campiCompilati++;
+        }
+      } else {
+        if (safeSet('regione', dati.regione)) campiCompilati++;
+      }
+    }
     const gradoNum = sanitizeFloat(dati.gradazione);
     if (safeSet('gradazione', gradoNum)) campiCompilati++;
     const formatoNum = sanitizeInt(dati.formato_ml);
@@ -358,7 +427,8 @@ async function salvaBottiglia(e) {
     annata: parseIntOrNull(document.getElementById('annata').value),
     tipologia: document.getElementById('tipologia').value,
     denominazione: nullIfEmpty(document.getElementById('denominazione').value),
-    regione: nullIfEmpty(document.getElementById('regione').value),
+    nazione: nullIfEmpty(document.getElementById('nazione').value),
+    regione: getRegioneValue(),
     gradazione: parseFloatOrNull(document.getElementById('gradazione').value),
     formato_ml: parseInt(document.getElementById('formatoMl').value),
     vitigni: vitigni.length ? vitigni : null,

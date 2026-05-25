@@ -76,10 +76,14 @@ function render() {
   if (b.denominazione) badges.push(`<span class="badge badge-anno">${b.denominazione}</span>`);
   document.getElementById('metaBadges').innerHTML = badges.join('');
 
-  // Identità
+  // Identità: Nazione (con bandiera) → Regione → Denominazione → Vitigni
   const ident = [];
+  if (b.nazione) {
+    const naz = (typeof NAZIONI !== 'undefined') ? NAZIONI.find(n => n.name === b.nazione) : null;
+    const display = naz ? `${naz.flag} ${b.nazione}` : b.nazione;
+    ident.push(row('Nazione', display));
+  }
   if (b.regione) ident.push(row('Regione', b.regione));
-  if (b.nazione) ident.push(row('Nazione', b.nazione));
   if (b.denominazione) ident.push(row('Denominazione', b.denominazione));
   if (b.vitigni && b.vitigni.length) {
     const tags = b.vitigni.map(v => `<span class="vit-chip">${esc(v)}</span>`).join('');
@@ -224,7 +228,6 @@ function apriModifica() {
   document.getElementById('mAnnata').value = bottiglia.annata || '';
   document.getElementById('mTipologia').value = bottiglia.tipologia || 'rosso';
   document.getElementById('mDenominazione').value = bottiglia.denominazione || '';
-  document.getElementById('mRegione').value = bottiglia.regione || '';
   document.getElementById('mGradazione').value = bottiglia.gradazione || '';
   document.getElementById('mQuantita').value = bottiglia.quantita || 0;
   document.getElementById('mProntoDa').value = bottiglia.anno_pronto_da || '';
@@ -232,7 +235,47 @@ function apriModifica() {
   document.getElementById('mPrezzo').value = bottiglia.prezzo_acquisto || '';
   document.getElementById('mPosizione').value = bottiglia.posizione || '';
   document.getElementById('mNote').value = bottiglia.note || '';
+
+  // Nazione + Regione (per bottiglie pre-migration, default 'Italia')
+  const naz = bottiglia.nazione || 'Italia';
+  document.getElementById('mNazione').innerHTML = nazioniOptionsHtml(naz);
+  document.getElementById('mRegioneSelect').innerHTML = regioniOptionsHtml(bottiglia.regione);
+  document.getElementById('mRegione').value = bottiglia.regione || '';
+  aggiornaCampoRegioneModal();
+
   document.getElementById('modalModifica').classList.add('show');
+}
+
+// Aggiorna visualizzazione regione nel modal in base alla nazione scelta
+function aggiornaCampoRegioneModal() {
+  const naz = document.getElementById('mNazione').value;
+  const sel = document.getElementById('mRegioneSelect');
+  const inp = document.getElementById('mRegione');
+  const label = document.getElementById('mRegioneLabel');
+
+  if (naz === 'Italia') {
+    sel.style.display = 'block';
+    inp.style.display = 'none';
+    label.textContent = 'Regione';
+    if (inp.value && !sel.value) {
+      sel.innerHTML = regioniOptionsHtml(inp.value);
+    }
+  } else {
+    sel.style.display = 'none';
+    inp.style.display = 'block';
+    label.textContent = naz ? 'Regione / Sub-area' : 'Regione';
+    if (sel.value && !inp.value) {
+      inp.value = sel.value;
+    }
+  }
+}
+
+function getRegioneModalValue() {
+  const naz = document.getElementById('mNazione').value;
+  if (naz === 'Italia') {
+    return document.getElementById('mRegioneSelect').value || null;
+  }
+  return document.getElementById('mRegione').value.trim() || null;
 }
 
 function chiudiModifica() {
@@ -247,7 +290,8 @@ async function salvaModifica(e) {
     annata: parseIntOrNull(document.getElementById('mAnnata').value),
     tipologia: document.getElementById('mTipologia').value,
     denominazione: nullIfEmpty(document.getElementById('mDenominazione').value),
-    regione: nullIfEmpty(document.getElementById('mRegione').value),
+    nazione: nullIfEmpty(document.getElementById('mNazione').value),
+    regione: getRegioneModalValue(),
     gradazione: parseFloatOrNull(document.getElementById('mGradazione').value),
     quantita: parseInt(document.getElementById('mQuantita').value) || 0,
     anno_pronto_da: parseIntOrNull(document.getElementById('mProntoDa').value),
