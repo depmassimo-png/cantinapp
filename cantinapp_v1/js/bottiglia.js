@@ -360,24 +360,7 @@ async function salvaEdit() {
 
   console.log('[salvaEdit] payload:', update);
 
-  let { error } = await sb
-    .from('bottiglie')
-    .update(update)
-    .eq('id', bottiglia.id);
-
-  // Fallback se manca la colonna nazione (migration non applicata)
-  if (error && /nazione/i.test(error.message || '')) {
-    console.warn('[salvaEdit] colonna nazione assente, retry senza nazione');
-    delete update.nazione;
-    const retry = await sb
-      .from('bottiglie')
-      .update(update)
-      .eq('id', bottiglia.id);
-    error = retry.error;
-    if (!error) {
-      showToast('Salvato (applicare migration SQL per il campo Nazione)', true);
-    }
-  }
+  const { error } = await sb.from('bottiglie').update(update).eq('id', bottiglia.id);
 
   if (error) {
     console.error('[salvaEdit] errore:', error);
@@ -386,7 +369,6 @@ async function salvaEdit() {
   }
 
   Object.assign(bottiglia, update);
-  // Esci da edit mode e ri-renderizza in view
   annullaEdit();
   showToast('Modifiche salvate');
 }
