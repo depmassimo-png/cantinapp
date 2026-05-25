@@ -258,7 +258,7 @@ async function esportaPDF() {
   y += 7;
   const colori = ['Paglierino', 'Dorato', 'Aranciato', 'Cerasuolo', 'Ramato', 'Porpora', 'Rubino', 'Granato'];
   checkboxRow(M, y, colori, d.colore, C.rossoChiaro, CW);
-  y += ROW_H + 1;
+  y += ROW_H + 3;
 
   sezioneSottoTitolo(doc, M, y, 'RIFLESSO', C.rosso);
   y += 5;
@@ -296,7 +296,7 @@ async function esportaPDF() {
   checkboxRow(xCol(1) + PAD_COL, y, ['Opaco', 'Limpido'], d.limpidezza, C.rossoChiaro, wCol(1) - PAD_COL * 2);
   checkboxRow(xCol(2) + PAD_COL, y, ['Cupo', 'Vivace', 'Luminoso'], d.vivacita, C.rossoChiaro, wCol(2) - PAD_COL * 2);
   checkboxRow(xCol(3) + PAD_COL, y, ['Grandi', 'Fini'], d.perlage_grana, C.rossoChiaro, wCol(3) - PAD_COL * 2);
-  y += 9;
+  y += 12;
 
   // ===== OLFATTO =====
   sezioneBarra(doc, M, y, CW, 'OLFATTO', C.verde);
@@ -319,43 +319,49 @@ async function esportaPDF() {
   }
   y += 6;
 
+  // Spazio in più per separare le famiglie olfattive dalle note
+  y += 3;
+
   doc.setFontSize(7.5);
   doc.setTextColor(...C.nero);
   doc.setFont('helvetica', 'normal');
   doc.text('Note', M, y);
   drawUnderline(doc, M + 8, y + 0.5, W - M);
 
-  // Compone il testo completo (sentori + note)
+  // Compone il testo completo (sentori + note personali utente)
   let noteText = '';
   if (d.olfatto_sentori && d.olfatto_sentori.length) {
     noteText = d.olfatto_sentori.join(', ');
-    if (d.olfatto_note) noteText += ' — ' + d.olfatto_note;
-  } else if (d.olfatto_note) {
-    noteText = d.olfatto_note;
+  }
+  if (d.olfatto_note) {
+    if (noteText) noteText += ' — ' + d.olfatto_note;
+    else noteText = d.olfatto_note;
   }
 
+  // Suddivide in righe e mostra fino a 2
+  let lines = [];
   if (noteText) {
+    lines = doc.splitTextToSize(noteText, W - M - M - 10);
     doc.setFont('helvetica', 'italic');
-    // Suddivide su 2 righe massimo
-    const lines = doc.splitTextToSize(noteText, W - M - M - 10);
-    // Prima riga: sopra la sottolineatura
     doc.text(lines[0] || '', M + 10, y - 0.5);
-    // Seconda riga (se serve): subito sotto la prima, con propria sottolineatura
-    if (lines.length > 1) {
-      y += 5;
-      let line2 = lines[1];
-      // Se c'è una terza riga, aggiunge "…" alla fine della seconda
-      if (lines.length > 2) {
-        // Tronca line2 per fare spazio a "…"
-        while (doc.getTextWidth(line2 + '…') > W - M - M - 2 && line2.length > 5) {
-          line2 = line2.slice(0, -1);
-        }
-        line2 += '…';
-      }
-      doc.text(line2, M, y - 0.5);
-      drawUnderline(doc, M, y + 0.5, W - M);
-    }
   }
+
+  // SECONDA RIGA: sempre presente, anche se vuota (per dare spazio scrittura)
+  y += 5;
+  if (lines.length > 1) {
+    let line2 = lines[1];
+    if (lines.length > 2) {
+      // Tronca con "…" se c'è una terza riga
+      while (doc.getTextWidth(line2 + '…') > W - M - M - 2 && line2.length > 5) {
+        line2 = line2.slice(0, -1);
+      }
+      line2 += '…';
+    }
+    doc.setFont('helvetica', 'italic');
+    doc.text(line2, M, y - 0.5);
+  }
+  // Sottolineatura sempre presente (anche se la riga è vuota)
+  drawUnderline(doc, M, y + 0.5, W - M);
   y += 6;
 
   doc.setFont('helvetica', 'bold');
@@ -389,7 +395,7 @@ async function esportaPDF() {
   ];
   y = scalaNumerica(M, y, [14,15,16,17,18,19,20], d.olfatto_qualita_punti, qualPalette, SCALE_W, qualLabels);
   boxPuntiVerticale(d.olfatto_qualita_punti, yQualStart, y - yQualStart);
-  y += 4;
+  y += 7;
 
   // ===== GUSTO =====
   sezioneBarra(doc, M, y, CW, 'GUSTO', C.bluS);
@@ -520,7 +526,7 @@ async function esportaPDF() {
   }
   // Colonna Punti dedicata
   boxPuntiVerticale(d.gusto_dimensioni_punti, yDimStart, (y + SCALE_H) - yDimStart);
-  y += SCALE_H + 3;
+  y += SCALE_H + 5;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
@@ -534,7 +540,7 @@ async function esportaPDF() {
     { key: 'lunghe_prospettive', label: 'Lunghe prospettive' },
   ];
   checkboxRow(M, y, pros, d.prospettive_consumo, C.bluChiaro, CW);
-  y += ROW_H + 3;
+  y += ROW_H + 5;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
