@@ -76,11 +76,11 @@ function initLeaflet() {
   mapInstance = L.map('map', {
     center: [30, 10],
     zoom: 2,
-    minZoom: 2,
+    minZoom: 1,
     zoomControl: true,
     attributionControl: true,
     worldCopyJump: false,
-    // Limita lo scroll ai confini reali del mondo (no ripetizione)
+    // Limita lo scroll ai confini reali del mondo (no ripetizione orizzontale)
     maxBounds: [[-85, -180], [85, 180]],
     maxBoundsViscosity: 1.0,
   });
@@ -91,7 +91,7 @@ function initLeaflet() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19,
-    minZoom: 2,
+    minZoom: 1,
     noWrap: true,
     bounds: [[-85, -180], [85, 180]],
   }).addTo(mapInstance);
