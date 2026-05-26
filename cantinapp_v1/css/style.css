@@ -568,6 +568,19 @@ input::placeholder, textarea::placeholder { color: var(--testo-3); }
   z-index: 150;
 }
 
+/* Quando la bottom-bar è dentro il wizard-body, NON fixed: appare in linea
+   alla fine dello step attivo. Più chiaro per l'utente: il "Continua" si vede
+   solo quando ha effettivamente finito di compilare e raggiunge il fondo. */
+.wizard-body .bottom-bar {
+  position: static;
+  background: transparent;
+  border-top: none;
+  padding: 24px 0 0;
+  max-width: none;
+  margin: 0;
+  z-index: auto;
+}
+
 /* ---- FAB ---- */
 .fab {
   position: fixed;
