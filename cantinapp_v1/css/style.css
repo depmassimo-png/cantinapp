@@ -275,7 +275,7 @@ input::placeholder, textarea::placeholder { color: var(--testo-3); }
   margin-bottom: 12px;
 }
 
-/* Modalità sticky: una singola riga orizzontale scrollabile, fissa in cima */
+/* Modalità sticky: una singola riga orizzontale scrollabile, fissa sotto il wizard-header */
 .famiglie-grid.sticky-row {
   display: flex;
   flex-direction: row;
@@ -283,17 +283,14 @@ input::placeholder, textarea::placeholder { color: var(--testo-3); }
   overflow-x: auto;
   overflow-y: hidden;
   gap: 8px;
-  padding: 8px 4px;
-  margin: 0 -16px 12px;       /* sborda la padding del step per andare edge-to-edge */
-  padding-left: 16px;
-  padding-right: 16px;
+  padding: 8px 16px;
+  margin: 0 -20px 12px;       /* sborda padding del wizard-body (20px) per andare edge-to-edge */
   position: sticky;
-  top: 0;
-  z-index: 50;
+  top: 88px;                  /* sotto il wizard-header che è ~85-95px */
+  z-index: 200;               /* sopra a tutto il resto */
   background: var(--nero, #1a0608);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(201,168,76,0.25);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
