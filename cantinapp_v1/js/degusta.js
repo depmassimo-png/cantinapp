@@ -178,10 +178,61 @@ function setupChips() {
   bindInput('extProduttore', 'produttore_esterno', v => v.trim() || null);
   bindInput('extAnnata', 'annata_esterna', v => v ? parseInt(v) : null);
   bindInput('extTipologia', 'tipologia_esterna', v => v || null);
+  bindInput('extDenominazione', 'denominazione_esterna', v => v.trim() || null);
+  bindInput('extNazione', 'nazione_esterna', v => v || null);
+  bindInput('extGradazione', 'gradazione_esterna', v => v ? parseFloat(v) : null);
+  bindInput('extVitigni', 'vitigni_esterni', v => v.trim() || null);
+  // Regione: doppio handler (select e input) — il valore effettivo viene letto al salvataggio
+  const regioneSel = document.getElementById('extRegioneSelect');
+  if (regioneSel) regioneSel.addEventListener('change', () => {
+    D.regione_esterna = getRegioneExtValue();
+  });
+  const regioneInp = document.getElementById('extRegione');
+  if (regioneInp) regioneInp.addEventListener('input', () => {
+    D.regione_esterna = getRegioneExtValue();
+  });
+
+  // Setup nazione/regione (Italia di default)
+  if (typeof nazioniOptionsHtml === 'function') {
+    document.getElementById('extNazione').innerHTML = nazioniOptionsHtml('Italia');
+    document.getElementById('extRegioneSelect').innerHTML = regioniOptionsHtml(null);
+    aggiornaCampoRegioneExt();
+  }
 
   document.getElementById('tempSlider').addEventListener('input', e => {
     D.temperatura_servizio = parseFloat(e.target.value);
   });
+}
+
+// Toggle Regione: select se nazione=Italia, input testo altrimenti
+function aggiornaCampoRegioneExt() {
+  const naz = document.getElementById('extNazione').value;
+  const sel = document.getElementById('extRegioneSelect');
+  const inp = document.getElementById('extRegione');
+  const label = document.getElementById('extRegioneLabel');
+  if (!sel || !inp || !label) return;
+
+  if (naz === 'Italia') {
+    sel.style.display = 'block';
+    inp.style.display = 'none';
+    label.textContent = 'Regione';
+    if (inp.value && !sel.value) sel.innerHTML = regioniOptionsHtml(inp.value);
+  } else {
+    sel.style.display = 'none';
+    inp.style.display = 'block';
+    label.textContent = naz ? 'Regione / Sub-area' : 'Regione';
+    if (sel.value && !inp.value) inp.value = sel.value;
+  }
+  D.regione_esterna = getRegioneExtValue();
+  D.nazione_esterna = naz || null;
+}
+
+function getRegioneExtValue() {
+  const naz = document.getElementById('extNazione').value;
+  if (naz === 'Italia') {
+    return document.getElementById('extRegioneSelect').value || null;
+  }
+  return document.getElementById('extRegione').value.trim() || null;
 }
 
 function bindInput(elId, field, transform) {
@@ -364,35 +415,55 @@ async function salvaDegustazione() {
   let bottigliaIdFinale = D.bottiglia_id;
 
   // Se è una degustazione cieca/libera (no bottiglia in cantina) e l'utente ha
-  // rivelato l'identità del vino (nome o foto), creiamo la bottiglia in cantina
-  // direttamente con stato 'bevuta', includendo le foto
-  if (!D.bottiglia_id && (D.nome_vino_esterno || extFotoFronte || extFotoRetro)) {
-    try {
-      const urlFronte = extFotoFronte ? await uploadFotoEsterna(extFotoFronte, 'fronte') : null;
-      const urlRetro  = extFotoRetro  ? await uploadFotoEsterna(extFotoRetro,  'retro')  : null;
+  // rivelato l'identità del vino, CHIEDIAMO se vuole aggiungere la bottiglia in cantina
+  const haRivelato = !D.bottiglia_id && (D.nome_vino_esterno || extFotoFronte || extFotoRetro);
+  if (haRivelato) {
+    const nomeMostrato = D.nome_vino_esterno || 'questa bottiglia';
+    const conferma = confirm(
+      `Hai compilato i dati del vino degustato.\n\n` +
+      `Vuoi aggiungere "${nomeMostrato}" alla cantina (con stato "bevuta")?\n\n` +
+      `Ti consente di ritrovarla nelle Bevute, nello storico degustazioni, sulla mappa e nelle statistiche.`
+    );
 
-      const nuovaBott = {
-        user_id: currentUser.id,
-        nome_vino: D.nome_vino_esterno || 'Vino in degustazione cieca',
-        produttore: D.produttore_esterno || null,
-        annata: D.annata_esterna || null,
-        tipologia: D.tipologia_esterna || 'rosso',
-        stato: 'bevuta',
-        quantita: 0,
-        etichetta_url: urlFronte,
-        controetichetta_url: urlRetro,
-      };
-      const { data: bot, error: errBot } = await sb
-        .from('bottiglie')
-        .insert(nuovaBott)
-        .select()
-        .single();
-      if (errBot) throw errBot;
-      bottigliaIdFinale = bot.id;
-    } catch (e) {
-      console.error('Errore creazione bottiglia da degustazione cieca:', e);
-      showToast('Errore salvataggio foto: ' + (e.message || ''), true);
-      // Non blocchiamo: continuiamo a salvare la degustazione senza foto
+    if (conferma) {
+      try {
+        const urlFronte = extFotoFronte ? await uploadFotoEsterna(extFotoFronte, 'fronte') : null;
+        const urlRetro  = extFotoRetro  ? await uploadFotoEsterna(extFotoRetro,  'retro')  : null;
+
+        // Parser vitigni: "Nebbiolo, Barbera" → ['Nebbiolo', 'Barbera']
+        const vitigniArr = (D.vitigni_esterni || '')
+          .split(',')
+          .map(v => v.trim())
+          .filter(v => v.length > 0);
+
+        const nuovaBott = {
+          user_id: currentUser.id,
+          nome_vino: D.nome_vino_esterno || 'Vino in degustazione cieca',
+          produttore: D.produttore_esterno || null,
+          annata: D.annata_esterna || null,
+          tipologia: D.tipologia_esterna || 'rosso',
+          denominazione: D.denominazione_esterna || null,
+          nazione: D.nazione_esterna || null,
+          regione: D.regione_esterna || null,
+          vitigni: vitigniArr.length ? vitigniArr : null,
+          gradazione: D.gradazione_esterna || null,
+          stato: 'bevuta',
+          quantita: 0,
+          etichetta_url: urlFronte,
+          controetichetta_url: urlRetro,
+        };
+        const { data: bot, error: errBot } = await sb
+          .from('bottiglie')
+          .insert(nuovaBott)
+          .select()
+          .single();
+        if (errBot) throw errBot;
+        bottigliaIdFinale = bot.id;
+      } catch (e) {
+        console.error('Errore creazione bottiglia da degustazione cieca:', e);
+        showToast('Errore salvataggio bottiglia: ' + (e.message || ''), true);
+        // Non blocchiamo: continuiamo a salvare la degustazione senza il record bottiglia
+      }
     }
   }
 
