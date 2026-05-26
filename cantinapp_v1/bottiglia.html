@@ -128,6 +128,122 @@
     }
     .edit-banner i { font-size: 18px; }
 
+    /* Timeline storico degustazioni */
+    .tl-storico {
+      position: relative;
+      padding-left: 24px;
+    }
+    .tl-storico::before {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: rgba(201,168,76,0.25);
+    }
+    .tl-item {
+      position: relative;
+      padding-bottom: 20px;
+    }
+    .tl-item:last-child { padding-bottom: 0; }
+    .tl-item::before {
+      content: "";
+      position: absolute;
+      left: -20px;
+      top: 5px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #C9A84C;
+      border: 3px solid #1a0608;
+      box-shadow: 0 0 0 1px #C9A84C;
+    }
+    .tl-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
+    }
+    .tl-yr {
+      font-size: 15px;
+      font-weight: 500;
+      color: #C9A84C;
+    }
+    .tl-date {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+    }
+    .tl-context {
+      font-size: 11.5px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 8px;
+    }
+    .tl-score-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 6px 0 10px;
+      padding: 7px 10px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 6px;
+    }
+    .tl-score {
+      font-size: 19px;
+      font-weight: 600;
+      color: #faf7f4;
+    }
+    .tl-score-max {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+    }
+    .tl-fascia {
+      font-size: 11.5px;
+      color: #C9A84C;
+    }
+    .tl-stars {
+      margin-left: auto;
+      color: #C9A84C;
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+    .tl-stars .star-empty {
+      color: rgba(255,255,255,0.18);
+    }
+    .tl-section {
+      margin: 8px 0 4px;
+    }
+    .tl-section .tl-l {
+      font-size: 10px;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .tl-section .tl-v {
+      font-size: 12.5px;
+      color: #faf7f4;
+      line-height: 1.5;
+    }
+    .tl-section .tl-v.tl-note {
+      font-style: italic;
+      color: rgba(255,255,255,0.75);
+    }
+    .tl-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11.5px;
+      color: #C9A84C;
+      margin-top: 8px;
+      text-decoration: none;
+      padding: 4px 9px;
+      border: 1px solid rgba(201,168,76,0.4);
+      border-radius: 5px;
+    }
+    .tl-link i { font-size: 14px; }
+
     .hero-photo {
       width: 100%;
       height: 280px;
@@ -504,6 +620,22 @@
         Note personali
       </div>
       <div id="infoNote" style="font-size:14px;line-height:1.6;color:rgba(255,255,255,0.55);font-style:italic"></div>
+    </div>
+
+    <div class="info-card" id="cardStorico" style="display:none">
+      <div class="info-card-title" style="cursor:pointer;justify-content:space-between" onclick="toggleStorico()">
+        <span style="display:flex;align-items:center;gap:8px">
+          <i class="ti ti-history"></i>
+          Storico degustazioni
+          <span style="background:rgba(201,168,76,0.15);color:#C9A84C;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">
+            <span id="storicoCount">0</span> <span id="storicoCountLabel">degustazioni</span>
+          </span>
+        </span>
+        <i class="ti ti-chevron-up" id="storicoToggleIcon" style="font-size:18px;color:rgba(255,255,255,0.5)"></i>
+      </div>
+      <div id="storicoTimelineWrap" style="margin-top:14px">
+        <div id="storicoTimeline" class="tl-storico"></div>
+      </div>
     </div>
   </div>
 

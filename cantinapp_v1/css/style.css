@@ -274,6 +274,48 @@ input::placeholder, textarea::placeholder { color: var(--testo-3); }
   gap: 8px;
   margin-bottom: 12px;
 }
+
+/* Modalità sticky: una singola riga orizzontale scrollabile, fissa in cima */
+.famiglie-grid.sticky-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 8px;
+  padding: 8px 4px;
+  margin: 0 -16px 12px;       /* sborda la padding del step per andare edge-to-edge */
+  padding-left: 16px;
+  padding-right: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--nero, #1a0608);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+.famiglie-grid.sticky-row::-webkit-scrollbar { height: 4px; }
+.famiglie-grid.sticky-row::-webkit-scrollbar-thumb {
+  background: rgba(201,168,76,0.4);
+  border-radius: 2px;
+}
+.famiglie-grid.sticky-row .fam-chip {
+  flex: 0 0 auto;             /* mantiene la dimensione naturale */
+  min-width: 110px;           /* minimo accettabile per tap accuracy + icona ⓘ */
+  flex-direction: row;        /* invece di column → più compatta in altezza */
+  text-align: left;
+  padding: 10px 12px;
+  scroll-snap-align: start;
+}
+.famiglie-grid.sticky-row .fam-chip .fam-count {
+  position: static;
+  margin-left: auto;
+}
+
 .fam-chip {
   padding: 14px 10px;
   border-radius: var(--radius-md);

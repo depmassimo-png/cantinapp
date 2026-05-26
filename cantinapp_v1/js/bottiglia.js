@@ -38,6 +38,132 @@ async function loadBottiglia(id) {
 
   document.getElementById('loadingArea').style.display = 'none';
   document.getElementById('detailArea').style.display = 'block';
+
+  // Carica storico degustazioni dello stesso vino (asincrono, non blocca)
+  loadStoricoDegustazioni();
+}
+
+async function loadStoricoDegustazioni() {
+  const b = bottiglia;
+  if (!b.nome_vino || !b.produttore) return;
+
+  // (1) Trova tutte le bottiglie con stesso nome+produttore (qualunque annata)
+  const { data: bottiglieFratelle } = await sb
+    .from('bottiglie')
+    .select('id, annata')
+    .eq('user_id', currentUser.id)
+    .ilike('nome_vino', b.nome_vino)
+    .ilike('produttore', b.produttore);
+
+  const idsBottiglie = (bottiglieFratelle || []).map(x => x.id);
+  const annataMap = {};
+  (bottiglieFratelle || []).forEach(x => { annataMap[x.id] = x.annata; });
+
+  // (2) Carica degustazioni collegate a queste bottiglie
+  let q1 = [];
+  if (idsBottiglie.length > 0) {
+    const { data } = await sb
+      .from('degustazioni')
+      .select('id, bottiglia_id, data_degustazione, luogo, occasione, commensali, punteggio_totale, fascia_finale, voto_piacere_personale, olfatto_sentori, olfatto_descrittori, note_conclusive, nome_vino_esterno, produttore_esterno, annata_esterna')
+      .eq('user_id', currentUser.id)
+      .in('bottiglia_id', idsBottiglie);
+    q1 = data || [];
+  }
+
+  // (3) Carica degustazioni esterne con stesso nome/produttore
+  const { data: q2 } = await sb
+    .from('degustazioni')
+    .select('id, bottiglia_id, data_degustazione, luogo, occasione, commensali, punteggio_totale, fascia_finale, voto_piacere_personale, olfatto_sentori, olfatto_descrittori, note_conclusive, nome_vino_esterno, produttore_esterno, annata_esterna')
+    .eq('user_id', currentUser.id)
+    .ilike('nome_vino_esterno', b.nome_vino)
+    .ilike('produttore_esterno', b.produttore);
+
+  // Unione + dedup per id
+  const allMap = new Map();
+  for (const d of q1) allMap.set(d.id, { ...d, annata: annataMap[d.bottiglia_id] });
+  for (const d of (q2 || [])) {
+    if (!allMap.has(d.id)) allMap.set(d.id, { ...d, annata: d.annata_esterna });
+  }
+
+  const degustazioni = Array.from(allMap.values())
+    .sort((a, b) => (b.data_degustazione || '').localeCompare(a.data_degustazione || ''));
+
+  console.log('[storico] degustazioni trovate:', degustazioni.length);
+  renderStorico(degustazioni);
+}
+
+function renderStorico(list) {
+  const card = document.getElementById('cardStorico');
+  if (!list || list.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = 'block';
+  const count = list.length;
+  document.getElementById('storicoCount').textContent = count;
+  document.getElementById('storicoCountLabel').textContent = count === 1 ? 'degustazione' : 'degustazioni';
+
+  const container = document.getElementById('storicoTimeline');
+  container.innerHTML = list.map(d => buildStoricoItem(d)).join('');
+}
+
+function buildStoricoItem(d) {
+  const date = d.data_degustazione ? formatDate(d.data_degustazione) : '—';
+  const annata = d.annata || '—';
+  const punteggio = d.punteggio_totale != null ? d.punteggio_totale : '—';
+  const fascia = d.fascia_finale || '';
+  const stelle = d.voto_piacere_personale || 0;
+  const stelleHtml = stelle > 0
+    ? Array.from({length: 5}, (_, i) => i < stelle ? '★' : '<span class="star-empty">★</span>').join('')
+    : '';
+
+  const ctxParts = [];
+  if (d.occasione) ctxParts.push(esc(cap(d.occasione)));
+  if (d.luogo) ctxParts.push(esc(d.luogo));
+  if (d.commensali) ctxParts.push('con ' + esc(d.commensali));
+  const ctx = ctxParts.join(' · ');
+
+  let sentori = [];
+  if (Array.isArray(d.olfatto_sentori)) sentori = d.olfatto_sentori.slice(0, 5);
+  else if (Array.isArray(d.olfatto_descrittori)) sentori = d.olfatto_descrittori.slice(0, 5);
+  const sentoriHtml = sentori.length > 0
+    ? `<div class="tl-section"><span class="tl-l">Sentori principali</span><span class="tl-v">${esc(sentori.join(', '))}</span></div>`
+    : '';
+
+  const noteHtml = d.note_conclusive
+    ? `<div class="tl-section"><span class="tl-l">Note</span><span class="tl-v tl-note">"${esc(d.note_conclusive)}"</span></div>`
+    : '';
+
+  return `<div class="tl-item">
+    <div class="tl-head">
+      <div class="tl-yr">Annata ${annata}</div>
+      <div class="tl-date">${date}</div>
+    </div>
+    ${ctx ? `<div class="tl-context">${ctx}</div>` : ''}
+    <div class="tl-score-bar">
+      <span class="tl-score">${punteggio}</span><span class="tl-score-max">/100</span>
+      ${fascia ? `<span class="tl-fascia">${esc(fascia)}</span>` : ''}
+      ${stelleHtml ? `<span class="tl-stars">${stelleHtml}</span>` : ''}
+    </div>
+    ${sentoriHtml}
+    ${noteHtml}
+    <a class="tl-link" href="scheda.html?id=${d.id}"><i class="ti ti-file-text"></i>Apri scheda</a>
+  </div>`;
+}
+
+function toggleStorico() {
+  const c = document.getElementById('storicoTimelineWrap');
+  const i = document.getElementById('storicoToggleIcon');
+  if (c.style.display === 'none') {
+    c.style.display = 'block';
+    i.classList.remove('ti-chevron-down');
+    i.classList.add('ti-chevron-up');
+  } else {
+    c.style.display = 'none';
+    i.classList.remove('ti-chevron-up');
+    i.classList.add('ti-chevron-down');
+  }
 }
 
 function render() {

@@ -554,10 +554,27 @@ function renderFamiglieAromi() {
     grid.appendChild(chip);
   }
 
+  // Modalità sticky: attiva quando almeno una famiglia è aperta
+  // (altrimenti la griglia 2-colonne aiuta a scegliere la prima famiglia)
+  const haFamigliaAperta = D.olfatto_famiglie_aperte && D.olfatto_famiglie_aperte.length > 0;
+  grid.classList.toggle('sticky-row', haFamigliaAperta);
+
   // Render delle famiglie aperte
   renderSentoriContainer();
   renderSentoriRiepilogo();
   aggiornaContatori();
+
+  // Scorre il chip attivo in vista quando si entra in sticky mode
+  if (haFamigliaAperta) {
+    const lastKey = D.olfatto_famiglie_aperte[D.olfatto_famiglie_aperte.length - 1];
+    const activeChip = grid.querySelector(`.fam-chip[data-key="${lastKey}"]`);
+    if (activeChip && grid.classList.contains('sticky-row')) {
+      // Scroll orizzontale per portare il chip attivo in vista
+      setTimeout(() => {
+        activeChip.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }, 50);
+    }
+  }
 }
 
 function renderVitignoBanner() {
