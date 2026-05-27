@@ -500,6 +500,15 @@ async function salvaBottiglia(e) {
     dati.dosaggio = nullIfEmpty(document.getElementById('dosaggio').value);
   }
 
+  // Se arriviamo da "Vino esterno per la degustazione", la bottiglia NON entra in cantina:
+  // stato='esterna' e quantità 0. Sarà la degustazione (salvata) a marcarla come 'bevuta'.
+  const modo = new URLSearchParams(window.location.search).get('modo');
+  const isDegustaEsterna = (modo === 'degusta');
+  if (isDegustaEsterna) {
+    dati.stato = 'esterna';
+    dati.quantita = 0;
+  }
+
   // Validazione minima
   if (!dati.nome_vino || !dati.produttore) {
     showToast('Compila nome vino e produttore', true);
@@ -563,9 +572,9 @@ async function salvaBottiglia(e) {
       return;
     }
 
-    // Salva posizione se inserita
+    // Salva posizione se inserita (solo per bottiglie da cantina, non per le "esterne")
     const posizione = document.getElementById('posizione').value.trim();
-    if (posizione && nuovaBottiglia) {
+    if (posizione && nuovaBottiglia && !isDegustaEsterna) {
       await sb.from('posizioni').insert({
         user_id: currentUser.id,
         bottiglia_id: nuovaBottiglia.id,
@@ -577,9 +586,8 @@ async function salvaBottiglia(e) {
 
     // Se siamo arrivati qui da "Vino esterno (degusta)", avvia la degustazione
     // della bottiglia appena creata invece di tornare in cantina
-    const modo = new URLSearchParams(window.location.search).get('modo');
-    if (modo === 'degusta') {
-      showToast('Bottiglia aggiunta. Inizia la degustazione!');
+    if (isDegustaEsterna) {
+      showToast('Dati salvati. Inizia la degustazione!');
       setTimeout(() => window.location.href = 'degusta.html?bottiglia_id=' + nuovaBottiglia.id, 600);
     } else {
       showToast('Bottiglia aggiunta in cantina!');

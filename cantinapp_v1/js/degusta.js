@@ -67,31 +67,74 @@ const D = {
   // Versione nell'header (al posto del footer fixed)
   const hv = document.getElementById('headerVersion');
   if (hv && typeof APP_VERSION !== 'undefined') hv.textContent = APP_VERSION;
-  // Rimuovi eventuale footer versione iniettato da supabase.js (la versione è nell'header)
   setTimeout(() => {
     const f = document.getElementById('appVersionFooter');
     if (f) f.remove();
   }, 50);
 
-  // Bottiglia da degustare (opzionale via query string)
+  // SETUP COMUNE: chip, scale, stars, ruota aromi, binding input
+  // Lo facciamo SEMPRE all'init, indipendentemente dalla modalità.
+  // L'overlay di scelta si limita a mostrarsi sopra: quando viene nascosto,
+  // il wizard è già pronto e funzionante.
+  setupChips();
+  setupScale();
+  setupStars();
+
+  // Data oggi di default
+  const oggi = new Date().toISOString().split('T')[0];
+  document.getElementById('dataDegustazione').value = oggi;
+  D.data_degustazione = oggi;
+  document.getElementById('dataDegustazione').addEventListener('change', e => {
+    D.data_degustazione = e.target.value;
+  });
+
+  // Bottiglia/modalità da URL
   const params = new URLSearchParams(window.location.search);
   const id = params.get('bottiglia_id');
-  const modo = params.get('modo');  // 'cieca' | 'esterno' | null
+  const modo = params.get('modo');
 
   if (id) {
-    // Caso 1: c'è un bottiglia_id → modalità "da cantina" diretta, niente schermata di scelta
+    // Caso 1: bottiglia_id specifico → carico bottiglia e parto direttamente
     await caricaBottigliaECompleta(id);
-    avviaWizard();
+    await completaAvvio();
   } else if (modo === 'cieca' || modo === 'esterno') {
-    // Caso 2: modalità esplicita da URL → salta la schermata di scelta
+    // Caso 2: modalità esplicita da URL
     impostaModalita(modo);
-    avviaWizard();
+    await completaAvvio();
   } else {
     // Caso 3: nessuna info → mostra schermata di scelta
+    // Il setup è già stato fatto, quando l'utente sceglie chiamiamo completaAvvio()
     document.getElementById('modalitaSceltaOverlay').style.display = 'block';
-    // Lascia in attesa, l'init prosegue quando l'utente sceglie
   }
 })();
+
+// Completa l'avvio del wizard (dopo che modalità/bottiglia sono determinate)
+async function completaAvvio() {
+  // Proponi ripresa del draft precedente se esiste
+  const ripreso = await proponiRipresaDraft();
+  if (ripreso) {
+    ripristinaUI();
+    showToast('Degustazione ripresa');
+  }
+
+  // Applica regole di tipologia (disabilita chip non pertinenti)
+  applicaRegoleTipologia();
+
+  // Attiva il salvataggio automatico in background
+  attivaAutosave();
+
+  // Forza step 1 attivo se non già stato impostato dal draft
+  if (!stepAttuale || stepAttuale < 1) stepAttuale = 1;
+  renderStep();
+
+  // Sicurezza: assicurati che gli overlay siano chiusi
+  for (const oid of ['modalitaSceltaOverlay', 'bottigliaSceltaOverlay', 'identificazioneOverlay']) {
+    const el = document.getElementById(oid);
+    if (el) el.style.display = 'none';
+  }
+  window.scrollTo(0, 0);
+  console.log('[degusta] completaAvvio ok, step:', stepAttuale, 'bottiglia:', bottigliaCorrente?.nome_vino);
+}
 
 async function caricaBottigliaECompleta(id) {
   const { data } = await sb.from('bottiglie').select('*').eq('id', id).single();
@@ -122,47 +165,9 @@ function impostaModalita(modo) {
   document.getElementById('boxPerlage').style.display = 'block';
 }
 
+// avviaWizard rimane come alias di completaAvvio per compatibilità
 async function avviaWizard() {
-  // Data oggi
-  const oggi = new Date().toISOString().split('T')[0];
-  document.getElementById('dataDegustazione').value = oggi;
-  D.data_degustazione = oggi;
-
-  // Setup event listeners (chip, scale, stars, ruota aromi, binding input ext)
-  setupChips();
-  setupScale();
-  setupStars();
-
-  document.getElementById('dataDegustazione').addEventListener('change', e => {
-    D.data_degustazione = e.target.value;
-  });
-
-  // Proponi ripresa del draft precedente se esiste
-  const ripreso = await proponiRipresaDraft();
-  if (ripreso) {
-    ripristinaUI();
-    showToast('Degustazione ripresa');
-  }
-
-  // Applica regole di tipologia (disabilita chip non pertinenti)
-  applicaRegoleTipologia();
-
-  // Attiva il salvataggio automatico in background
-  attivaAutosave();
-
-  // Forza step 1 attivo e render
-  if (!stepAttuale || stepAttuale < 1) stepAttuale = 1;
-  renderStep();
-
-  // Sicurezza: assicurati che gli overlay siano chiusi e il wizard-body visibile
-  const overlays = ['modalitaSceltaOverlay', 'bottigliaSceltaOverlay', 'identificazioneOverlay'];
-  for (const id of overlays) {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
-  }
-  // Scroll in cima
-  window.scrollTo(0, 0);
-  console.log('[degusta] avviaWizard completato, step:', stepAttuale, 'bottigliaCorrente:', bottigliaCorrente?.nome_vino);
+  return completaAvvio();
 }
 
 // =========== Schermata scelta modalità ===========
@@ -170,7 +175,7 @@ async function scegliModalita(modo) {
   if (modo === 'cieca') {
     document.getElementById('modalitaSceltaOverlay').style.display = 'none';
     impostaModalita('cieca');
-    await avviaWizard();
+    await completaAvvio();
   } else if (modo === 'esterno') {
     // Modalità esterno → vai alla pagina di aggiunta bottiglia con flag degusta
     // così l'utente compila tutto come per una bottiglia normale (foto, AI, campi)
@@ -375,7 +380,7 @@ async function scegliBottigliaScelta(id) {
   try {
     await caricaBottigliaECompleta(id);
     console.log('[degusta] bottiglia caricata, bottigliaCorrente:', bottigliaCorrente);
-    await avviaWizard();
+    await completaAvvio();
     console.log('[degusta] wizard avviato, stepAttuale:', stepAttuale);
   } catch (e) {
     console.error('[degusta] Errore in scegliBottigliaScelta:', e);
@@ -612,15 +617,28 @@ function stepIndietro() {
   }
 }
 
-function annullaDegustazione() {
-  if (confirm('Vuoi davvero annullare la degustazione?\n\nI dati inseriti andranno persi.')) {
-    if (typeof cancellaDraft === 'function') cancellaDraft();
-    draftDirty = false;
-    if (bottigliaCorrente) {
-      location.href = 'bottiglia.html?id=' + bottigliaCorrente.id;
-    } else {
-      location.href = 'cantina.html';
+async function annullaDegustazione() {
+  if (!confirm('Vuoi davvero annullare la degustazione?\n\nI dati inseriti andranno persi.')) return;
+
+  if (typeof cancellaDraft === 'function') cancellaDraft();
+  draftDirty = false;
+
+  // Se la bottiglia è stata creata per la degustazione (stato 'esterna') e l'utente
+  // annulla, cancello la bottiglia per non lasciarla "orfana" nel DB
+  if (bottigliaCorrente && bottigliaCorrente.stato === 'esterna') {
+    try {
+      await sb.from('bottiglie').delete().eq('id', bottigliaCorrente.id);
+    } catch (e) {
+      console.warn('Impossibile cancellare bottiglia esterna:', e);
     }
+    location.href = 'cantina.html';
+    return;
+  }
+
+  if (bottigliaCorrente) {
+    location.href = 'bottiglia.html?id=' + bottigliaCorrente.id;
+  } else {
+    location.href = 'cantina.html';
   }
 }
 
@@ -731,6 +749,19 @@ async function salvaDegustazione() {
         showToast('Errore salvataggio bottiglia: ' + (e.message || ''), true);
         // Non blocchiamo: continuiamo a salvare la degustazione senza il record bottiglia
       }
+    }
+  }
+
+  // Se la bottiglia esiste già (cantina o esterna) ed è ancora in stato 'esterna'
+  // (caso "Vino esterno noto" arrivato via aggiungi.html?modo=degusta), la promuovo
+  // a 'bevuta' adesso che la degustazione è stata completata
+  if (bottigliaIdFinale && bottigliaCorrente && bottigliaCorrente.stato === 'esterna') {
+    try {
+      await sb.from('bottiglie')
+        .update({ stato: 'bevuta', quantita: 0 })
+        .eq('id', bottigliaIdFinale);
+    } catch (e) {
+      console.warn('Impossibile aggiornare stato bottiglia esterna:', e);
     }
   }
 
