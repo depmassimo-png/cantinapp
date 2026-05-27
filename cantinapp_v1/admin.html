@@ -968,37 +968,51 @@ async function salvaNuovoSentore() {
 }
 
 // ============================================================
-// CRUD SOTTOCATEGORIE
+// CRUD SOTTOCATEGORIE (con collassamento per famiglia)
 // ============================================================
+
+let _famigliaSubEspansa = null; // key famiglia espansa nel pannello Sottocategorie (separato da albero sentori)
 
 function renderListaSottocategorie() {
   const list = document.getElementById('listaSottocategorie');
   if (!list) return;
   list.innerHTML = _allFamiglie.map(fam => {
     const subs = _allSottocategorie.filter(s => s.famiglia_key === fam.key);
+    const isOpen = _famigliaSubEspansa === fam.key;
     return `
-      <div class="sub-group">
-        <div class="sub-group-title">
+      <div class="tree-fam" data-key="${fam.key}">
+        <div class="tree-fam-header" onclick="toggleFamigliaSub('${fam.key}')">
           <span class="tree-color-dot" style="background:${fam.color || '#888'}"></span>
-          ${escapeHtml(fam.label)}
+          <span class="tree-fam-label">${escapeHtml(fam.label)}</span>
+          <span class="tree-count">${subs.length} sottocategorie</span>
+          <i class="ti ti-chevron-${isOpen ? 'down' : 'right'}"></i>
         </div>
-        ${subs.length === 0
-          ? '<div class="placeholder-text" style="padding:6px 0 10px;font-size:11px">Nessuna sottocategoria</div>'
-          : subs.map(s => `
-              <div class="sub-row" data-id="${s.id}">
-                <div style="flex:1;min-width:0">
-                  <div class="sub-row-label">${escapeHtml(s.label)}</div>
-                  <div class="sub-row-meta">key: ${escapeHtml(s.key)} · compat: ${(s.compat || []).join(', ') || '—'}</div>
-                </div>
-                <div class="sent-actions">
-                  <button class="icon-btn" title="Modifica" onclick="modificaSottocategoria('${s.id}')"><i class="ti ti-edit"></i></button>
-                  <button class="icon-btn danger" title="Elimina" onclick="eliminaSottocategoria('${s.id}')"><i class="ti ti-trash"></i></button>
-                </div>
-              </div>`).join('')
-        }
+        ${isOpen ? `
+          <div class="tree-fam-body" style="padding-left:14px">
+            ${subs.length === 0
+              ? '<div class="placeholder-text" style="padding:8px 0;font-size:11px">Nessuna sottocategoria in questa famiglia</div>'
+              : subs.map(s => `
+                  <div class="sub-row" data-id="${s.id}">
+                    <div style="flex:1;min-width:0">
+                      <div class="sub-row-label">${escapeHtml(s.label)}</div>
+                      <div class="sub-row-meta">key: ${escapeHtml(s.key)} · compat: ${(s.compat || []).join(', ') || '—'} · ${_allSentori.filter(se => se.sottocategoria_id === s.id).length} sentori</div>
+                    </div>
+                    <div class="sent-actions">
+                      <button class="icon-btn" title="Modifica" onclick="modificaSottocategoria('${s.id}')"><i class="ti ti-edit"></i></button>
+                      <button class="icon-btn danger" title="Elimina" onclick="eliminaSottocategoria('${s.id}')"><i class="ti ti-trash"></i></button>
+                    </div>
+                  </div>`).join('')
+            }
+          </div>
+        ` : ''}
       </div>
     `;
   }).join('');
+}
+
+function toggleFamigliaSub(key) {
+  _famigliaSubEspansa = (_famigliaSubEspansa === key) ? null : key;
+  renderListaSottocategorie();
 }
 
 function apriFormAggiungiSottocategoria() {
@@ -1092,21 +1106,125 @@ async function modificaSottocategoria(id) {
 async function eliminaSottocategoria(id) {
   const sub = _allSottocategorie.find(s => s.id === id);
   if (!sub) return;
-  const nSentori = _allSentori.filter(s => s.sottocategoria_id === id).length;
-  let msg = `Eliminare la sottocategoria "${sub.label}"?`;
-  if (nSentori > 0) {
-    msg += `\n\n⚠ Contiene ${nSentori} sentori che verranno anch'essi eliminati (cascade).`;
+  const fam = _allFamiglie.find(f => f.key === sub.famiglia_key);
+  const sentoriContenuti = _allSentori.filter(s => s.sottocategoria_id === id);
+
+  // Caso 1: sottocategoria vuota → eliminazione diretta
+  if (sentoriContenuti.length === 0) {
+    if (!confirm(`Eliminare la sottocategoria vuota "${sub.label}"?`)) return;
+    const { error } = await sb.from('sottocategorie_olfattive').delete().eq('id', id);
+    if (error) { alert('Errore: ' + error.message); return; }
+    _allSottocategorie = _allSottocategorie.filter(s => s.id !== id);
+    invalidaCacheAromiClient();
+    renderListaSottocategorie();
+    renderAlberoSentori();
+    aggiornaStatRow('Sottocategorie', _allSottocategorie.length);
+    return;
   }
-  if (!confirm(msg)) return;
+
+  // Caso 2: contiene sentori → chiedi destinazione per spostarli
+  // Costruisci elenco delle altre sottocategorie (escluse quella corrente)
+  const destinazioniDisponibili = _allSottocategorie.filter(s => s.id !== id);
+  if (destinazioniDisponibili.length === 0) {
+    alert(`La sottocategoria "${sub.label}" contiene ${sentoriContenuti.length} sentori ma non ci sono altre sottocategorie dove spostarli.\n\nCrea prima un'altra sottocategoria oppure elimina manualmente i sentori.`);
+    return;
+  }
+
+  // Mostra prompt: prima la famiglia, poi la sottocategoria
+  const famLabels = _allFamiglie.map((f, i) => `${i+1}. ${f.label}`).join('\n');
+  const famScelta = prompt(
+    `"${sub.label}" contiene ${sentoriContenuti.length} sentori.\n\n` +
+    `Per eliminarla devi prima spostare i sentori in un'altra sottocategoria.\n\n` +
+    `Scegli numero famiglia di destinazione:\n${famLabels}`
+  );
+  if (!famScelta) return;
+  const famIdx = parseInt(famScelta) - 1;
+  if (isNaN(famIdx) || famIdx < 0 || famIdx >= _allFamiglie.length) {
+    alert('Scelta non valida'); return;
+  }
+  const newFam = _allFamiglie[famIdx];
+  // Filtra le sottocategorie della famiglia scelta, escludendo quella corrente
+  const subDest = _allSottocategorie.filter(s => s.famiglia_key === newFam.key && s.id !== id);
+  if (subDest.length === 0) {
+    alert(`La famiglia "${newFam.label}" non ha altre sottocategorie disponibili.`);
+    return;
+  }
+  const subLabels = subDest.map((s, i) => `${i+1}. ${s.label}`).join('\n');
+  const subScelta = prompt(`Famiglia: ${newFam.label}\n\nScegli sottocategoria di destinazione:\n${subLabels}`);
+  if (!subScelta) return;
+  const subIdx = parseInt(subScelta) - 1;
+  if (isNaN(subIdx) || subIdx < 0 || subIdx >= subDest.length) {
+    alert('Scelta non valida'); return;
+  }
+  const newSub = subDest[subIdx];
+
+  // Verifica duplicati case-insensitive nella sottocategoria di destinazione
+  const nomiDest = new Set(
+    _allSentori
+      .filter(s => s.sottocategoria_id === newSub.id)
+      .map(s => s.nome.toLowerCase())
+  );
+  const conflitti = sentoriContenuti.filter(s => nomiDest.has(s.nome.toLowerCase()));
+  if (conflitti.length > 0) {
+    const nomiConf = conflitti.map(s => '"' + s.nome + '"').join(', ');
+    if (!confirm(
+      `Attenzione: ${conflitti.length} sentori esistono già in "${newSub.label}":\n${nomiConf}\n\n` +
+      `Questi non verranno spostati (resteranno orfani e l'eliminazione fallirà).\n\n` +
+      `Vuoi procedere comunque? Ti consiglio di:\n` +
+      `- Annullare\n- Rinominare manualmente i duplicati nella sottocategoria di destinazione\n- Poi riprovare\n\nProcedere?`
+    )) return;
+  }
+
+  // Conferma finale
+  if (!confirm(
+    `Spostare ${sentoriContenuti.length - conflitti.length} sentori da "${sub.label}" a "${newFam.label} → ${newSub.label}" ` +
+    `e poi eliminare "${sub.label}"?`
+  )) return;
+
+  // Esegui spostamento sentori (solo quelli senza conflitti)
+  const daSpostare = sentoriContenuti.filter(s => !nomiDest.has(s.nome.toLowerCase()));
+  if (daSpostare.length > 0) {
+    const { error: errSpost } = await sb.from('sentori')
+      .update({ sottocategoria_id: newSub.id })
+      .in('id', daSpostare.map(s => s.id));
+    if (errSpost) {
+      alert('Errore durante spostamento: ' + errSpost.message);
+      return;
+    }
+  }
+
+  // Se ci sono ancora sentori orfani (conflitti) blocca l'eliminazione
+  const ancoraDentro = sentoriContenuti.length - daSpostare.length;
+  if (ancoraDentro > 0) {
+    alert(`Spostati ${daSpostare.length} sentori. ${ancoraDentro} sentori non sono stati spostati (duplicati).\n\nLa sottocategoria "${sub.label}" non può essere eliminata finché contiene sentori. Eliminali o spostali manualmente.`);
+    // Aggiorna cache locale comunque
+    for (const s of daSpostare) {
+      const ref = _allSentori.find(x => x.id === s.id);
+      if (ref) ref.sottocategoria_id = newSub.id;
+    }
+    invalidaCacheAromiClient();
+    renderListaSottocategorie();
+    renderAlberoSentori();
+    return;
+  }
+
+  // Adesso la sottocategoria è vuota, possiamo eliminarla
   const { error } = await sb.from('sottocategorie_olfattive').delete().eq('id', id);
-  if (error) { alert('Errore: ' + error.message); return; }
+  if (error) {
+    alert('Errore eliminazione: ' + error.message);
+    return;
+  }
+
+  // Aggiorna cache locale
+  for (const s of daSpostare) {
+    const ref = _allSentori.find(x => x.id === s.id);
+    if (ref) ref.sottocategoria_id = newSub.id;
+  }
   _allSottocategorie = _allSottocategorie.filter(s => s.id !== id);
-  _allSentori = _allSentori.filter(s => s.sottocategoria_id !== id);
   invalidaCacheAromiClient();
   renderListaSottocategorie();
   renderAlberoSentori();
   aggiornaStatRow('Sottocategorie', _allSottocategorie.length);
-  aggiornaStatRow('Sentori attivi', _allSentori.length);
 }
 
 // ============================================================
