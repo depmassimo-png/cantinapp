@@ -144,6 +144,162 @@
     justify-content: flex-end;
     margin-top: 12px;
   }
+
+  /* === Bottone "+ Aggiungi" === */
+  .btn-add {
+    background: rgba(46, 160, 67, 0.15);
+    border: 1px solid rgba(46, 160, 67, 0.4);
+    color: #2EA043;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-add:active { background: rgba(46, 160, 67, 0.25); }
+
+  /* === Albero famiglie/sottocategorie/sentori === */
+  .albero-sentori { margin-top: 4px; }
+  .tree-fam {
+    margin-bottom: 6px;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .tree-fam-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    background: rgba(255,255,255,0.03);
+    user-select: none;
+  }
+  .tree-fam-header:active { background: rgba(255,255,255,0.05); }
+  .tree-fam-label {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .tree-count {
+    font-size: 10px;
+    color: rgba(255,255,255,0.45);
+  }
+  .tree-fam-header i { color: rgba(201,168,76,0.7); }
+  .tree-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+  }
+  .tree-fam-body {
+    padding: 4px 8px 8px 28px;
+    background: rgba(0,0,0,0.2);
+  }
+  .tree-sub {
+    margin-top: 4px;
+    border-left: 2px solid rgba(201,168,76,0.2);
+  }
+  .tree-sub-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .tree-sub-header:active { background: rgba(255,255,255,0.03); }
+  .tree-sub-label {
+    flex: 1;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.85);
+  }
+  .tree-sub-header i { color: rgba(255,255,255,0.4); font-size: 14px; }
+  .tree-sub-body {
+    padding: 4px 10px 6px 20px;
+  }
+
+  /* === Riga sentore con azioni === */
+  .sent-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 6px;
+    margin-bottom: 3px;
+  }
+  .sent-nome {
+    font-size: 12.5px;
+    color: #fff;
+  }
+  .sent-ctx {
+    font-size: 10px;
+    color: rgba(201,168,76,0.6);
+    margin-top: 2px;
+  }
+  .sent-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .icon-btn {
+    background: none;
+    border: none;
+    color: rgba(201,168,76,0.7);
+    padding: 4px 6px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+  }
+  .icon-btn:hover { color: var(--oro); background: rgba(201,168,76,0.1); }
+  .icon-btn.danger { color: rgba(248, 81, 73, 0.7); }
+  .icon-btn.danger:hover { color: #F85149; background: rgba(248, 81, 73, 0.1); }
+
+  /* === Lista sottocategorie raggruppata === */
+  .sub-group {
+    margin-bottom: 14px;
+  }
+  .sub-group-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--oro);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(201,168,76,0.15);
+  }
+  .sub-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 6px;
+    margin-bottom: 4px;
+  }
+  .sub-row-label {
+    font-size: 13px;
+    color: #fff;
+    font-weight: 500;
+  }
+  .sub-row-meta {
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+    word-break: break-all;
+  }
+
 </style>
 </head>
 <body class="dark">
@@ -259,11 +415,44 @@
 
     <div class="admin-section">
       <div class="admin-section-title">
-        <span><i class="ti ti-list"></i> Gestione completa</span>
+        <span><i class="ti ti-flask"></i> Sentori attivi</span>
+        <button class="btn-add" onclick="apriFormAggiungiSentore()">+ Aggiungi</button>
       </div>
-      <div class="placeholder-text">
-        Le sezioni di gestione completa (CRUD famiglie, sottocategorie, sentori, rinomina, sposta) saranno disponibili nella prossima release. Per ora puoi utilizzare la query SQL diretta su Supabase.
+      <input type="text" id="searchSentori" placeholder="Cerca un sentore..." class="approve-input" style="margin-bottom:10px" oninput="filtraSentori()">
+      <div id="formAggiungiSentore" style="display:none"></div>
+      <div id="alberoSentori" class="albero-sentori"></div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">
+        <span><i class="ti ti-folder"></i> Sottocategorie</span>
+        <button class="btn-add" onclick="apriFormAggiungiSottocategoria()">+ Aggiungi</button>
       </div>
+      <div id="formAggiungiSottocategoria" style="display:none"></div>
+      <div id="listaSottocategorie"></div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">
+        <span><i class="ti ti-plant"></i> Famiglie olfattive</span>
+        <button class="btn-add" onclick="apriFormAggiungiFamiglia()">+ Aggiungi</button>
+      </div>
+      <div id="formAggiungiFamiglia" style="display:none"></div>
+      <div id="listaFamiglie"></div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">
+        <span><i class="ti ti-download"></i> Export</span>
+      </div>
+      <p style="font-size:12px;color:rgba(255,255,255,0.65);margin:0 0 10px;line-height:1.5">
+        Esporta il file <code>aromi-data.js</code> aggiornato per allineare il fallback offline al DB.
+        Scarica il file e sostituiscilo in <code>js/aromi-data.js</code> nel repo GitHub.
+      </p>
+      <button class="btn-add" style="width:100%" onclick="esportaAromiDataJs()">
+        <i class="ti ti-file-download" style="font-size:14px;vertical-align:middle"></i>
+        Scarica aromi-data.js
+      </button>
     </div>
   `;
 
@@ -271,6 +460,12 @@
   if (nPending > 0) {
     await renderPendingList();
   }
+
+  // Carica le nuove sezioni CRUD (sentori/sottocategorie/famiglie)
+  await caricaTuttiDati();
+  renderAlberoSentori();
+  renderListaSottocategorie();
+  renderListaFamiglie();
 })();
 
 async function renderPendingList() {
@@ -504,6 +699,594 @@ async function rifiutaPending(id) {
   const el = document.querySelector(`.pending-item[data-id="${id}"]`);
   if (el) el.remove();
   aggiornaBadgePending(-1);
+}
+
+// ============================================================
+// SEZIONI CRUD: cache globale dei dati
+// ============================================================
+
+let _allFamiglie = [];
+let _allSottocategorie = [];
+let _allSentori = [];
+
+async function caricaTuttiDati() {
+  const [famR, subR, sentR] = await Promise.all([
+    sb.from('famiglie_olfattive').select('*').order('ordine'),
+    sb.from('sottocategorie_olfattive').select('*').order('famiglia_key, ordine'),
+    sb.from('sentori').select('*').eq('stato', 'attivo').order('nome'),
+  ]);
+  _allFamiglie = famR.data || [];
+  _allSottocategorie = subR.data || [];
+  _allSentori = sentR.data || [];
+  _famiglieCache = _allFamiglie;
+  _sottocategorieCache = _allSottocategorie;
+}
+
+function invalidaCacheAromiClient() {
+  try { localStorage.removeItem('cantinapp_aromi_cache_v1'); } catch (e) {}
+}
+
+// ============================================================
+// CRUD SENTORI ATTIVI (albero famiglia → sottocat → sentori)
+// ============================================================
+
+let _famigliaEspansa = null;
+let _sottocatEspansa = null;
+
+function renderAlberoSentori() {
+  const tree = document.getElementById('alberoSentori');
+  if (!tree) return;
+  const search = (document.getElementById('searchSentori').value || '').toLowerCase().trim();
+
+  if (search) {
+    const matches = _allSentori.filter(s => s.nome.toLowerCase().includes(search));
+    if (matches.length === 0) {
+      tree.innerHTML = '<div class="placeholder-text" style="text-align:center;padding:20px">Nessun sentore corrispondente</div>';
+      return;
+    }
+    tree.innerHTML = `
+      <div class="placeholder-text" style="margin-bottom:8px">${matches.length} risultati per "${escapeHtml(search)}"</div>
+      ${matches.map(s => renderSentoreRow(s, true)).join('')}
+    `;
+    return;
+  }
+
+  tree.innerHTML = _allFamiglie.map(fam => {
+    const subs = _allSottocategorie.filter(s => s.famiglia_key === fam.key);
+    const totSentori = subs.reduce((tot, s) => tot + _allSentori.filter(se => se.sottocategoria_id === s.id).length, 0);
+    const isOpen = _famigliaEspansa === fam.key;
+    return `
+      <div class="tree-fam" data-key="${fam.key}">
+        <div class="tree-fam-header" onclick="toggleFamiglia('${fam.key}')">
+          <span class="tree-color-dot" style="background:${fam.color || '#888'}"></span>
+          <span class="tree-fam-label">${escapeHtml(fam.label)}</span>
+          <span class="tree-count">${subs.length} sottocategorie · ${totSentori} sentori</span>
+          <i class="ti ti-chevron-${isOpen ? 'down' : 'right'}"></i>
+        </div>
+        ${isOpen ? renderSottocategorieDellaFamiglia(fam.key) : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderSottocategorieDellaFamiglia(famKey) {
+  const subs = _allSottocategorie.filter(s => s.famiglia_key === famKey);
+  if (subs.length === 0) {
+    return '<div class="tree-fam-body"><div class="placeholder-text" style="padding:10px">Nessuna sottocategoria.</div></div>';
+  }
+  return `
+    <div class="tree-fam-body">
+      ${subs.map(sub => {
+        const sentori = _allSentori.filter(se => se.sottocategoria_id === sub.id);
+        const isOpen = _sottocatEspansa === sub.id;
+        return `
+          <div class="tree-sub" data-id="${sub.id}">
+            <div class="tree-sub-header" onclick="toggleSottocategoria('${sub.id}')">
+              <span class="tree-sub-label">${escapeHtml(sub.label)}</span>
+              <span class="tree-count">${sentori.length}</span>
+              <i class="ti ti-chevron-${isOpen ? 'down' : 'right'}"></i>
+            </div>
+            ${isOpen ? `<div class="tree-sub-body">${sentori.map(se => renderSentoreRow(se, false)).join('')}</div>` : ''}
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderSentoreRow(sent, showContext) {
+  const sub = _allSottocategorie.find(s => s.id === sent.sottocategoria_id);
+  const fam = sub ? _allFamiglie.find(f => f.key === sub.famiglia_key) : null;
+  const ctx = showContext && sub && fam
+    ? `<div class="sent-ctx">${escapeHtml(fam.label)} → ${escapeHtml(sub.label)}</div>` : '';
+  return `
+    <div class="sent-row" data-id="${sent.id}">
+      <div style="flex:1;min-width:0">
+        <div class="sent-nome">${escapeHtml(sent.nome)}</div>
+        ${ctx}
+      </div>
+      <div class="sent-actions">
+        <button class="icon-btn" title="Rinomina" onclick="rinominaSentore('${sent.id}')"><i class="ti ti-edit"></i></button>
+        <button class="icon-btn" title="Sposta" onclick="spostaSentore('${sent.id}')"><i class="ti ti-arrows-exchange"></i></button>
+        <button class="icon-btn danger" title="Elimina" onclick="eliminaSentore('${sent.id}')"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>
+  `;
+}
+
+function toggleFamiglia(key) {
+  _famigliaEspansa = (_famigliaEspansa === key) ? null : key;
+  _sottocatEspansa = null;
+  renderAlberoSentori();
+}
+
+function toggleSottocategoria(id) {
+  _sottocatEspansa = (_sottocatEspansa === id) ? null : id;
+  renderAlberoSentori();
+}
+
+function filtraSentori() {
+  renderAlberoSentori();
+}
+
+async function rinominaSentore(id) {
+  const sent = _allSentori.find(s => s.id === id);
+  if (!sent) return;
+  const nuovo = prompt(`Rinomina "${sent.nome}":`, sent.nome);
+  if (!nuovo || nuovo.trim() === '' || nuovo.trim() === sent.nome) return;
+  const nome = nuovo.trim();
+  const dupe = _allSentori.find(s => 
+    s.id !== id && 
+    s.sottocategoria_id === sent.sottocategoria_id && 
+    s.nome.toLowerCase() === nome.toLowerCase()
+  );
+  if (dupe) { alert(`Esiste già "${dupe.nome}" in questa sottocategoria.`); return; }
+  const { error } = await sb.from('sentori').update({ nome }).eq('id', id);
+  if (error) { alert('Errore: ' + error.message); return; }
+  sent.nome = nome;
+  _allSentori.sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
+  invalidaCacheAromiClient();
+  renderAlberoSentori();
+}
+
+async function spostaSentore(id) {
+  const sent = _allSentori.find(s => s.id === id);
+  if (!sent) return;
+  const subAttuale = _allSottocategorie.find(s => s.id === sent.sottocategoria_id);
+  const famAttuale = subAttuale ? _allFamiglie.find(f => f.key === subAttuale.famiglia_key) : null;
+
+  const famLabels = _allFamiglie.map((f, i) => `${i+1}. ${f.label}`).join('\n');
+  const famScelta = prompt(
+    `Sposta "${sent.nome}"\nAttualmente in: ${famAttuale?.label || '?'} → ${subAttuale?.label || '?'}\n\nScegli numero famiglia di destinazione:\n${famLabels}`
+  );
+  if (!famScelta) return;
+  const famIdx = parseInt(famScelta) - 1;
+  if (isNaN(famIdx) || famIdx < 0 || famIdx >= _allFamiglie.length) { alert('Scelta non valida'); return; }
+  const newFam = _allFamiglie[famIdx];
+  const subs = _allSottocategorie.filter(s => s.famiglia_key === newFam.key);
+  if (subs.length === 0) { alert('Questa famiglia non ha sottocategorie.'); return; }
+  const subLabels = subs.map((s, i) => `${i+1}. ${s.label}`).join('\n');
+  const subScelta = prompt(`Famiglia: ${newFam.label}\n\nScegli numero sottocategoria:\n${subLabels}`);
+  if (!subScelta) return;
+  const subIdx = parseInt(subScelta) - 1;
+  if (isNaN(subIdx) || subIdx < 0 || subIdx >= subs.length) { alert('Scelta non valida'); return; }
+  const newSub = subs[subIdx];
+
+  const dupe = _allSentori.find(s => 
+    s.id !== id && s.sottocategoria_id === newSub.id && 
+    s.nome.toLowerCase() === sent.nome.toLowerCase()
+  );
+  if (dupe) { alert(`Esiste già "${dupe.nome}" in ${newFam.label} → ${newSub.label}.`); return; }
+
+  const { error } = await sb.from('sentori').update({ sottocategoria_id: newSub.id }).eq('id', id);
+  if (error) { alert('Errore: ' + error.message); return; }
+  sent.sottocategoria_id = newSub.id;
+  invalidaCacheAromiClient();
+  renderAlberoSentori();
+}
+
+async function eliminaSentore(id) {
+  const sent = _allSentori.find(s => s.id === id);
+  if (!sent) return;
+  if (!confirm(`Eliminare il sentore "${sent.nome}"?\n\nQuesta operazione è definitiva.`)) return;
+  const { error } = await sb.from('sentori').delete().eq('id', id);
+  if (error) { alert('Errore: ' + error.message); return; }
+  _allSentori = _allSentori.filter(s => s.id !== id);
+  invalidaCacheAromiClient();
+  incrementaContatoreSentori(-1);
+  renderAlberoSentori();
+}
+
+function apriFormAggiungiSentore() {
+  const div = document.getElementById('formAggiungiSentore');
+  if (div.style.display === 'block') {
+    div.style.display = 'none'; div.innerHTML = ''; return;
+  }
+  const famOptions = _allFamiglie.map(f => `<option value="${f.key}">${escapeHtml(f.label)}</option>`).join('');
+  div.innerHTML = `
+    <div class="approve-form-inner" style="margin-bottom:12px">
+      <label class="approve-label">Nome sentore</label>
+      <input type="text" id="newSentoreNome" class="approve-input" placeholder="es. mirto, china, ribes nero">
+      <div class="approve-row">
+        <div style="flex:1">
+          <label class="approve-label">Famiglia</label>
+          <select id="newSentoreFam" class="approve-input" onchange="aggiornaSubNewSentore()">
+            <option value="">— scegli —</option>${famOptions}
+          </select>
+        </div>
+        <div style="flex:1">
+          <label class="approve-label">Sottocategoria</label>
+          <select id="newSentoreSub" class="approve-input">
+            <option value="">— prima scegli famiglia —</option>
+          </select>
+        </div>
+      </div>
+      <div class="approve-actions">
+        <button class="btn-mini" style="border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.6)" onclick="apriFormAggiungiSentore()">Annulla</button>
+        <button class="btn-mini approve" onclick="salvaNuovoSentore()">✓ Aggiungi</button>
+      </div>
+    </div>
+  `;
+  div.style.display = 'block';
+  document.getElementById('newSentoreNome').focus();
+}
+
+function aggiornaSubNewSentore() {
+  const famKey = document.getElementById('newSentoreFam').value;
+  const subSel = document.getElementById('newSentoreSub');
+  if (!famKey) { subSel.innerHTML = '<option value="">— prima scegli famiglia —</option>'; return; }
+  const subs = _allSottocategorie.filter(s => s.famiglia_key === famKey);
+  subSel.innerHTML = '<option value="">— scegli —</option>' +
+    subs.map(s => `<option value="${s.id}">${escapeHtml(s.label)}</option>`).join('');
+}
+
+async function salvaNuovoSentore() {
+  const nome = document.getElementById('newSentoreNome').value.trim();
+  const subId = document.getElementById('newSentoreSub').value;
+  if (!nome) { alert('Inserisci il nome'); return; }
+  if (!subId) { alert('Scegli una sottocategoria'); return; }
+  const dupe = _allSentori.find(s =>
+    s.sottocategoria_id === subId && s.nome.toLowerCase() === nome.toLowerCase()
+  );
+  if (dupe) { alert(`Esiste già "${dupe.nome}" in questa sottocategoria.`); return; }
+
+  const { data: { session } } = await sb.auth.getSession();
+  const { data: nuovo, error } = await sb.from('sentori').insert({
+    nome, sottocategoria_id: subId, stato: 'attivo',
+    created_by: session?.user?.id || null,
+    approvato_at: new Date().toISOString(),
+    approvato_by: session?.user?.id || null,
+  }).select().single();
+
+  if (error) { alert('Errore: ' + error.message); return; }
+  _allSentori.push(nuovo);
+  _allSentori.sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
+  invalidaCacheAromiClient();
+  incrementaContatoreSentori(1);
+  apriFormAggiungiSentore();
+  renderAlberoSentori();
+}
+
+// ============================================================
+// CRUD SOTTOCATEGORIE
+// ============================================================
+
+function renderListaSottocategorie() {
+  const list = document.getElementById('listaSottocategorie');
+  if (!list) return;
+  list.innerHTML = _allFamiglie.map(fam => {
+    const subs = _allSottocategorie.filter(s => s.famiglia_key === fam.key);
+    return `
+      <div class="sub-group">
+        <div class="sub-group-title">
+          <span class="tree-color-dot" style="background:${fam.color || '#888'}"></span>
+          ${escapeHtml(fam.label)}
+        </div>
+        ${subs.length === 0
+          ? '<div class="placeholder-text" style="padding:6px 0 10px;font-size:11px">Nessuna sottocategoria</div>'
+          : subs.map(s => `
+              <div class="sub-row" data-id="${s.id}">
+                <div style="flex:1;min-width:0">
+                  <div class="sub-row-label">${escapeHtml(s.label)}</div>
+                  <div class="sub-row-meta">key: ${escapeHtml(s.key)} · compat: ${(s.compat || []).join(', ') || '—'}</div>
+                </div>
+                <div class="sent-actions">
+                  <button class="icon-btn" title="Modifica" onclick="modificaSottocategoria('${s.id}')"><i class="ti ti-edit"></i></button>
+                  <button class="icon-btn danger" title="Elimina" onclick="eliminaSottocategoria('${s.id}')"><i class="ti ti-trash"></i></button>
+                </div>
+              </div>`).join('')
+        }
+      </div>
+    `;
+  }).join('');
+}
+
+function apriFormAggiungiSottocategoria() {
+  const div = document.getElementById('formAggiungiSottocategoria');
+  if (div.style.display === 'block') {
+    div.style.display = 'none'; div.innerHTML = ''; return;
+  }
+  const famOptions = _allFamiglie.map(f => `<option value="${f.key}">${escapeHtml(f.label)}</option>`).join('');
+  div.innerHTML = `
+    <div class="approve-form-inner" style="margin-bottom:12px">
+      <label class="approve-label">Famiglia</label>
+      <select id="newSubFam" class="approve-input">
+        <option value="">— scegli —</option>${famOptions}
+      </select>
+      <label class="approve-label">Label (visualizzato)</label>
+      <input type="text" id="newSubLabel" class="approve-input" placeholder="es. Erbe officinali">
+      <label class="approve-label">Key (identificatore, lettere/numeri/underscore)</label>
+      <input type="text" id="newSubKey" class="approve-input" placeholder="es. erbe_officinali">
+      <label class="approve-label">Compatibilità (separate da virgola)</label>
+      <input type="text" id="newSubCompat" class="approve-input" placeholder="rosso, bianco, rosato, spumante, passito, liquoroso">
+      <div class="approve-actions">
+        <button class="btn-mini" style="border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.6)" onclick="apriFormAggiungiSottocategoria()">Annulla</button>
+        <button class="btn-mini approve" onclick="salvaNuovaSottocategoria()">✓ Aggiungi</button>
+      </div>
+    </div>
+  `;
+  div.style.display = 'block';
+  document.getElementById('newSubLabel').addEventListener('input', (e) => {
+    const keyInp = document.getElementById('newSubKey');
+    if (keyInp.value === '' || keyInp.dataset.auto === '1') {
+      keyInp.value = slugify(e.target.value);
+      keyInp.dataset.auto = '1';
+    }
+  });
+  document.getElementById('newSubKey').addEventListener('input', (e) => { e.target.dataset.auto = '0'; });
+}
+
+function slugify(s) {
+  return String(s).toLowerCase()
+    .replace(/[àáâãäå]/g, 'a').replace(/[èéêë]/g, 'e').replace(/[ìíîï]/g, 'i')
+    .replace(/[òóôõö]/g, 'o').replace(/[ùúûü]/g, 'u').replace(/ç/g, 'c').replace(/ñ/g, 'n')
+    .replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').substring(0, 40);
+}
+
+async function salvaNuovaSottocategoria() {
+  const famKey = document.getElementById('newSubFam').value;
+  const label = document.getElementById('newSubLabel').value.trim();
+  const key = document.getElementById('newSubKey').value.trim();
+  const compatStr = document.getElementById('newSubCompat').value.trim();
+  if (!famKey) { alert('Scegli una famiglia'); return; }
+  if (!label) { alert('Inserisci il label'); return; }
+  if (!key || !/^[a-z0-9_]+$/.test(key)) { alert('Key non valida (solo a-z, 0-9, _)'); return; }
+  const compat = compatStr ? compatStr.split(',').map(c => c.trim()).filter(Boolean) : null;
+  if (_allSottocategorie.find(s => s.famiglia_key === famKey && s.key === key)) {
+    alert(`Esiste già una sottocategoria con key "${key}" in questa famiglia.`); return;
+  }
+  const ordineMax = Math.max(0, ..._allSottocategorie.filter(s => s.famiglia_key === famKey).map(s => s.ordine || 0));
+  const { data: nuovo, error } = await sb.from('sottocategorie_olfattive').insert({
+    famiglia_key: famKey, key, label, compat, ordine: ordineMax + 1
+  }).select().single();
+  if (error) { alert('Errore: ' + error.message); return; }
+  _allSottocategorie.push(nuovo);
+  invalidaCacheAromiClient();
+  apriFormAggiungiSottocategoria();
+  renderListaSottocategorie();
+  renderAlberoSentori();
+  aggiornaStatRow('Sottocategorie', _allSottocategorie.length);
+}
+
+async function modificaSottocategoria(id) {
+  const sub = _allSottocategorie.find(s => s.id === id);
+  if (!sub) return;
+  const nuovoLabel = prompt(`Modifica label di "${sub.label}":`, sub.label);
+  if (!nuovoLabel || nuovoLabel.trim() === sub.label) return;
+  const compatCur = (sub.compat || []).join(', ');
+  const nuovaCompat = prompt(`Compatibilità (separate da virgola):`, compatCur);
+  if (nuovaCompat === null) return;
+  const compat = nuovaCompat.trim() ? nuovaCompat.split(',').map(c => c.trim()).filter(Boolean) : null;
+
+  const { error } = await sb.from('sottocategorie_olfattive').update({
+    label: nuovoLabel.trim(), compat
+  }).eq('id', id);
+  if (error) { alert('Errore: ' + error.message); return; }
+  sub.label = nuovoLabel.trim();
+  sub.compat = compat;
+  invalidaCacheAromiClient();
+  renderListaSottocategorie();
+  renderAlberoSentori();
+}
+
+async function eliminaSottocategoria(id) {
+  const sub = _allSottocategorie.find(s => s.id === id);
+  if (!sub) return;
+  const nSentori = _allSentori.filter(s => s.sottocategoria_id === id).length;
+  let msg = `Eliminare la sottocategoria "${sub.label}"?`;
+  if (nSentori > 0) {
+    msg += `\n\n⚠ Contiene ${nSentori} sentori che verranno anch'essi eliminati (cascade).`;
+  }
+  if (!confirm(msg)) return;
+  const { error } = await sb.from('sottocategorie_olfattive').delete().eq('id', id);
+  if (error) { alert('Errore: ' + error.message); return; }
+  _allSottocategorie = _allSottocategorie.filter(s => s.id !== id);
+  _allSentori = _allSentori.filter(s => s.sottocategoria_id !== id);
+  invalidaCacheAromiClient();
+  renderListaSottocategorie();
+  renderAlberoSentori();
+  aggiornaStatRow('Sottocategorie', _allSottocategorie.length);
+  aggiornaStatRow('Sentori attivi', _allSentori.length);
+}
+
+// ============================================================
+// CRUD FAMIGLIE
+// ============================================================
+
+function renderListaFamiglie() {
+  const list = document.getElementById('listaFamiglie');
+  if (!list) return;
+  list.innerHTML = _allFamiglie.map(f => {
+    const nSubs = _allSottocategorie.filter(s => s.famiglia_key === f.key).length;
+    return `
+      <div class="sub-row" data-key="${f.key}">
+        <span class="tree-color-dot" style="background:${f.color || '#888'}"></span>
+        <div style="flex:1;min-width:0">
+          <div class="sub-row-label">${escapeHtml(f.label)}</div>
+          <div class="sub-row-meta">key: ${escapeHtml(f.key)} · ${nSubs} sottocat · ordine: ${f.ordine}</div>
+        </div>
+        <div class="sent-actions">
+          <button class="icon-btn" title="Modifica" onclick="modificaFamiglia('${f.key}')"><i class="ti ti-edit"></i></button>
+          <button class="icon-btn danger" title="Elimina" onclick="eliminaFamiglia('${f.key}')"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function apriFormAggiungiFamiglia() {
+  const div = document.getElementById('formAggiungiFamiglia');
+  if (div.style.display === 'block') {
+    div.style.display = 'none'; div.innerHTML = ''; return;
+  }
+  div.innerHTML = `
+    <div class="approve-form-inner" style="margin-bottom:12px">
+      <label class="approve-label">Label (visualizzato)</label>
+      <input type="text" id="newFamLabel" class="approve-input" placeholder="es. Animale">
+      <label class="approve-label">Key (identificatore, lettere/numeri/underscore)</label>
+      <input type="text" id="newFamKey" class="approve-input" placeholder="es. animale">
+      <label class="approve-label">Colore (hex)</label>
+      <input type="color" id="newFamColor" class="approve-input" value="#888888" style="height:36px;padding:2px">
+      <div class="approve-actions">
+        <button class="btn-mini" style="border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.6)" onclick="apriFormAggiungiFamiglia()">Annulla</button>
+        <button class="btn-mini approve" onclick="salvaNuovaFamiglia()">✓ Aggiungi</button>
+      </div>
+    </div>
+  `;
+  div.style.display = 'block';
+  document.getElementById('newFamLabel').addEventListener('input', (e) => {
+    const keyInp = document.getElementById('newFamKey');
+    if (keyInp.value === '' || keyInp.dataset.auto === '1') {
+      keyInp.value = slugify(e.target.value);
+      keyInp.dataset.auto = '1';
+    }
+  });
+  document.getElementById('newFamKey').addEventListener('input', (e) => { e.target.dataset.auto = '0'; });
+}
+
+async function salvaNuovaFamiglia() {
+  const label = document.getElementById('newFamLabel').value.trim();
+  const key = document.getElementById('newFamKey').value.trim();
+  const color = document.getElementById('newFamColor').value;
+  if (!label) { alert('Inserisci il label'); return; }
+  if (!key || !/^[a-z0-9_]+$/.test(key)) { alert('Key non valida (solo a-z, 0-9, _)'); return; }
+  if (_allFamiglie.find(f => f.key === key)) { alert(`Esiste già una famiglia con key "${key}".`); return; }
+  const ordineMax = Math.max(0, ..._allFamiglie.map(f => f.ordine || 0));
+  const { data: nuova, error } = await sb.from('famiglie_olfattive').insert({
+    key, label, color, ordine: ordineMax + 1
+  }).select().single();
+  if (error) { alert('Errore: ' + error.message); return; }
+  _allFamiglie.push(nuova);
+  invalidaCacheAromiClient();
+  apriFormAggiungiFamiglia();
+  renderListaFamiglie();
+  renderListaSottocategorie();
+  renderAlberoSentori();
+  aggiornaStatRow('Famiglie olfattive', _allFamiglie.length);
+}
+
+async function modificaFamiglia(key) {
+  const fam = _allFamiglie.find(f => f.key === key);
+  if (!fam) return;
+  const nuovoLabel = prompt(`Modifica label di "${fam.label}":`, fam.label);
+  if (!nuovoLabel || nuovoLabel.trim() === fam.label) return;
+  const nuovoColor = prompt(`Colore (es. #C0392B):`, fam.color || '#888888');
+  if (nuovoColor === null) return;
+  const { error } = await sb.from('famiglie_olfattive').update({
+    label: nuovoLabel.trim(),
+    color: nuovoColor.trim() || '#888888',
+  }).eq('id', fam.id);
+  if (error) { alert('Errore: ' + error.message); return; }
+  fam.label = nuovoLabel.trim();
+  fam.color = nuovoColor.trim() || '#888888';
+  invalidaCacheAromiClient();
+  renderListaFamiglie();
+  renderListaSottocategorie();
+  renderAlberoSentori();
+}
+
+async function eliminaFamiglia(key) {
+  const fam = _allFamiglie.find(f => f.key === key);
+  if (!fam) return;
+  const subs = _allSottocategorie.filter(s => s.famiglia_key === key);
+  const nSentori = _allSentori.filter(se => subs.some(s => s.id === se.sottocategoria_id)).length;
+  let msg = `Eliminare la famiglia "${fam.label}"?`;
+  if (subs.length > 0) {
+    msg += `\n\n⚠ Contiene ${subs.length} sottocategorie e ${nSentori} sentori che verranno anch'essi eliminati (cascade).`;
+  }
+  if (!confirm(msg)) return;
+  const { error } = await sb.from('famiglie_olfattive').delete().eq('id', fam.id);
+  if (error) { alert('Errore: ' + error.message); return; }
+  _allFamiglie = _allFamiglie.filter(f => f.key !== key);
+  _allSottocategorie = _allSottocategorie.filter(s => s.famiglia_key !== key);
+  _allSentori = _allSentori.filter(se => !subs.some(s => s.id === se.sottocategoria_id));
+  invalidaCacheAromiClient();
+  renderListaFamiglie();
+  renderListaSottocategorie();
+  renderAlberoSentori();
+  aggiornaStatRow('Famiglie olfattive', _allFamiglie.length);
+  aggiornaStatRow('Sottocategorie', _allSottocategorie.length);
+  aggiornaStatRow('Sentori attivi', _allSentori.length);
+}
+
+function aggiornaStatRow(label, value) {
+  const rows = document.querySelectorAll('.stat-row');
+  for (const r of rows) {
+    if (r.textContent.includes(label)) {
+      const v = r.querySelector('.v');
+      if (v) v.textContent = value;
+      break;
+    }
+  }
+}
+
+// ============================================================
+// EXPORT aromi-data.js
+// ============================================================
+
+function esportaAromiDataJs() {
+  const out = {};
+  for (const fam of _allFamiglie) {
+    out[fam.key] = { label: fam.label, color: fam.color || '#888888', subcategories: {} };
+  }
+  for (const sub of _allSottocategorie) {
+    if (!out[sub.famiglia_key]) continue;
+    out[sub.famiglia_key].subcategories[sub.key] = {
+      label: sub.label, compat: sub.compat || [], sentori: []
+    };
+  }
+  for (const sent of _allSentori) {
+    const sub = _allSottocategorie.find(s => s.id === sent.sottocategoria_id);
+    if (!sub) continue;
+    if (out[sub.famiglia_key] && out[sub.famiglia_key].subcategories[sub.key]) {
+      out[sub.famiglia_key].subcategories[sub.key].sentori.push(sent.nome);
+    }
+  }
+  for (const fam of Object.values(out)) {
+    for (const sub of Object.values(fam.subcategories)) {
+      sub.sentori.sort((a, b) => a.localeCompare(b, 'it', { sensitivity: 'base' }));
+    }
+  }
+  const oggi = new Date().toISOString().split('T')[0];
+  const content = `// ============================================================
+// CantinApp — Aromi/Sentori (fallback offline)
+// ============================================================
+// Generato dal pannello Admin il ${oggi}
+// Allineato al database Supabase.
+// Modifiche manuali a questo file verranno sovrascritte al prossimo export.
+// ============================================================
+
+const AROMI = ${JSON.stringify(out, null, 2)};
+`;
+  const blob = new Blob([content], { type: 'application/javascript;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'aromi-data.js';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 </script>
 </body>
