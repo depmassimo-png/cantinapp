@@ -323,55 +323,108 @@ function prepopolaBoxIdentita() {
 }
 
 let _bottiglieScelta = [];
+let _pickerFiltro = 'all';
 
 async function caricaBottiglieScelta() {
   const lista = document.getElementById('listaBottiglieScelta');
   lista.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.4);font-size:13px">Caricamento...</div>';
 
   const { data } = await sb.from('bottiglie')
-    .select('id, nome_vino, produttore, annata, tipologia, etichetta_url, stato')
+    .select('id, nome_vino, produttore, annata, tipologia, denominazione, regione, gradazione, quantita, etichetta_url, controetichetta_url, stato, anno_pronto_da, anno_pronto_a')
     .eq('user_id', currentUser.id)
     .eq('stato', 'disponibile')
     .order('created_at', { ascending: false });
 
   _bottiglieScelta = data || [];
-  renderListaBottiglie(_bottiglieScelta);
+  _pickerFiltro = 'all';
+  // Reset visivo dei filter buttons
+  document.querySelectorAll('#pickerFilterBtns .filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === 'all');
+  });
+  document.getElementById('filtroBottiglie').value = '';
+  renderListaBottiglie();
 }
 
-function renderListaBottiglie(list) {
+function isBottigliaPronta(b) {
+  const annoCorrente = new Date().getFullYear();
+  const da = b.anno_pronto_da;
+  const fino = b.anno_pronto_a;
+  if (!da && !fino) return false;
+  if (da && annoCorrente < da) return false;
+  if (fino && annoCorrente > fino) return false;
+  return true;
+}
+
+function setPickerFilter(filter, btn) {
+  _pickerFiltro = filter;
+  document.querySelectorAll('#pickerFilterBtns .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderListaBottiglie();
+}
+
+function renderListaBottiglie() {
   const lista = document.getElementById('listaBottiglieScelta');
   const vuota = document.getElementById('listaBottiglieVuota');
-  if (!list || list.length === 0) {
+  const search = document.getElementById('filtroBottiglie').value.toLowerCase().trim();
+
+  // Applica filtri
+  let filtered = _bottiglieScelta;
+  if (_pickerFiltro === 'pronti') {
+    filtered = filtered.filter(isBottigliaPronta);
+  } else if (_pickerFiltro !== 'all') {
+    filtered = filtered.filter(b => b.tipologia === _pickerFiltro);
+  }
+  if (search) {
+    filtered = filtered.filter(b =>
+      (b.nome_vino || '').toLowerCase().includes(search) ||
+      (b.produttore || '').toLowerCase().includes(search) ||
+      (b.denominazione || '').toLowerCase().includes(search) ||
+      (b.regione || '').toLowerCase().includes(search)
+    );
+  }
+
+  if (!filtered || filtered.length === 0) {
     lista.innerHTML = '';
     vuota.style.display = 'block';
     return;
   }
   vuota.style.display = 'none';
-  lista.innerHTML = list.map(b => `
-    <button class="bottiglia-pick-card" onclick="scegliBottigliaScelta('${b.id}')">
-      <div class="bottiglia-pick-thumb">
-        ${b.etichetta_url ? `<img src="${esc(b.etichetta_url)}" alt="">` : '<i class="ti ti-bottle-wine"></i>'}
-      </div>
-      <div class="bottiglia-pick-text">
-        <div class="bottiglia-pick-nome">${esc(b.nome_vino || 'Senza nome')}</div>
-        <div class="bottiglia-pick-meta">${esc(b.produttore || '—')}${b.annata ? ' · ' + b.annata : ''}</div>
-      </div>
-      <i class="ti ti-chevron-right" style="font-size:18px;color:rgba(201,168,76,0.5)"></i>
-    </button>
-  `).join('');
+
+  lista.innerHTML = filtered.map(b => {
+    const tipologia = b.tipologia || 'rosso';
+    const annata = b.annata || 'NM';
+    const gradi = b.gradazione ? b.gradazione.toString().replace('.', ',') + '°' : '';
+    const qty = b.quantita || 1;
+    const pronta = isBottigliaPronta(b);
+    const img = b.etichetta_url
+      ? `<img src="${esc(b.etichetta_url)}" alt="">`
+      : (b.controetichetta_url
+          ? `<img src="${esc(b.controetichetta_url)}" alt="">`
+          : `<i class="ti ti-bottle-wine" aria-hidden="true"></i>`);
+    const badgePronto = pronta
+      ? `<span class="wine-badge-pronto"><i class="ti ti-circle-check" style="font-size:11px"></i> Pronto</span>`
+      : '';
+    const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+    return `
+      <button type="button" class="wine-card" onclick="scegliBottigliaScelta('${b.id}')">
+        <span class="wine-stripe stripe-${tipologia}"></span>
+        <div class="wine-thumb">${img}</div>
+        <div class="wine-info">
+          <div class="wine-name">${esc(b.nome_vino || 'Senza nome')}${badgePronto}</div>
+          <div class="wine-producer">${esc(b.produttore || '—')}</div>
+          <div class="wine-meta-row">
+            <span class="tipo-label tipo-${tipologia}">${cap(tipologia)}</span>
+            <span class="wine-extra">${annata}${gradi ? ' · ' + gradi : ''}</span>
+          </div>
+        </div>
+        <div class="wine-qty">×${qty}</div>
+      </button>
+    `;
+  }).join('');
 }
 
-function filtraBottiglie(q) {
-  const query = (q || '').toLowerCase().trim();
-  if (!query) {
-    renderListaBottiglie(_bottiglieScelta);
-    return;
-  }
-  const filtered = _bottiglieScelta.filter(b =>
-    (b.nome_vino || '').toLowerCase().includes(query) ||
-    (b.produttore || '').toLowerCase().includes(query)
-  );
-  renderListaBottiglie(filtered);
+function filtraBottiglie() {
+  renderListaBottiglie();
 }
 
 async function scegliBottigliaScelta(id) {

@@ -270,6 +270,154 @@
       line-height: 1.6;
     }
     .summary-box .lbl { color: var(--bordeaux); font-weight: 600; }
+    /* === PICKER BOTTIGLIE CANTINA: filtri tipologia + wine cards === */
+    #bottigliaSceltaOverlay .filter-btns {
+      display: flex;
+      gap: 6px;
+      padding: 4px 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    #bottigliaSceltaOverlay .filter-btns::-webkit-scrollbar { display: none; }
+    #bottigliaSceltaOverlay .filter-btn {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      transition: all .15s;
+      user-select: none;
+    }
+    #bottigliaSceltaOverlay .filter-btn.active {
+      background: var(--bordeaux, #8B2635);
+      border-color: var(--bordeaux, #8B2635);
+      color: #fff;
+    }
+    #bottigliaSceltaOverlay .filter-pronti {
+      border-color: var(--oro, #C9A84C) !important;
+      color: var(--oro, #C9A84C) !important;
+    }
+    #bottigliaSceltaOverlay .filter-pronti.active {
+      background: var(--oro, #C9A84C) !important;
+      color: var(--nero, #1a0608) !important;
+      border-color: var(--oro, #C9A84C) !important;
+    }
+
+    /* Lista vini (riprodotta dalla cantina) */
+    #bottigliaSceltaOverlay .wine-list {
+      padding: 0;
+    }
+    #bottigliaSceltaOverlay .wine-card {
+      background: rgba(255,255,255,0.04);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      padding: 10px 14px 10px 18px;
+      display: flex;
+      gap: 12px;
+      cursor: pointer;
+      transition: all .15s;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+      align-items: center;
+      width: 100%;
+      text-align: left;
+      border: none;
+      font-family: inherit;
+    }
+    #bottigliaSceltaOverlay .wine-card:active { background: rgba(255,255,255,0.07); }
+
+    #bottigliaSceltaOverlay .wine-stripe {
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 4px;
+      border-radius: 2px;
+    }
+    #bottigliaSceltaOverlay .stripe-rosso { background: #8B2635; }
+    #bottigliaSceltaOverlay .stripe-bianco { background: #C9A84C; }
+    #bottigliaSceltaOverlay .stripe-rosato { background: #D88FAE; }
+    #bottigliaSceltaOverlay .stripe-spumante { background: #5B9FB5; }
+    #bottigliaSceltaOverlay .stripe-passito { background: #B97324; }
+    #bottigliaSceltaOverlay .stripe-liquoroso { background: #6B4226; }
+
+    #bottigliaSceltaOverlay .wine-thumb {
+      width: 44px;
+      height: 56px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    #bottigliaSceltaOverlay .wine-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    #bottigliaSceltaOverlay .wine-thumb i {
+      font-size: 22px;
+      color: rgba(255,255,255,0.3);
+    }
+    #bottigliaSceltaOverlay .wine-info { flex: 1; min-width: 0; }
+    #bottigliaSceltaOverlay .wine-name {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.25;
+    }
+    #bottigliaSceltaOverlay .wine-producer {
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #bottigliaSceltaOverlay .wine-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+    }
+    #bottigliaSceltaOverlay .tipo-label { font-weight: 700; letter-spacing: 0.3px; }
+    #bottigliaSceltaOverlay .tipo-rosso { color: #C66270; }
+    #bottigliaSceltaOverlay .tipo-bianco { color: #D9B95C; }
+    #bottigliaSceltaOverlay .tipo-rosato { color: #E0A4BB; }
+    #bottigliaSceltaOverlay .tipo-spumante { color: #82BFD3; }
+    #bottigliaSceltaOverlay .tipo-passito { color: #D38E4E; }
+    #bottigliaSceltaOverlay .tipo-liquoroso { color: #A07853; }
+    #bottigliaSceltaOverlay .wine-extra { color: rgba(255,255,255,0.5); }
+    #bottigliaSceltaOverlay .wine-qty {
+      flex-shrink: 0;
+      color: var(--oro, #C9A84C);
+      font-weight: 700;
+      font-size: 13px;
+      padding-left: 8px;
+    }
+    #bottigliaSceltaOverlay .wine-badge-pronto {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      background: rgba(201, 168, 76, 0.18);
+      color: var(--oro, #C9A84C);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 999px;
+      margin-left: 6px;
+      vertical-align: middle;
+      letter-spacing: 0.2px;
+    }
+
   </style>
 </head>
 <body class="dark">
@@ -426,11 +574,24 @@
     </div>
 
     <h1 style="font-size:20px;font-weight:600;color:var(--oro);margin:0 0 4px">Scegli una bottiglia</h1>
-    <p style="font-size:13px;color:rgba(255,255,255,0.55);margin:0 0 18px">Dalla tua cantina</p>
+    <p style="font-size:13px;color:rgba(255,255,255,0.55);margin:0 0 14px">Dalla tua cantina</p>
 
-    <input type="text" id="filtroBottiglie" placeholder="Cerca per nome o produttore..." style="margin-bottom:16px" oninput="filtraBottiglie(this.value)">
+    <input type="text" id="filtroBottiglie" placeholder="Cerca per nome, produttore, denominazione..." style="margin-bottom:12px" oninput="filtraBottiglie()">
 
-    <div id="listaBottiglieScelta" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div class="filter-btns" id="pickerFilterBtns" style="margin-bottom:16px">
+      <span class="filter-btn active" data-filter="all" onclick="setPickerFilter('all', this)">Tutti</span>
+      <span class="filter-btn filter-pronti" data-filter="pronti" onclick="setPickerFilter('pronti', this)">
+        <i class="ti ti-circle-check" style="font-size:13px;vertical-align:middle"></i> Pronti
+      </span>
+      <span class="filter-btn" data-filter="rosso" onclick="setPickerFilter('rosso', this)">Rossi</span>
+      <span class="filter-btn" data-filter="bianco" onclick="setPickerFilter('bianco', this)">Bianchi</span>
+      <span class="filter-btn" data-filter="rosato" onclick="setPickerFilter('rosato', this)">Rosati</span>
+      <span class="filter-btn" data-filter="spumante" onclick="setPickerFilter('spumante', this)">Spumanti</span>
+      <span class="filter-btn" data-filter="passito" onclick="setPickerFilter('passito', this)">Passiti</span>
+      <span class="filter-btn" data-filter="liquoroso" onclick="setPickerFilter('liquoroso', this)">Liquorosi</span>
+    </div>
+
+    <div id="listaBottiglieScelta" class="wine-list"></div>
     <div id="listaBottiglieVuota" style="display:none;text-align:center;padding:40px 20px;color:rgba(255,255,255,0.4);font-size:13px">
       Nessuna bottiglia trovata
     </div>
