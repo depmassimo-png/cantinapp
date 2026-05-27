@@ -155,10 +155,15 @@ async function avviaWizard() {
 
 // =========== Schermata scelta modalità ===========
 async function scegliModalita(modo) {
-  if (modo === 'cieca' || modo === 'esterno') {
+  if (modo === 'cieca') {
     document.getElementById('modalitaSceltaOverlay').style.display = 'none';
-    impostaModalita(modo);
+    impostaModalita('cieca');
     await avviaWizard();
+  } else if (modo === 'esterno') {
+    // Modalità esterno → apri schermata di identificazione preliminare
+    document.getElementById('modalitaSceltaOverlay').style.display = 'none';
+    document.getElementById('identificazioneOverlay').style.display = 'block';
+    setupIdentificazioneForm();
   } else if (modo === 'cantina') {
     document.getElementById('modalitaSceltaOverlay').style.display = 'none';
     document.getElementById('bottigliaSceltaOverlay').style.display = 'block';
@@ -168,7 +173,136 @@ async function scegliModalita(modo) {
 
 function tornaAModalita() {
   document.getElementById('bottigliaSceltaOverlay').style.display = 'none';
+  document.getElementById('identificazioneOverlay').style.display = 'none';
   document.getElementById('modalitaSceltaOverlay').style.display = 'block';
+}
+
+// =========== Schermata identificazione preliminare ('esterno') ===========
+function setupIdentificazioneForm() {
+  // Popola nazioni/regioni
+  if (typeof nazioniOptionsHtml === 'function') {
+    const nazSel = document.getElementById('idNazione');
+    if (nazSel && !nazSel.innerHTML.trim()) {
+      nazSel.innerHTML = nazioniOptionsHtml('Italia');
+      document.getElementById('idRegioneSelect').innerHTML = regioniOptionsHtml(null);
+      aggiornaCampoRegioneId();
+    }
+  }
+}
+
+function aggiornaCampoRegioneId() {
+  const naz = document.getElementById('idNazione').value;
+  const sel = document.getElementById('idRegioneSelect');
+  const inp = document.getElementById('idRegione');
+  const label = document.getElementById('idRegioneLabel');
+  if (!sel || !inp || !label) return;
+  if (naz === 'Italia') {
+    sel.style.display = 'block';
+    inp.style.display = 'none';
+    label.textContent = 'Regione';
+  } else {
+    sel.style.display = 'none';
+    inp.style.display = 'block';
+    label.textContent = naz ? 'Regione / Sub-area' : 'Regione';
+  }
+}
+
+async function confermaIdentificazione() {
+  // Validazione minima: serve almeno nome + tipologia per avere senso
+  const nome = document.getElementById('idNome').value.trim();
+  const tipologia = document.getElementById('idTipologia').value;
+
+  if (!nome) {
+    showToast('Inserisci almeno il nome del vino', true);
+    document.getElementById('idNome').focus();
+    return;
+  }
+  if (!tipologia) {
+    showToast('Seleziona la tipologia (necessaria per le regole di degustazione)', true);
+    document.getElementById('idTipologia').focus();
+    return;
+  }
+
+  // Salva i dati raccolti in D
+  D.nome_vino_esterno = nome;
+  D.produttore_esterno = document.getElementById('idProduttore').value.trim() || null;
+  const annata = document.getElementById('idAnnata').value;
+  D.annata_esterna = annata ? parseInt(annata) : null;
+  D.tipologia_esterna = tipologia;
+  D.denominazione_esterna = document.getElementById('idDenominazione').value.trim() || null;
+  D.nazione_esterna = document.getElementById('idNazione').value || null;
+
+  // Regione: dipende dalla nazione
+  if (D.nazione_esterna === 'Italia') {
+    D.regione_esterna = document.getElementById('idRegioneSelect').value || null;
+  } else {
+    D.regione_esterna = document.getElementById('idRegione').value.trim() || null;
+  }
+
+  D.vitigni_esterni = document.getElementById('idVitigni').value.trim() || null;
+  const grad = document.getElementById('idGradazione').value;
+  D.gradazione_esterna = grad ? parseFloat(grad) : null;
+
+  // Costruisci un "bottigliaCorrente" virtuale per applicare regole di tipologia
+  // e per popolare profili vitigno se disponibili
+  bottigliaCorrente = {
+    nome_vino: nome,
+    produttore: D.produttore_esterno,
+    annata: D.annata_esterna,
+    tipologia: tipologia,
+    denominazione: D.denominazione_esterna,
+    nazione: D.nazione_esterna,
+    regione: D.regione_esterna,
+    vitigni: D.vitigni_esterni ? D.vitigni_esterni.split(',').map(s => s.trim()).filter(Boolean) : null,
+  };
+
+  // Aggiorna header con il nome del vino
+  const w = document.getElementById('wineId');
+  const subtitle = [D.produttore_esterno, D.annata_esterna].filter(Boolean).join(' · ');
+  w.textContent = subtitle ? `${nome} · ${subtitle}` : nome;
+  w.classList.remove('cieca');
+
+  // Mostra i box necessari
+  document.getElementById('boxVinoEsterno').style.display = 'block';
+  document.getElementById('boxDensita').style.display = 'block';
+  document.getElementById('boxPerlage').style.display = 'block';
+
+  // Chiudi la schermata e avvia il wizard
+  document.getElementById('identificazioneOverlay').style.display = 'none';
+  await avviaWizard();
+
+  // Pre-compila il box "Identità del vino" allo step 5 con i dati già inseriti
+  setTimeout(() => prepopolaBoxIdentita(), 100);
+}
+
+function prepopolaBoxIdentita() {
+  // Popola gli input del box vino esterno (step 5) con i dati raccolti in identificazione
+  const fields = [
+    ['extNome', D.nome_vino_esterno],
+    ['extProduttore', D.produttore_esterno],
+    ['extAnnata', D.annata_esterna],
+    ['extTipologia', D.tipologia_esterna],
+    ['extDenominazione', D.denominazione_esterna],
+    ['extNazione', D.nazione_esterna],
+    ['extVitigni', D.vitigni_esterni],
+    ['extGradazione', D.gradazione_esterna],
+  ];
+  for (const [id, val] of fields) {
+    const el = document.getElementById(id);
+    if (el && val != null) el.value = val;
+  }
+  // Regione: dipende dalla nazione
+  if (typeof aggiornaCampoRegioneExt === 'function') aggiornaCampoRegioneExt();
+  if (D.regione_esterna) {
+    const naz = D.nazione_esterna;
+    if (naz === 'Italia') {
+      const sel = document.getElementById('extRegioneSelect');
+      if (sel) sel.value = D.regione_esterna;
+    } else {
+      const inp = document.getElementById('extRegione');
+      if (inp) inp.value = D.regione_esterna;
+    }
+  }
 }
 
 let _bottiglieScelta = [];
@@ -180,7 +314,7 @@ async function caricaBottiglieScelta() {
   const { data } = await sb.from('bottiglie')
     .select('id, nome_vino, produttore, annata, tipologia, etichetta_url, stato')
     .eq('user_id', currentUser.id)
-    .in('stato', ['in cantina', 'in_cantina', 'cantina', 'bevuta'])
+    .eq('stato', 'disponibile')
     .order('created_at', { ascending: false });
 
   _bottiglieScelta = data || [];

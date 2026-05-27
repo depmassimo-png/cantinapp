@@ -337,6 +337,80 @@
   </div>
 </div>
 
+<!-- Schermata identificazione preliminare (per modalità 'esterno') -->
+<div id="identificazioneOverlay" style="display:none;position:fixed;inset:0;background:var(--nero);z-index:200;overflow-y:auto">
+  <div style="max-width:480px;margin:0 auto;padding:24px 20px 40px;min-height:100vh">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <button onclick="tornaAModalita()" style="background:none;border:none;color:var(--oro);cursor:pointer;display:flex;align-items:center;gap:4px;font-size:13px">
+        <i class="ti ti-arrow-left" style="font-size:20px"></i>
+        Indietro
+      </button>
+      <button class="x-btn" onclick="annullaDegustazione()" aria-label="Annulla" style="background:none;border:none;color:var(--oro);cursor:pointer;display:flex;align-items:center;gap:4px;font-size:13px">
+        <i class="ti ti-x" style="font-size:20px"></i>
+        Annulla
+      </button>
+    </div>
+
+    <h1 style="font-size:20px;font-weight:600;color:var(--oro);margin:0 0 4px">Identità del vino</h1>
+    <p style="font-size:13px;color:rgba(255,255,255,0.55);margin:0 0 20px">Conoscere il vino aiuterà a suggerirti i sentori tipici durante la degustazione</p>
+
+    <label style="color:var(--oro);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Nome del vino *</label>
+    <input type="text" id="idNome" placeholder="es. Barolo Riserva" style="margin-bottom:14px">
+
+    <label style="color:var(--oro);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Produttore</label>
+    <input type="text" id="idProduttore" placeholder="es. Giacomo Conterno" style="margin-bottom:14px">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="color:var(--oro);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Annata</label>
+        <input type="number" id="idAnnata" placeholder="2018" min="1900" max="2099">
+      </div>
+      <div>
+        <label style="color:var(--oro);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Tipologia *</label>
+        <select id="idTipologia">
+          <option value="">—</option>
+          <option value="rosso">Rosso</option>
+          <option value="bianco">Bianco</option>
+          <option value="rosato">Rosato</option>
+          <option value="spumante">Spumante</option>
+          <option value="passito">Passito</option>
+          <option value="liquoroso">Liquoroso</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="color:var(--oro);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Denominazione</label>
+        <input type="text" id="idDenominazione" placeholder="es. DOCG">
+      </div>
+      <div>
+        <label style="color:var(--oro);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Nazione</label>
+        <select id="idNazione" onchange="aggiornaCampoRegioneId()"></select>
+      </div>
+    </div>
+
+    <label id="idRegioneLabel" style="color:var(--oro);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Regione</label>
+    <select id="idRegioneSelect" style="margin-bottom:14px;display:none"></select>
+    <input type="text" id="idRegione" placeholder="es. Bordeaux, Mosella..." style="margin-bottom:14px">
+
+    <label style="color:var(--oro);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Vitigni</label>
+    <input type="text" id="idVitigni" placeholder="es. Nebbiolo, Barbera (separati da virgola)" style="margin-bottom:14px">
+
+    <label style="color:var(--oro);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Gradazione (% vol)</label>
+    <input type="number" id="idGradazione" placeholder="13.5" step="0.1" min="0" max="25" style="margin-bottom:24px">
+
+    <div style="font-size:11px;color:rgba(255,255,255,0.45);font-style:italic;margin-bottom:16px">
+      * Campi richiesti. Gli altri dati sono opzionali ma utili per il check di coerenza.
+    </div>
+
+    <button class="btn btn-primary" onclick="confermaIdentificazione()">
+      Procedi con la degustazione
+      <i class="ti ti-arrow-right" style="font-size:18px"></i>
+    </button>
+  </div>
+</div>
+
 <!-- Picker bottiglia in cantina (mostrato quando si sceglie 'cantina') -->
 <div id="bottigliaSceltaOverlay" style="display:none;position:fixed;inset:0;background:var(--nero);z-index:200;overflow-y:auto">
   <div style="max-width:480px;margin:0 auto;padding:24px 20px 40px;min-height:100vh">
