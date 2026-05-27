@@ -159,6 +159,51 @@
   }
   .btn-add:active { background: rgba(46, 160, 67, 0.25); }
 
+  /* Bottone inline (dentro l'albero) per aggiungere figli */
+  .tree-add-row {
+    margin: 6px 0 8px;
+  }
+  .btn-add-inline {
+    background: rgba(46, 160, 67, 0.08);
+    border: 1px dashed rgba(46, 160, 67, 0.35);
+    color: rgba(46, 160, 67, 0.85);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-add-inline:active { background: rgba(46, 160, 67, 0.18); }
+  .btn-add-inline i { font-size: 14px; }
+
+  /* Toolbar espandi/collassa */
+  .albero-toolbar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .btn-tool {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.7);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn-tool:active { background: rgba(255,255,255,0.08); }
+  .btn-tool i { font-size: 13px; }
+
   /* === Albero famiglie/sottocategorie/sentori === */
   .albero-sentori { margin-top: 4px; }
   .tree-fam {
@@ -172,7 +217,6 @@
     align-items: center;
     gap: 8px;
     padding: 10px 12px;
-    cursor: pointer;
     background: rgba(255,255,255,0.03);
     user-select: none;
   }
@@ -182,42 +226,61 @@
     font-size: 13px;
     font-weight: 600;
     color: #fff;
+    cursor: pointer;
   }
+  .tree-toggle {
+    cursor: pointer;
+    color: rgba(201,168,76,0.7);
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .tree-toggle:active { color: var(--oro); }
   .tree-count {
     font-size: 10px;
     color: rgba(255,255,255,0.45);
+    cursor: pointer;
+    margin-right: 4px;
   }
-  .tree-fam-header i { color: rgba(201,168,76,0.7); }
   .tree-color-dot {
     width: 12px;
     height: 12px;
     border-radius: 50%;
     border: 1px solid rgba(255,255,255,0.2);
     flex-shrink: 0;
+    cursor: pointer;
   }
   .tree-fam-body {
-    padding: 4px 8px 8px 28px;
+    padding: 4px 10px 8px 28px;
     background: rgba(0,0,0,0.2);
   }
   .tree-sub {
     margin-top: 4px;
     border-left: 2px solid rgba(201,168,76,0.2);
+    border-radius: 4px;
   }
   .tree-sub-header {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 6px 10px;
-    cursor: pointer;
     user-select: none;
   }
   .tree-sub-header:active { background: rgba(255,255,255,0.03); }
-  .tree-sub-label {
+  .tree-sub-text {
     flex: 1;
+    min-width: 0;
+    cursor: pointer;
+  }
+  .tree-sub-label {
     font-size: 12.5px;
     color: rgba(255,255,255,0.85);
+    font-weight: 500;
   }
-  .tree-sub-header i { color: rgba(255,255,255,0.4); font-size: 14px; }
+  .tree-sub-meta {
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+  }
   .tree-sub-body {
     padding: 4px 10px 6px 20px;
   }
@@ -415,30 +478,18 @@
 
     <div class="admin-section">
       <div class="admin-section-title">
-        <span><i class="ti ti-flask"></i> Sentori attivi</span>
-        <button class="btn-add" onclick="apriFormAggiungiSentore()">+ Aggiungi</button>
+        <span><i class="ti ti-plant"></i> Gestione olfattiva</span>
+        <button class="btn-add" onclick="apriFormAggiungiFamiglia()">+ Famiglia</button>
       </div>
       <input type="text" id="searchSentori" placeholder="Cerca un sentore..." class="approve-input" style="margin-bottom:10px" oninput="filtraSentori()">
-      <div id="formAggiungiSentore" style="display:none"></div>
-      <div id="alberoSentori" class="albero-sentori"></div>
-    </div>
-
-    <div class="admin-section">
-      <div class="admin-section-title">
-        <span><i class="ti ti-folder"></i> Sottocategorie</span>
-        <button class="btn-add" onclick="apriFormAggiungiSottocategoria()">+ Aggiungi</button>
-      </div>
-      <div id="formAggiungiSottocategoria" style="display:none"></div>
-      <div id="listaSottocategorie"></div>
-    </div>
-
-    <div class="admin-section">
-      <div class="admin-section-title">
-        <span><i class="ti ti-plant"></i> Famiglie olfattive</span>
-        <button class="btn-add" onclick="apriFormAggiungiFamiglia()">+ Aggiungi</button>
+      <div class="albero-toolbar">
+        <button class="btn-tool" onclick="espandiTutto()" title="Espandi tutto"><i class="ti ti-layout-rows"></i> Espandi tutto</button>
+        <button class="btn-tool" onclick="collassaTutto()" title="Collassa tutto"><i class="ti ti-fold"></i> Collassa</button>
       </div>
       <div id="formAggiungiFamiglia" style="display:none"></div>
-      <div id="listaFamiglie"></div>
+      <div id="formAggiungiSottocategoria" style="display:none"></div>
+      <div id="formAggiungiSentore" style="display:none"></div>
+      <div id="alberoSentori" class="albero-sentori"></div>
     </div>
 
     <div class="admin-section">
@@ -464,8 +515,6 @@
   // Carica le nuove sezioni CRUD (sentori/sottocategorie/famiglie)
   await caricaTuttiDati();
   renderAlberoSentori();
-  renderListaSottocategorie();
-  renderListaFamiglie();
 })();
 
 async function renderPendingList() {
@@ -727,17 +776,21 @@ function invalidaCacheAromiClient() {
 }
 
 // ============================================================
-// CRUD SENTORI ATTIVI (albero famiglia → sottocat → sentori)
+// ALBERO UNIFICATO: famiglia → sottocategoria → sentore
+// Tutti i livelli espandibili/collassabili individualmente
+// Tutti i livelli con azioni CRUD inline
 // ============================================================
 
-let _famigliaEspansa = null;
-let _sottocatEspansa = null;
+// Set di chiavi/id espansi (multi-espansione, niente "solo uno alla volta")
+let _famExpanded = new Set();
+let _subExpanded = new Set();
 
 function renderAlberoSentori() {
   const tree = document.getElementById('alberoSentori');
   if (!tree) return;
   const search = (document.getElementById('searchSentori').value || '').toLowerCase().trim();
 
+  // Ricerca: lista piatta di sentori che matchano
   if (search) {
     const matches = _allSentori.filter(s => s.nome.toLowerCase().includes(search));
     if (matches.length === 0) {
@@ -751,45 +804,76 @@ function renderAlberoSentori() {
     return;
   }
 
-  tree.innerHTML = _allFamiglie.map(fam => {
-    const subs = _allSottocategorie.filter(s => s.famiglia_key === fam.key);
-    const totSentori = subs.reduce((tot, s) => tot + _allSentori.filter(se => se.sottocategoria_id === s.id).length, 0);
-    const isOpen = _famigliaEspansa === fam.key;
-    return `
-      <div class="tree-fam" data-key="${fam.key}">
-        <div class="tree-fam-header" onclick="toggleFamiglia('${fam.key}')">
-          <span class="tree-color-dot" style="background:${fam.color || '#888'}"></span>
-          <span class="tree-fam-label">${escapeHtml(fam.label)}</span>
-          <span class="tree-count">${subs.length} sottocategorie · ${totSentori} sentori</span>
-          <i class="ti ti-chevron-${isOpen ? 'down' : 'right'}"></i>
-        </div>
-        ${isOpen ? renderSottocategorieDellaFamiglia(fam.key) : ''}
-      </div>
-    `;
-  }).join('');
+  // Albero gerarchico
+  tree.innerHTML = _allFamiglie.map(fam => renderFamigliaNode(fam)).join('');
 }
 
-function renderSottocategorieDellaFamiglia(famKey) {
-  const subs = _allSottocategorie.filter(s => s.famiglia_key === famKey);
-  if (subs.length === 0) {
-    return '<div class="tree-fam-body"><div class="placeholder-text" style="padding:10px">Nessuna sottocategoria.</div></div>';
-  }
+function renderFamigliaNode(fam) {
+  const subs = _allSottocategorie.filter(s => s.famiglia_key === fam.key);
+  const totSentori = subs.reduce((tot, s) => tot + _allSentori.filter(se => se.sottocategoria_id === s.id).length, 0);
+  const isOpen = _famExpanded.has(fam.key);
+
   return `
-    <div class="tree-fam-body">
-      ${subs.map(sub => {
-        const sentori = _allSentori.filter(se => se.sottocategoria_id === sub.id);
-        const isOpen = _sottocatEspansa === sub.id;
-        return `
-          <div class="tree-sub" data-id="${sub.id}">
-            <div class="tree-sub-header" onclick="toggleSottocategoria('${sub.id}')">
-              <span class="tree-sub-label">${escapeHtml(sub.label)}</span>
-              <span class="tree-count">${sentori.length}</span>
-              <i class="ti ti-chevron-${isOpen ? 'down' : 'right'}"></i>
-            </div>
-            ${isOpen ? `<div class="tree-sub-body">${sentori.map(se => renderSentoreRow(se, false)).join('')}</div>` : ''}
+    <div class="tree-fam" data-key="${fam.key}">
+      <div class="tree-fam-header">
+        <i class="ti ti-chevron-${isOpen ? 'down' : 'right'} tree-toggle" onclick="toggleFamiglia('${fam.key}')"></i>
+        <span class="tree-color-dot" style="background:${fam.color || '#888'}" onclick="toggleFamiglia('${fam.key}')"></span>
+        <span class="tree-fam-label" onclick="toggleFamiglia('${fam.key}')">${escapeHtml(fam.label)}</span>
+        <span class="tree-count" onclick="toggleFamiglia('${fam.key}')">${subs.length} sottocat · ${totSentori} sentori</span>
+        <div class="sent-actions">
+          <button class="icon-btn" title="Modifica famiglia" onclick="modificaFamiglia('${fam.key}')"><i class="ti ti-edit"></i></button>
+          <button class="icon-btn danger" title="Elimina famiglia" onclick="eliminaFamiglia('${fam.key}')"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      ${isOpen ? `
+        <div class="tree-fam-body">
+          <div class="tree-add-row">
+            <button class="btn-add-inline" onclick="apriFormAggiungiSottocategoria('${fam.key}')">
+              <i class="ti ti-plus"></i> Aggiungi sottocategoria a "${escapeHtml(fam.label)}"
+            </button>
           </div>
-        `;
-      }).join('')}
+          ${subs.length === 0
+            ? '<div class="placeholder-text" style="padding:8px 0;font-size:11px">Nessuna sottocategoria.</div>'
+            : subs.map(sub => renderSottocategoriaNode(sub)).join('')
+          }
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderSottocategoriaNode(sub) {
+  const sentori = _allSentori.filter(se => se.sottocategoria_id === sub.id);
+  const isOpen = _subExpanded.has(sub.id);
+  const compatStr = (sub.compat || []).join(', ');
+
+  return `
+    <div class="tree-sub" data-id="${sub.id}">
+      <div class="tree-sub-header">
+        <i class="ti ti-chevron-${isOpen ? 'down' : 'right'} tree-toggle" onclick="toggleSottocategoria('${sub.id}')"></i>
+        <div class="tree-sub-text" onclick="toggleSottocategoria('${sub.id}')">
+          <div class="tree-sub-label">${escapeHtml(sub.label)}</div>
+          ${compatStr ? `<div class="tree-sub-meta">${escapeHtml(compatStr)}</div>` : ''}
+        </div>
+        <span class="tree-count" onclick="toggleSottocategoria('${sub.id}')">${sentori.length}</span>
+        <div class="sent-actions">
+          <button class="icon-btn" title="Modifica sottocategoria" onclick="modificaSottocategoria('${sub.id}')"><i class="ti ti-edit"></i></button>
+          <button class="icon-btn danger" title="Elimina sottocategoria" onclick="eliminaSottocategoria('${sub.id}')"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      ${isOpen ? `
+        <div class="tree-sub-body">
+          <div class="tree-add-row">
+            <button class="btn-add-inline" onclick="apriFormAggiungiSentore('${sub.id}')">
+              <i class="ti ti-plus"></i> Aggiungi sentore a "${escapeHtml(sub.label)}"
+            </button>
+          </div>
+          ${sentori.length === 0
+            ? '<div class="placeholder-text" style="padding:6px 0;font-size:11px">Nessun sentore.</div>'
+            : sentori.map(se => renderSentoreRow(se, false)).join('')
+          }
+        </div>
+      ` : ''}
     </div>
   `;
 }
@@ -815,13 +899,26 @@ function renderSentoreRow(sent, showContext) {
 }
 
 function toggleFamiglia(key) {
-  _famigliaEspansa = (_famigliaEspansa === key) ? null : key;
-  _sottocatEspansa = null;
+  if (_famExpanded.has(key)) _famExpanded.delete(key);
+  else _famExpanded.add(key);
   renderAlberoSentori();
 }
 
 function toggleSottocategoria(id) {
-  _sottocatEspansa = (_sottocatEspansa === id) ? null : id;
+  if (_subExpanded.has(id)) _subExpanded.delete(id);
+  else _subExpanded.add(id);
+  renderAlberoSentori();
+}
+
+function espandiTutto() {
+  for (const f of _allFamiglie) _famExpanded.add(f.key);
+  for (const s of _allSottocategorie) _subExpanded.add(s.id);
+  renderAlberoSentori();
+}
+
+function collassaTutto() {
+  _famExpanded.clear();
+  _subExpanded.clear();
   renderAlberoSentori();
 }
 
@@ -897,12 +994,23 @@ async function eliminaSentore(id) {
   renderAlberoSentori();
 }
 
-function apriFormAggiungiSentore() {
+function apriFormAggiungiSentore(subIdPredefinito) {
   const div = document.getElementById('formAggiungiSentore');
   if (div.style.display === 'block') {
     div.style.display = 'none'; div.innerHTML = ''; return;
   }
-  const famOptions = _allFamiglie.map(f => `<option value="${f.key}">${escapeHtml(f.label)}</option>`).join('');
+  // Se viene passato subIdPredefinito, lo usiamo come default
+  const subPre = subIdPredefinito ? _allSottocategorie.find(s => s.id === subIdPredefinito) : null;
+  const famPre = subPre ? subPre.famiglia_key : '';
+  const famOptions = _allFamiglie.map(f => 
+    `<option value="${f.key}"${f.key === famPre ? ' selected' : ''}>${escapeHtml(f.label)}</option>`
+  ).join('');
+  const subOptions = famPre
+    ? _allSottocategorie.filter(s => s.famiglia_key === famPre).map(s =>
+        `<option value="${s.id}"${s.id === subIdPredefinito ? ' selected' : ''}>${escapeHtml(s.label)}</option>`
+      ).join('')
+    : '';
+
   div.innerHTML = `
     <div class="approve-form-inner" style="margin-bottom:12px">
       <label class="approve-label">Nome sentore</label>
@@ -917,7 +1025,7 @@ function apriFormAggiungiSentore() {
         <div style="flex:1">
           <label class="approve-label">Sottocategoria</label>
           <select id="newSentoreSub" class="approve-input">
-            <option value="">— prima scegli famiglia —</option>
+            ${subOptions ? '<option value="">— scegli —</option>' + subOptions : '<option value="">— prima scegli famiglia —</option>'}
           </select>
         </div>
       </div>
@@ -928,6 +1036,7 @@ function apriFormAggiungiSentore() {
     </div>
   `;
   div.style.display = 'block';
+  div.scrollIntoView({ behavior: 'smooth', block: 'center' });
   document.getElementById('newSentoreNome').focus();
 }
 
@@ -971,56 +1080,26 @@ async function salvaNuovoSentore() {
 // CRUD SOTTOCATEGORIE (con collassamento per famiglia)
 // ============================================================
 
-let _famigliaSubEspansa = null; // key famiglia espansa nel pannello Sottocategorie (separato da albero sentori)
+// Le funzioni renderListaSottocategorie e renderListaFamiglie sono
+// state sostituite dall'albero unico (renderAlberoSentori). Le manteniamo
+// come stub no-op per compatibilità con eventuali chiamate residue.
 
 function renderListaSottocategorie() {
-  const list = document.getElementById('listaSottocategorie');
-  if (!list) return;
-  list.innerHTML = _allFamiglie.map(fam => {
-    const subs = _allSottocategorie.filter(s => s.famiglia_key === fam.key);
-    const isOpen = _famigliaSubEspansa === fam.key;
-    return `
-      <div class="tree-fam" data-key="${fam.key}">
-        <div class="tree-fam-header" onclick="toggleFamigliaSub('${fam.key}')">
-          <span class="tree-color-dot" style="background:${fam.color || '#888'}"></span>
-          <span class="tree-fam-label">${escapeHtml(fam.label)}</span>
-          <span class="tree-count">${subs.length} sottocategorie</span>
-          <i class="ti ti-chevron-${isOpen ? 'down' : 'right'}"></i>
-        </div>
-        ${isOpen ? `
-          <div class="tree-fam-body" style="padding-left:14px">
-            ${subs.length === 0
-              ? '<div class="placeholder-text" style="padding:8px 0;font-size:11px">Nessuna sottocategoria in questa famiglia</div>'
-              : subs.map(s => `
-                  <div class="sub-row" data-id="${s.id}">
-                    <div style="flex:1;min-width:0">
-                      <div class="sub-row-label">${escapeHtml(s.label)}</div>
-                      <div class="sub-row-meta">key: ${escapeHtml(s.key)} · compat: ${(s.compat || []).join(', ') || '—'} · ${_allSentori.filter(se => se.sottocategoria_id === s.id).length} sentori</div>
-                    </div>
-                    <div class="sent-actions">
-                      <button class="icon-btn" title="Modifica" onclick="modificaSottocategoria('${s.id}')"><i class="ti ti-edit"></i></button>
-                      <button class="icon-btn danger" title="Elimina" onclick="eliminaSottocategoria('${s.id}')"><i class="ti ti-trash"></i></button>
-                    </div>
-                  </div>`).join('')
-            }
-          </div>
-        ` : ''}
-      </div>
-    `;
-  }).join('');
+  // No-op: tutto è gestito da renderAlberoSentori
 }
 
 function toggleFamigliaSub(key) {
-  _famigliaSubEspansa = (_famigliaSubEspansa === key) ? null : key;
-  renderListaSottocategorie();
+  // No-op: legacy
 }
 
-function apriFormAggiungiSottocategoria() {
+function apriFormAggiungiSottocategoria(famKeyPredefinita) {
   const div = document.getElementById('formAggiungiSottocategoria');
   if (div.style.display === 'block') {
     div.style.display = 'none'; div.innerHTML = ''; return;
   }
-  const famOptions = _allFamiglie.map(f => `<option value="${f.key}">${escapeHtml(f.label)}</option>`).join('');
+  const famOptions = _allFamiglie.map(f => 
+    `<option value="${f.key}"${f.key === famKeyPredefinita ? ' selected' : ''}>${escapeHtml(f.label)}</option>`
+  ).join('');
   div.innerHTML = `
     <div class="approve-form-inner" style="margin-bottom:12px">
       <label class="approve-label">Famiglia</label>
@@ -1040,6 +1119,7 @@ function apriFormAggiungiSottocategoria() {
     </div>
   `;
   div.style.display = 'block';
+  div.scrollIntoView({ behavior: 'smooth', block: 'center' });
   document.getElementById('newSubLabel').addEventListener('input', (e) => {
     const keyInp = document.getElementById('newSubKey');
     if (keyInp.value === '' || keyInp.dataset.auto === '1') {
@@ -1048,6 +1128,7 @@ function apriFormAggiungiSottocategoria() {
     }
   });
   document.getElementById('newSubKey').addEventListener('input', (e) => { e.target.dataset.auto = '0'; });
+  document.getElementById('newSubLabel').focus();
 }
 
 function slugify(s) {
@@ -1232,24 +1313,7 @@ async function eliminaSottocategoria(id) {
 // ============================================================
 
 function renderListaFamiglie() {
-  const list = document.getElementById('listaFamiglie');
-  if (!list) return;
-  list.innerHTML = _allFamiglie.map(f => {
-    const nSubs = _allSottocategorie.filter(s => s.famiglia_key === f.key).length;
-    return `
-      <div class="sub-row" data-key="${f.key}">
-        <span class="tree-color-dot" style="background:${f.color || '#888'}"></span>
-        <div style="flex:1;min-width:0">
-          <div class="sub-row-label">${escapeHtml(f.label)}</div>
-          <div class="sub-row-meta">key: ${escapeHtml(f.key)} · ${nSubs} sottocat · ordine: ${f.ordine}</div>
-        </div>
-        <div class="sent-actions">
-          <button class="icon-btn" title="Modifica" onclick="modificaFamiglia('${f.key}')"><i class="ti ti-edit"></i></button>
-          <button class="icon-btn danger" title="Elimina" onclick="eliminaFamiglia('${f.key}')"><i class="ti ti-trash"></i></button>
-        </div>
-      </div>
-    `;
-  }).join('');
+  // No-op: tutto è gestito dall'albero unico (renderAlberoSentori)
 }
 
 function apriFormAggiungiFamiglia() {
