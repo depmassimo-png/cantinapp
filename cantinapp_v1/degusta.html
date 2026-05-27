@@ -75,6 +75,126 @@
       background-clip: text;
       color: transparent;
     }
+    .wizard-header .header-version {
+      font-size: 9px;
+      color: rgba(201,168,76,0.5);
+      letter-spacing: 0.3px;
+      flex-shrink: 0;
+      align-self: flex-end;
+      padding-bottom: 2px;
+    }
+
+    /* Schermata di scelta modalità */
+    .modalita-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all .15s;
+      width: 100%;
+      text-align: left;
+      color: inherit;
+      font-family: inherit;
+    }
+    .modalita-card:active {
+      background: rgba(201,168,76,0.08);
+      transform: scale(0.99);
+    }
+    .modalita-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(201,168,76,0.2), rgba(139,38,53,0.15));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .modalita-icon i {
+      font-size: 22px;
+      color: var(--oro);
+    }
+    .modalita-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .modalita-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--oro);
+      margin-bottom: 3px;
+    }
+    .modalita-desc {
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.4;
+    }
+    .modalita-arrow {
+      font-size: 18px;
+      color: rgba(201,168,76,0.5);
+      flex-shrink: 0;
+    }
+
+    /* Picker bottiglie cantina */
+    .bottiglia-pick-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all .15s;
+      width: 100%;
+      text-align: left;
+      color: inherit;
+      font-family: inherit;
+    }
+    .bottiglia-pick-card:active {
+      background: rgba(201,168,76,0.08);
+    }
+    .bottiglia-pick-thumb {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      background: rgba(201,168,76,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .bottiglia-pick-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .bottiglia-pick-thumb i {
+      font-size: 18px;
+      color: var(--oro);
+    }
+    .bottiglia-pick-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .bottiglia-pick-nome {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--avorio);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bottiglia-pick-meta {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 2px;
+    }
 
     .wizard-body {
       padding: 20px 20px 32px;
@@ -165,8 +285,82 @@
   <div class="brand-row">
     <img src="logo.png" alt="">
     <div class="wine-id" id="wineId">Caricamento...</div>
+    <span class="header-version" id="headerVersion"></span>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progBar" style="width:20%"></div></div>
+</div>
+
+<!-- Schermata iniziale di scelta modalità -->
+<div id="modalitaSceltaOverlay" style="display:none;position:fixed;inset:0;background:var(--nero);z-index:200;overflow-y:auto">
+  <div style="max-width:480px;margin:0 auto;padding:24px 20px 40px;min-height:100vh;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+      <button class="x-btn" onclick="annullaDegustazione()" aria-label="Annulla" style="background:none;border:none;color:var(--oro);cursor:pointer;display:flex;align-items:center;gap:4px;font-size:13px">
+        <i class="ti ti-x" style="font-size:20px"></i>
+        Annulla
+      </button>
+    </div>
+
+    <div style="text-align:center;margin-bottom:32px">
+      <img src="logo.png" alt="" style="width:56px;height:56px;border-radius:12px;margin-bottom:16px">
+      <h1 style="font-size:24px;font-weight:600;color:var(--oro);margin:0 0 8px;letter-spacing:0.3px">Nuova degustazione</h1>
+      <p style="font-size:14px;color:rgba(255,255,255,0.6);margin:0">Come vuoi iniziare?</p>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;flex:1">
+      <button class="modalita-card" onclick="scegliModalita('cieca')">
+        <div class="modalita-icon"><i class="ti ti-eye-off"></i></div>
+        <div class="modalita-text">
+          <div class="modalita-title">Degustazione alla cieca</div>
+          <div class="modalita-desc">Il vino è ignoto. Lo svelerai a fine compilazione.</div>
+        </div>
+        <i class="ti ti-chevron-right modalita-arrow"></i>
+      </button>
+
+      <button class="modalita-card" onclick="scegliModalita('cantina')">
+        <div class="modalita-icon"><i class="ti ti-bottle"></i></div>
+        <div class="modalita-text">
+          <div class="modalita-title">Da una bottiglia in cantina</div>
+          <div class="modalita-desc">Seleziona una bottiglia che hai già aggiunto.</div>
+        </div>
+        <i class="ti ti-chevron-right modalita-arrow"></i>
+      </button>
+
+      <button class="modalita-card" onclick="scegliModalita('esterno')">
+        <div class="modalita-icon"><i class="ti ti-wine"></i></div>
+        <div class="modalita-text">
+          <div class="modalita-title">Vino esterno (già noto)</div>
+          <div class="modalita-desc">Vino non in cantina di cui conosci l'identità.</div>
+        </div>
+        <i class="ti ti-chevron-right modalita-arrow"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Picker bottiglia in cantina (mostrato quando si sceglie 'cantina') -->
+<div id="bottigliaSceltaOverlay" style="display:none;position:fixed;inset:0;background:var(--nero);z-index:200;overflow-y:auto">
+  <div style="max-width:480px;margin:0 auto;padding:24px 20px 40px;min-height:100vh">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <button onclick="tornaAModalita()" style="background:none;border:none;color:var(--oro);cursor:pointer;display:flex;align-items:center;gap:4px;font-size:13px">
+        <i class="ti ti-arrow-left" style="font-size:20px"></i>
+        Indietro
+      </button>
+      <button class="x-btn" onclick="annullaDegustazione()" aria-label="Annulla" style="background:none;border:none;color:var(--oro);cursor:pointer;display:flex;align-items:center;gap:4px;font-size:13px">
+        <i class="ti ti-x" style="font-size:20px"></i>
+        Annulla
+      </button>
+    </div>
+
+    <h1 style="font-size:20px;font-weight:600;color:var(--oro);margin:0 0 4px">Scegli una bottiglia</h1>
+    <p style="font-size:13px;color:rgba(255,255,255,0.55);margin:0 0 18px">Dalla tua cantina</p>
+
+    <input type="text" id="filtroBottiglie" placeholder="Cerca per nome o produttore..." style="margin-bottom:16px" oninput="filtraBottiglie(this.value)">
+
+    <div id="listaBottiglieScelta" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div id="listaBottiglieVuota" style="display:none;text-align:center;padding:40px 20px;color:rgba(255,255,255,0.4);font-size:13px">
+      Nessuna bottiglia trovata
+    </div>
+  </div>
 </div>
 
 <div class="wizard-body">

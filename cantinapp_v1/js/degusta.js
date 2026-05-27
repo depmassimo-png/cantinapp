@@ -64,37 +64,71 @@ const D = {
   if (!session) return;
   currentUser = session.user;
 
-  // Bottiglia da degustare (opzionale)
-  const id = new URLSearchParams(window.location.search).get('bottiglia_id');
-  if (id) {
-    const { data } = await sb.from('bottiglie').select('*').eq('id', id).single();
-    if (data) {
-      bottigliaCorrente = data;
-      D.bottiglia_id = data.id;
-      const w = document.getElementById('wineId');
-      w.textContent = `${data.nome_vino} · ${data.produttore}${data.annata ? ' · ' + data.annata : ''}`;
-      w.classList.remove('cieca');
+  // Versione nell'header (al posto del footer fixed)
+  const hv = document.getElementById('headerVersion');
+  if (hv && typeof APP_VERSION !== 'undefined') hv.textContent = APP_VERSION;
+  // Rimuovi eventuale footer versione iniettato da supabase.js (la versione è nell'header)
+  setTimeout(() => {
+    const f = document.getElementById('appVersionFooter');
+    if (f) f.remove();
+  }, 50);
 
-      // Mostra TUTTI i box (densità, tannino, perlage), gestiamo poi
-      // l'abilitazione tramite applicaRegoleTipologia()
-      document.getElementById('boxDensita').style.display = 'block';
-      document.getElementById('boxPerlage').style.display = 'block';
-    }
+  // Bottiglia da degustare (opzionale via query string)
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('bottiglia_id');
+  const modo = params.get('modo');  // 'cieca' | 'esterno' | null
+
+  if (id) {
+    // Caso 1: c'è un bottiglia_id → modalità "da cantina" diretta, niente schermata di scelta
+    await caricaBottigliaECompleta(id);
+    avviaWizard();
+  } else if (modo === 'cieca' || modo === 'esterno') {
+    // Caso 2: modalità esplicita da URL → salta la schermata di scelta
+    impostaModalita(modo);
+    avviaWizard();
   } else {
+    // Caso 3: nessuna info → mostra schermata di scelta
+    document.getElementById('modalitaSceltaOverlay').style.display = 'block';
+    // Lascia in attesa, l'init prosegue quando l'utente sceglie
+  }
+})();
+
+async function caricaBottigliaECompleta(id) {
+  const { data } = await sb.from('bottiglie').select('*').eq('id', id).single();
+  if (data) {
+    bottigliaCorrente = data;
+    D.bottiglia_id = data.id;
     const w = document.getElementById('wineId');
-    w.textContent = 'Degustazione alla cieca';
-    w.classList.add('cieca');
-    document.getElementById('boxVinoEsterno').style.display = 'block';
+    w.textContent = `${data.nome_vino} · ${data.produttore}${data.annata ? ' · ' + data.annata : ''}`;
+    w.classList.remove('cieca');
     document.getElementById('boxDensita').style.display = 'block';
     document.getElementById('boxPerlage').style.display = 'block';
   }
+}
 
+function impostaModalita(modo) {
+  const w = document.getElementById('wineId');
+  if (modo === 'cieca') {
+    w.textContent = 'Degustazione alla cieca';
+    w.classList.add('cieca');
+  } else { // esterno
+    w.textContent = 'Nuova degustazione';
+    w.classList.remove('cieca');
+  }
+  // In entrambi i casi mostriamo i box che permettono al sommelier
+  // di valutare densità/perlage (non sa la tipologia all'inizio)
+  document.getElementById('boxVinoEsterno').style.display = 'block';
+  document.getElementById('boxDensita').style.display = 'block';
+  document.getElementById('boxPerlage').style.display = 'block';
+}
+
+async function avviaWizard() {
   // Data oggi
   const oggi = new Date().toISOString().split('T')[0];
   document.getElementById('dataDegustazione').value = oggi;
   D.data_degustazione = oggi;
 
-  // Setup event listeners su chip
+  // Setup event listeners (chip, scale, stars, ruota aromi, binding input ext)
   setupChips();
   setupScale();
   setupStars();
@@ -117,7 +151,83 @@ const D = {
   attivaAutosave();
 
   renderStep();
-})();
+}
+
+// =========== Schermata scelta modalità ===========
+async function scegliModalita(modo) {
+  if (modo === 'cieca' || modo === 'esterno') {
+    document.getElementById('modalitaSceltaOverlay').style.display = 'none';
+    impostaModalita(modo);
+    await avviaWizard();
+  } else if (modo === 'cantina') {
+    document.getElementById('modalitaSceltaOverlay').style.display = 'none';
+    document.getElementById('bottigliaSceltaOverlay').style.display = 'block';
+    await caricaBottiglieScelta();
+  }
+}
+
+function tornaAModalita() {
+  document.getElementById('bottigliaSceltaOverlay').style.display = 'none';
+  document.getElementById('modalitaSceltaOverlay').style.display = 'block';
+}
+
+let _bottiglieScelta = [];
+
+async function caricaBottiglieScelta() {
+  const lista = document.getElementById('listaBottiglieScelta');
+  lista.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.4);font-size:13px">Caricamento...</div>';
+
+  const { data } = await sb.from('bottiglie')
+    .select('id, nome_vino, produttore, annata, tipologia, etichetta_url, stato')
+    .eq('user_id', currentUser.id)
+    .in('stato', ['in cantina', 'in_cantina', 'cantina', 'bevuta'])
+    .order('created_at', { ascending: false });
+
+  _bottiglieScelta = data || [];
+  renderListaBottiglie(_bottiglieScelta);
+}
+
+function renderListaBottiglie(list) {
+  const lista = document.getElementById('listaBottiglieScelta');
+  const vuota = document.getElementById('listaBottiglieVuota');
+  if (!list || list.length === 0) {
+    lista.innerHTML = '';
+    vuota.style.display = 'block';
+    return;
+  }
+  vuota.style.display = 'none';
+  lista.innerHTML = list.map(b => `
+    <button class="bottiglia-pick-card" onclick="scegliBottigliaScelta('${b.id}')">
+      <div class="bottiglia-pick-thumb">
+        ${b.etichetta_url ? `<img src="${esc(b.etichetta_url)}" alt="">` : '<i class="ti ti-bottle-wine"></i>'}
+      </div>
+      <div class="bottiglia-pick-text">
+        <div class="bottiglia-pick-nome">${esc(b.nome_vino || 'Senza nome')}</div>
+        <div class="bottiglia-pick-meta">${esc(b.produttore || '—')}${b.annata ? ' · ' + b.annata : ''}</div>
+      </div>
+      <i class="ti ti-chevron-right" style="font-size:18px;color:rgba(201,168,76,0.5)"></i>
+    </button>
+  `).join('');
+}
+
+function filtraBottiglie(q) {
+  const query = (q || '').toLowerCase().trim();
+  if (!query) {
+    renderListaBottiglie(_bottiglieScelta);
+    return;
+  }
+  const filtered = _bottiglieScelta.filter(b =>
+    (b.nome_vino || '').toLowerCase().includes(query) ||
+    (b.produttore || '').toLowerCase().includes(query)
+  );
+  renderListaBottiglie(filtered);
+}
+
+async function scegliBottigliaScelta(id) {
+  document.getElementById('bottigliaSceltaOverlay').style.display = 'none';
+  await caricaBottigliaECompleta(id);
+  await avviaWizard();
+}
 
 // ==== SETUP CHIP (selezione singola) ====
 function setupChips() {
