@@ -98,6 +98,52 @@
   }
   .btn-mini.approve { border-color: rgba(46, 160, 67, 0.5); color: #2EA043; }
   .btn-mini.reject { border-color: rgba(248, 81, 73, 0.5); color: #F85149; }
+
+  /* Form approva inline */
+  .approve-form {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(201,168,76,0.2);
+  }
+  .approve-form-inner {
+    background: rgba(201,168,76,0.05);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .approve-label {
+    display: block;
+    font-size: 10px;
+    color: rgba(201,168,76,0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    margin-top: 8px;
+  }
+  .approve-label:first-child { margin-top: 0; }
+  .approve-input {
+    width: 100%;
+    padding: 7px 10px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    box-sizing: border-box;
+  }
+  .approve-input:focus { border-color: var(--oro); }
+  .approve-row {
+    display: flex;
+    gap: 8px;
+  }
+  .approve-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
 </style>
 </head>
 <body class="dark">
@@ -223,32 +269,228 @@
 
   // Se ci sono pending, mostra la lista breve
   if (nPending > 0) {
-    const { data: pendList } = await sb.from('sentori')
-      .select('id, nome, note_origine, created_at')
-      .eq('stato', 'pending')
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    const list = document.getElementById('pendingList');
-    if (list && pendList) {
-      list.innerHTML = pendList.map(s => `
-        <div class="pending-item" data-id="${s.id}">
-          <div style="flex:1">
-            <div class="nome">${escapeHtml(s.nome)}</div>
-            ${s.note_origine ? `<div class="meta">Da: "${escapeHtml(s.note_origine.substring(0,80))}${s.note_origine.length > 80 ? '...' : ''}"</div>` : ''}
-          </div>
-          <div class="pending-actions">
-            <button class="btn-mini reject" onclick="rifiutaPending('${s.id}')">✕ Rifiuta</button>
-          </div>
-        </div>
-      `).join('');
-    }
+    await renderPendingList();
   }
 })();
+
+async function renderPendingList() {
+  const { data: pendList } = await sb.from('sentori')
+    .select('id, nome, note_origine, created_at')
+    .eq('stato', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  const list = document.getElementById('pendingList');
+  if (!list || !pendList) return;
+
+  if (pendList.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.4);font-size:13px">Nessuna voce in attesa</div>';
+    // Aggiorna anche il badge in alto
+    const badge = document.querySelector('.pending-badge');
+    if (badge) {
+      badge.textContent = '0';
+      badge.classList.add('zero');
+    }
+    return;
+  }
+
+  list.innerHTML = pendList.map(s => `
+    <div class="pending-item" data-id="${s.id}">
+      <div style="flex:1;min-width:0">
+        <div class="nome">${escapeHtml(s.nome)}</div>
+        ${s.note_origine ? `<div class="meta">Da: "${escapeHtml(s.note_origine.substring(0,80))}${s.note_origine.length > 80 ? '...' : ''}"</div>` : ''}
+        <div class="approve-form" id="approveForm-${s.id}" style="display:none"></div>
+      </div>
+      <div class="pending-actions">
+        <button class="btn-mini approve" onclick="apriFormApprova('${s.id}', '${escapeAttr(s.nome)}')">✓ Approva</button>
+        <button class="btn-mini reject" onclick="rifiutaPending('${s.id}')">✕ Rifiuta</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Cache famiglie/sottocategorie per il form
+let _famiglieCache = null;
+let _sottocategorieCache = null;
+
+async function caricaFamiglieSottocategorie() {
+  if (_famiglieCache && _sottocategorieCache) return;
+  const [fam, sub] = await Promise.all([
+    sb.from('famiglie_olfattive').select('*').order('ordine'),
+    sb.from('sottocategorie_olfattive').select('*').order('famiglia_key, ordine'),
+  ]);
+  _famiglieCache = fam.data || [];
+  _sottocategorieCache = sub.data || [];
+}
+
+async function apriFormApprova(pendingId, nomeAttuale) {
+  await caricaFamiglieSottocategorie();
+  const formDiv = document.getElementById('approveForm-' + pendingId);
+  if (!formDiv) return;
+
+  // Toggle: se già aperto, chiudi
+  if (formDiv.style.display === 'block') {
+    formDiv.style.display = 'none';
+    formDiv.innerHTML = '';
+    return;
+  }
+
+  // Costruisci il form
+  const famOptions = _famiglieCache.map(f => 
+    `<option value="${f.key}">${escapeHtml(f.label)}</option>`
+  ).join('');
+
+  formDiv.innerHTML = `
+    <div class="approve-form-inner">
+      <label class="approve-label">Nome (modificabile)</label>
+      <input type="text" id="approveNome-${pendingId}" value="${escapeAttr(nomeAttuale)}" class="approve-input">
+
+      <div class="approve-row">
+        <div style="flex:1">
+          <label class="approve-label">Famiglia</label>
+          <select id="approveFam-${pendingId}" class="approve-input" onchange="aggiornaSottocategorie('${pendingId}')">
+            <option value="">— scegli —</option>
+            ${famOptions}
+          </select>
+        </div>
+        <div style="flex:1">
+          <label class="approve-label">Sottocategoria</label>
+          <select id="approveSub-${pendingId}" class="approve-input">
+            <option value="">— prima scegli famiglia —</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="approve-actions">
+        <button class="btn-mini" style="border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.6)" onclick="apriFormApprova('${pendingId}', '${escapeAttr(nomeAttuale)}')">Annulla</button>
+        <button class="btn-mini approve" onclick="confermaApprova('${pendingId}')">✓ Conferma</button>
+      </div>
+    </div>
+  `;
+  formDiv.style.display = 'block';
+
+  // Auto-focus sul campo nome
+  const inp = document.getElementById('approveNome-' + pendingId);
+  if (inp) {
+    inp.focus();
+    inp.select();
+  }
+}
+
+function aggiornaSottocategorie(pendingId) {
+  const famKey = document.getElementById('approveFam-' + pendingId).value;
+  const subSel = document.getElementById('approveSub-' + pendingId);
+  if (!famKey) {
+    subSel.innerHTML = '<option value="">— prima scegli famiglia —</option>';
+    return;
+  }
+  const subs = _sottocategorieCache.filter(s => s.famiglia_key === famKey);
+  subSel.innerHTML = '<option value="">— scegli —</option>' + 
+    subs.map(s => `<option value="${s.id}">${escapeHtml(s.label)}</option>`).join('');
+}
+
+async function confermaApprova(pendingId) {
+  const nome = document.getElementById('approveNome-' + pendingId).value.trim();
+  const subId = document.getElementById('approveSub-' + pendingId).value;
+
+  if (!nome) {
+    alert('Il nome è obbligatorio');
+    return;
+  }
+  if (!subId) {
+    alert('Devi assegnare una sottocategoria');
+    return;
+  }
+
+  // Verifica duplicato case-insensitive nella stessa sottocategoria
+  const { data: existing } = await sb.from('sentori')
+    .select('id, nome, stato')
+    .eq('sottocategoria_id', subId)
+    .ilike('nome', nome);
+
+  if (existing && existing.length > 0) {
+    const altro = existing.find(e => e.id !== pendingId);
+    if (altro) {
+      const stato = altro.stato === 'attivo' ? 'già presente come sentore attivo' : 'già in attesa';
+      if (!confirm(`"${nome}" è ${stato} in questa sottocategoria.\n\nVuoi comunque procedere (verrà mantenuto solo uno per via del vincolo unique)?`)) {
+        return;
+      }
+    }
+  }
+
+  // Recupero utente per approvato_by
+  const { data: { session } } = await sb.auth.getSession();
+
+  // Promuovi a stato='attivo'
+  const { error } = await sb.from('sentori').update({
+    nome: nome,
+    sottocategoria_id: subId,
+    stato: 'attivo',
+    approvato_at: new Date().toISOString(),
+    approvato_by: session?.user?.id || null,
+  }).eq('id', pendingId);
+
+  if (error) {
+    if (error.code === '23505') {
+      alert('Esiste già un sentore con lo stesso nome in quella sottocategoria. Operazione annullata.');
+    } else {
+      alert('Errore: ' + error.message);
+    }
+    return;
+  }
+
+  // Invalida cache aromi (così la prossima apertura degusta carica il nuovo sentore)
+  try { localStorage.removeItem('cantinapp_aromi_cache_v1'); } catch (e) {}
+
+  // Rimuovi dal DOM e aggiorna contatori
+  const el = document.querySelector(`.pending-item[data-id="${pendingId}"]`);
+  if (el) el.remove();
+  aggiornaBadgePending(-1);
+  incrementaContatoreSentori(1);
+}
+
+function aggiornaBadgePending(delta) {
+  const badge = document.querySelector('.pending-badge');
+  if (!badge) return;
+  const current = parseInt(badge.textContent) || 0;
+  const next = Math.max(0, current + delta);
+  badge.textContent = next;
+  if (next === 0) {
+    badge.classList.add('zero');
+    const list = document.getElementById('pendingList');
+    if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.4);font-size:13px">Nessuna voce in attesa</div>';
+  }
+}
+
+function incrementaContatoreSentori(delta) {
+  // Cerca la stat-row con label "Sentori attivi" e aggiorna il valore
+  const rows = document.querySelectorAll('.stat-row');
+  for (const r of rows) {
+    if (r.textContent.includes('Sentori attivi')) {
+      const v = r.querySelector('.v');
+      if (v) {
+        const cur = parseInt(v.textContent) || 0;
+        v.textContent = cur + delta;
+      }
+      break;
+    }
+  }
+}
 
 function escapeHtml(s) {
   if (!s) return '';
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Per attributi HTML (es. value="..."): escape anche apici singoli per inline onclick
+function escapeAttr(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 async function rifiutaPending(id) {
@@ -258,9 +500,10 @@ async function rifiutaPending(id) {
     alert('Errore: ' + error.message);
     return;
   }
-  // Rimuovi dal DOM
+  // Rimuovi dal DOM e aggiorna badge
   const el = document.querySelector(`.pending-item[data-id="${id}"]`);
   if (el) el.remove();
+  aggiornaBadgePending(-1);
 }
 </script>
 </body>
