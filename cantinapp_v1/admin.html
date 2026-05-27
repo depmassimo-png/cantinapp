@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a0608">
+<title>Admin · CantinApp</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.40.0/tabler-icons.min.css">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body.dark { background: var(--nero); color: var(--avorio); padding-bottom: 100px; }
+  .admin-header {
+    padding: 24px 20px 16px;
+    background: linear-gradient(135deg, rgba(139,38,53,0.15), rgba(201,168,76,0.08));
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+  }
+  .admin-header h1 {
+    display: flex; align-items: center; gap: 10px;
+    margin: 0 0 4px;
+    font-size: 22px; font-weight: 600; color: var(--oro);
+  }
+  .admin-header .subtitle {
+    color: rgba(255,255,255,0.6); font-size: 13px;
+  }
+  .admin-content {
+    max-width: 600px; margin: 0 auto; padding: 20px;
+  }
+  .admin-section {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .admin-section-title {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+    font-size: 13px; font-weight: 700; color: var(--oro);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  .admin-section-title i { font-size: 18px; }
+  .pending-badge {
+    background: var(--bordeaux);
+    color: #fff;
+    font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px;
+    letter-spacing: 0.3px;
+  }
+  .pending-badge.zero { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); }
+  .stat-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 8px 0;
+    font-size: 14px; color: rgba(255,255,255,0.75);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row .v {
+    color: var(--oro); font-weight: 600; font-size: 16px;
+  }
+  .placeholder-text {
+    font-size: 12px; color: rgba(255,255,255,0.45);
+    font-style: italic; margin-top: 8px;
+  }
+  .auth-error {
+    text-align: center;
+    padding: 40px 20px;
+    color: rgba(255,255,255,0.6);
+  }
+  .auth-error i {
+    font-size: 48px; color: var(--bordeaux);
+    display: block; margin-bottom: 12px;
+  }
+  .pending-list { margin-top: 12px; max-height: 50vh; overflow-y: auto; }
+  .pending-item {
+    display: flex; gap: 8px; align-items: center;
+    padding: 10px; background: rgba(255,255,255,0.03);
+    border-radius: 8px; margin-bottom: 6px;
+    border-left: 3px solid rgba(201,168,76,0.4);
+  }
+  .pending-item .nome {
+    flex: 1;
+    font-size: 14px; color: #fff; font-weight: 500;
+  }
+  .pending-item .meta {
+    font-size: 11px; color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+  }
+  .pending-actions {
+    display: flex; gap: 6px;
+  }
+  .btn-mini {
+    background: none; border: 1px solid; padding: 4px 10px;
+    border-radius: 6px; font-size: 11px; cursor: pointer;
+    font-family: inherit; font-weight: 600;
+  }
+  .btn-mini.approve { border-color: rgba(46, 160, 67, 0.5); color: #2EA043; }
+  .btn-mini.reject { border-color: rgba(248, 81, 73, 0.5); color: #F85149; }
+</style>
+</head>
+<body class="dark">
+
+<div class="admin-header">
+  <h1><i class="ti ti-shield-lock"></i> Pannello Admin</h1>
+  <div class="subtitle">Gestione sentori olfattivi</div>
+</div>
+
+<div class="admin-content" id="adminContent">
+  <div class="auth-error">
+    <i class="ti ti-loader-2" style="animation:spin .7s linear infinite"></i>
+    Verifica autorizzazioni...
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <a href="cantina.html" class="nav-item">
+    <i class="ti ti-bottle-wine"></i>
+    <span>Cantina</span>
+  </a>
+  <a href="degusta.html" class="nav-item">
+    <i class="ti ti-flask"></i>
+    <span>Degusta</span>
+  </a>
+  <a href="bevute.html" class="nav-item">
+    <i class="ti ti-glass-cocktail"></i>
+    <span>Bevute</span>
+  </a>
+  <a href="statistiche.html" class="nav-item">
+    <i class="ti ti-chart-bar"></i>
+    <span>Stats</span>
+  </a>
+  <a href="teoria.html" class="nav-item">
+    <i class="ti ti-book"></i>
+    <span>Teoria</span>
+  </a>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script>
+(async function init() {
+  const session = await requireAuth();
+  if (!session) return;
+  const currentUser = session.user;
+
+  // Verifica is_admin
+  const { data: profile } = await sb
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', currentUser.id)
+    .maybeSingle();
+
+  const content = document.getElementById('adminContent');
+
+  if (!profile || !profile.is_admin) {
+    content.innerHTML = `
+      <div class="auth-error">
+        <i class="ti ti-lock"></i>
+        <h3 style="margin:0 0 6px;color:#fff">Accesso non autorizzato</h3>
+        <p style="margin:0;font-size:13px">Questa area è riservata agli amministratori.</p>
+        <p style="margin:16px 0 0">
+          <a href="cantina.html" style="color:var(--oro);font-size:13px">← Torna alla cantina</a>
+        </p>
+      </div>`;
+    return;
+  }
+
+  // Carica statistiche
+  const [pendCount, sentCount, famCount, subCount] = await Promise.all([
+    sb.from('sentori').select('id', { count: 'exact', head: true }).eq('stato', 'pending'),
+    sb.from('sentori').select('id', { count: 'exact', head: true }).eq('stato', 'attivo'),
+    sb.from('famiglie_olfattive').select('id', { count: 'exact', head: true }),
+    sb.from('sottocategorie_olfattive').select('id', { count: 'exact', head: true }),
+  ]);
+
+  const nPending = pendCount.count || 0;
+  const nSentori = sentCount.count || 0;
+  const nFamiglie = famCount.count || 0;
+  const nSottoc = subCount.count || 0;
+
+  content.innerHTML = `
+    <div class="admin-section">
+      <div class="admin-section-title">
+        <span><i class="ti ti-clock-pause"></i> Sentori in attesa</span>
+        <span class="pending-badge ${nPending === 0 ? 'zero' : ''}">${nPending}</span>
+      </div>
+      ${nPending > 0
+        ? '<div class="placeholder-text">Voci candidate da approvare o rifiutare. Pannello completo in sviluppo.</div><div id="pendingList" class="pending-list"></div>'
+        : '<div class="placeholder-text">Nessun candidato in attesa. Le voci personali inserite nelle "Note olfattive aggiuntive" dagli utenti appariranno qui per essere approvate.</div>'
+      }
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">
+        <span><i class="ti ti-chart-pie"></i> Stato sentori</span>
+      </div>
+      <div class="stat-row">
+        <span>Famiglie olfattive</span>
+        <span class="v">${nFamiglie}</span>
+      </div>
+      <div class="stat-row">
+        <span>Sottocategorie</span>
+        <span class="v">${nSottoc}</span>
+      </div>
+      <div class="stat-row">
+        <span>Sentori attivi</span>
+        <span class="v">${nSentori}</span>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">
+        <span><i class="ti ti-list"></i> Gestione completa</span>
+      </div>
+      <div class="placeholder-text">
+        Le sezioni di gestione completa (CRUD famiglie, sottocategorie, sentori, rinomina, sposta) saranno disponibili nella prossima release. Per ora puoi utilizzare la query SQL diretta su Supabase.
+      </div>
+    </div>
+  `;
+
+  // Se ci sono pending, mostra la lista breve
+  if (nPending > 0) {
+    const { data: pendList } = await sb.from('sentori')
+      .select('id, nome, note_origine, created_at')
+      .eq('stato', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    const list = document.getElementById('pendingList');
+    if (list && pendList) {
+      list.innerHTML = pendList.map(s => `
+        <div class="pending-item" data-id="${s.id}">
+          <div style="flex:1">
+            <div class="nome">${escapeHtml(s.nome)}</div>
+            ${s.note_origine ? `<div class="meta">Da: "${escapeHtml(s.note_origine.substring(0,80))}${s.note_origine.length > 80 ? '...' : ''}"</div>` : ''}
+          </div>
+          <div class="pending-actions">
+            <button class="btn-mini reject" onclick="rifiutaPending('${s.id}')">✕ Rifiuta</button>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+})();
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+async function rifiutaPending(id) {
+  if (!confirm('Rifiutare questa voce?')) return;
+  const { error } = await sb.from('sentori').delete().eq('id', id);
+  if (error) {
+    alert('Errore: ' + error.message);
+    return;
+  }
+  // Rimuovi dal DOM
+  const el = document.querySelector(`.pending-item[data-id="${id}"]`);
+  if (el) el.remove();
+}
+</script>
+</body>
+</html>

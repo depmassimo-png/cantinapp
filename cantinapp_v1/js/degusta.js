@@ -885,14 +885,126 @@ async function salvaDegustazione() {
     return;
   }
 
+  // Cattura candidati pending da "Note olfattive aggiuntive" (richiesta admin)
+  // Fire-and-forget: se fallisce non blocca il salvataggio
+  if (D.olfatto_note && D.olfatto_note.trim()) {
+    catturaSentoriCandidati(D.olfatto_note, D.olfatto_sentori || []).catch(e => {
+      console.warn('[pending] Cattura candidati fallita:', e);
+    });
+  }
+
   showToast('Degustazione salvata!');
   cancellaDraft();
   draftDirty = false;
   setTimeout(() => {
-    // Dopo il salvataggio andiamo sempre nella sezione Bevute
-    // (sia per degustazioni di bottiglie in cantina sia per quelle cieche)
     location.href = 'bevute.html';
   }, 1200);
+}
+
+// ============================================================
+// CATTURA VOCI PENDING dalle note olfattive aggiuntive
+// ============================================================
+// Estrae termini candidati dal testo libero e li inserisce in
+// tabella `sentori` con stato='pending' per la review dell'admin.
+// Filtri:
+//   - termini di 3+ caratteri
+//   - esclude stopwords italiane
+//   - esclude sentori già presenti in AROMI (qualsiasi famiglia)
+//   - esclude sentori già selezionati nella scheda
+// ============================================================
+
+const STOPWORDS_IT = new Set([
+  'il','lo','la','le','gli','un','una','uno','di','del','della','dello','dei','degli','delle',
+  'da','dal','dalla','dallo','dai','dagli','dalle','in','nel','nella','nello','nei','negli','nelle',
+  'con','col','collo','colla','coi','cogli','colle','su','sul','sulla','sullo','sui','sugli','sulle',
+  'per','tra','fra','e','ed','o','od','ma','se','che','chi','cui','non','si','ne',
+  'mi','ti','ci','vi','lo','la','li','le','gli','ne',
+  'al','allo','alla','ai','agli','alle','più','meno','molto','poco','tanto','quanto','come','anche',
+  'questo','questa','questi','queste','quel','quella','quello','quegli','quei','quelle',
+  'è','sono','sei','sia','era','erano','essere','stato','stata','stati','state','ha','hai','hanno',
+  'ho','c','d','l','n','s','t','no','già','vino','vini','sentore','sentori','nota','note','vede',
+  'profumo','profumi','aroma','aromi','olfatto','naso','bocca','molto','bene','poco',
+]);
+
+async function catturaSentoriCandidati(noteText, sentoriGiaScelti) {
+  if (!currentUser) return;
+  if (typeof AROMI === 'undefined') return;
+
+  // 1. Raccolgo tutti i sentori già esistenti (qualsiasi famiglia) per esclusione
+  const sentoriEsistenti = new Set();
+  for (const fam of Object.values(AROMI)) {
+    for (const sub of Object.values(fam.subcategories || {})) {
+      for (const s of (sub.sentori || [])) {
+        sentoriEsistenti.add(s.toLowerCase().trim());
+      }
+    }
+  }
+  // Aggiungi anche quelli già selezionati in questa scheda
+  for (const s of sentoriGiaScelti) {
+    sentoriEsistenti.add(String(s).toLowerCase().trim());
+  }
+
+  // 2. Estrai candidati dal testo
+  // Spezza per virgole, punti e virgole, "e", "ed", "di", e simili separatori comuni
+  const candidati = new Set();
+  const segments = noteText
+    .toLowerCase()
+    .replace(/[.;:!?\n]/g, ',')
+    .split(/[,]/);
+
+  for (const seg of segments) {
+    const cleaned = seg.trim();
+    if (!cleaned) continue;
+    // Considero il segmento intero come candidato se è breve (1-4 parole)
+    // così catturo cose come "frutti di bosco" o "tabacco biondo"
+    const parole = cleaned.split(/\s+/).filter(p => p.length >= 3 && !STOPWORDS_IT.has(p));
+    if (parole.length === 0) continue;
+    if (parole.length <= 4) {
+      // Frase corta: usala intera come candidato
+      const frase = parole.join(' ').trim();
+      if (frase && frase.length >= 3 && !sentoriEsistenti.has(frase)) {
+        candidati.add(frase);
+      }
+    }
+    // Comunque aggiungi anche parole singole significative
+    for (const p of parole) {
+      if (p.length >= 4 && !sentoriEsistenti.has(p)) {
+        candidati.add(p);
+      }
+    }
+  }
+
+  if (candidati.size === 0) {
+    console.log('[pending] Nessun candidato estratto');
+    return;
+  }
+
+  // 3. Inserisci in DB come pending (senza assegnare a sottocategoria, sarà l'admin a deciderlo)
+  // Recupero la sottocategoria "_pending" se esiste, altrimenti uso la prima disponibile come placeholder
+  const { data: subDefault } = await sb.from('sottocategorie_olfattive')
+    .select('id').limit(1).maybeSingle();
+  if (!subDefault) {
+    console.warn('[pending] Nessuna sottocategoria default, skip cattura');
+    return;
+  }
+
+  const rows = Array.from(candidati).map(nome => ({
+    sottocategoria_id: subDefault.id,
+    nome: nome,
+    stato: 'pending',
+    created_by: currentUser.id,
+    note_origine: noteText.substring(0, 500),
+  }));
+
+  const { error: insErr } = await sb.from('sentori').insert(rows);
+  if (insErr) {
+    // ON CONFLICT silently ignored per duplicati: solo errori veri loggati
+    if (insErr.code !== '23505') {
+      console.warn('[pending] Insert candidati error:', insErr);
+    }
+  } else {
+    console.log(`[pending] ${rows.length} candidati inseriti per review admin`);
+  }
 }
 
 // ====== FOTO ESTERNE (degustazione cieca/libera) ======
