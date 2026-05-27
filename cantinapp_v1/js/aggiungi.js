@@ -17,7 +17,48 @@ let vitigni = [];
 
   // Popola select Nazione e Regione (Italia di default)
   setupGeoSelects();
+
+  // Se siamo qui da "Vino esterno noto" (modalità degusta), mostra banner
+  // e modifica il testo del bottone di salvataggio
+  const modo = new URLSearchParams(window.location.search).get('modo');
+  if (modo === 'degusta') {
+    setupModoDegusta();
+  }
 })();
+
+function setupModoDegusta() {
+  // Cambia titolo della pagina
+  const h1 = document.querySelector('h1');
+  if (h1) {
+    const logoImg = h1.querySelector('img');
+    h1.innerHTML = '';
+    if (logoImg) h1.appendChild(logoImg);
+    h1.appendChild(document.createTextNode(' Identifica il vino'));
+  }
+
+  // Banner informativo in cima al form
+  const form = document.querySelector('form') || document.querySelector('.main-content') || document.body;
+  const firstChild = form.querySelector('.section, .upload-area, form > div, h1 + *');
+  const banner = document.createElement('div');
+  banner.style.cssText = 'background:linear-gradient(135deg, rgba(201,168,76,0.15), rgba(139,38,53,0.1)); border-left:3px solid var(--oro); padding:14px 16px; border-radius:10px; margin:0 0 18px; font-size:13px; color:var(--avorio); line-height:1.5';
+  banner.innerHTML = '<i class="ti ti-wine" style="color:var(--oro);font-size:18px;vertical-align:middle;margin-right:6px"></i> <strong style="color:var(--oro)">Vino esterno per la degustazione</strong><br><span style="color:rgba(255,255,255,0.7);font-size:12px">Compila i dati del vino (la foto e l\'AI possono aiutare). Al salvataggio partirà subito la scheda di degustazione.</span>';
+  if (firstChild) firstChild.parentNode.insertBefore(banner, firstChild);
+  else form.insertBefore(banner, form.firstChild);
+
+  // Cambia testo del bottone Salva
+  const btnSalva = document.querySelector('button[type="submit"], #btnSalva, .btn-primary');
+  if (btnSalva) {
+    // Trova il bottone più verosimilmente "salva bottiglia"
+    const allBtn = document.querySelectorAll('button');
+    for (const b of allBtn) {
+      const txt = b.textContent.trim().toLowerCase();
+      if (txt.includes('salva') || txt.includes('aggiungi')) {
+        b.innerHTML = '<i class="ti ti-flask" style="font-size:18px"></i> Procedi con la degustazione';
+        break;
+      }
+    }
+  }
+}
 
 function setupGeoSelects() {
   document.getElementById('nazione').innerHTML = nazioniOptionsHtml('Italia');
@@ -533,8 +574,17 @@ async function salvaBottiglia(e) {
     }
 
     overlay.classList.remove('show');
-    showToast('Bottiglia aggiunta in cantina!');
-    setTimeout(() => window.location.href = 'cantina.html', 800);
+
+    // Se siamo arrivati qui da "Vino esterno (degusta)", avvia la degustazione
+    // della bottiglia appena creata invece di tornare in cantina
+    const modo = new URLSearchParams(window.location.search).get('modo');
+    if (modo === 'degusta') {
+      showToast('Bottiglia aggiunta. Inizia la degustazione!');
+      setTimeout(() => window.location.href = 'degusta.html?bottiglia_id=' + nuovaBottiglia.id, 600);
+    } else {
+      showToast('Bottiglia aggiunta in cantina!');
+      setTimeout(() => window.location.href = 'cantina.html', 800);
+    }
 
   } catch (err) {
     overlay.classList.remove('show');

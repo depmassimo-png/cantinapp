@@ -150,7 +150,19 @@ async function avviaWizard() {
   // Attiva il salvataggio automatico in background
   attivaAutosave();
 
+  // Forza step 1 attivo e render
+  if (!stepAttuale || stepAttuale < 1) stepAttuale = 1;
   renderStep();
+
+  // Sicurezza: assicurati che gli overlay siano chiusi e il wizard-body visibile
+  const overlays = ['modalitaSceltaOverlay', 'bottigliaSceltaOverlay', 'identificazioneOverlay'];
+  for (const id of overlays) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  }
+  // Scroll in cima
+  window.scrollTo(0, 0);
+  console.log('[degusta] avviaWizard completato, step:', stepAttuale, 'bottigliaCorrente:', bottigliaCorrente?.nome_vino);
 }
 
 // =========== Schermata scelta modalità ===========
@@ -160,10 +172,10 @@ async function scegliModalita(modo) {
     impostaModalita('cieca');
     await avviaWizard();
   } else if (modo === 'esterno') {
-    // Modalità esterno → apri schermata di identificazione preliminare
-    document.getElementById('modalitaSceltaOverlay').style.display = 'none';
-    document.getElementById('identificazioneOverlay').style.display = 'block';
-    setupIdentificazioneForm();
+    // Modalità esterno → vai alla pagina di aggiunta bottiglia con flag degusta
+    // così l'utente compila tutto come per una bottiglia normale (foto, AI, campi)
+    // e al salvataggio si avvia la degustazione su quella bottiglia
+    window.location.href = 'aggiungi.html?modo=degusta';
   } else if (modo === 'cantina') {
     document.getElementById('modalitaSceltaOverlay').style.display = 'none';
     document.getElementById('bottigliaSceltaOverlay').style.display = 'block';
@@ -358,9 +370,17 @@ function filtraBottiglie(q) {
 }
 
 async function scegliBottigliaScelta(id) {
+  console.log('[degusta] scegliBottigliaScelta:', id);
   document.getElementById('bottigliaSceltaOverlay').style.display = 'none';
-  await caricaBottigliaECompleta(id);
-  await avviaWizard();
+  try {
+    await caricaBottigliaECompleta(id);
+    console.log('[degusta] bottiglia caricata, bottigliaCorrente:', bottigliaCorrente);
+    await avviaWizard();
+    console.log('[degusta] wizard avviato, stepAttuale:', stepAttuale);
+  } catch (e) {
+    console.error('[degusta] Errore in scegliBottigliaScelta:', e);
+    showToast('Errore: ' + (e.message || 'impossibile aprire la bottiglia'), true);
+  }
 }
 
 // ==== SETUP CHIP (selezione singola) ====
