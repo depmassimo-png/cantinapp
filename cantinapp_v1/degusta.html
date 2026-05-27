@@ -24,7 +24,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     .wizard-header a, .wizard-header button.x-btn {
       color: var(--oro);
@@ -42,14 +42,38 @@
       color: rgba(201,168,76,.7);
       letter-spacing: .5px;
     }
+    .wizard-header .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .wizard-header .brand-row img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
     .wizard-header .wine-id {
-      font-size: 13px;
-      color: rgba(255,255,255,.7);
-      font-style: italic;
-      margin-bottom: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--oro);
+      font-style: normal;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      letter-spacing: 0.3px;
+      flex: 1;
+    }
+    .wizard-header .wine-id.cieca {
+      text-transform: uppercase;
+      font-size: 14px;
+      letter-spacing: 1.2px;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--oro), #E8C77C, var(--oro));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
 
     .wizard-body {
@@ -138,7 +162,10 @@
     </button>
     <span class="step-info" id="stepInfo">1 · 5</span>
   </div>
-  <div class="wine-id" id="wineId">Caricamento...</div>
+  <div class="brand-row">
+    <img src="logo.png" alt="">
+    <div class="wine-id" id="wineId">Caricamento...</div>
+  </div>
   <div class="progress-track"><div class="progress-fill" id="progBar" style="width:20%"></div></div>
 </div>
 
@@ -158,16 +185,21 @@
 
     <label class="field-label">Occasione</label>
     <div class="chips" id="chipsOccasione">
+      <span class="chip" data-v="pranzo">Pranzo</span>
       <span class="chip" data-v="cena">Cena</span>
       <span class="chip" data-v="aperitivo">Aperitivo</span>
       <span class="chip" data-v="fiera">Fiera</span>
       <span class="chip" data-v="degustazione">Degustazione</span>
-      <span class="chip" data-v="compleanno">Compleanno</span>
       <span class="chip" data-v="altro">Altro</span>
     </div>
 
     <label class="field-label">Con chi</label>
-    <input type="text" id="commensali" placeholder="Solo, con amici, con la famiglia...">
+    <div class="chips" id="chipsCommensali">
+      <span class="chip" data-v="solo">Solo</span>
+      <span class="chip" data-v="amici">Amici</span>
+      <span class="chip" data-v="famiglia">Famiglia</span>
+      <span class="chip" data-v="evento">Evento</span>
+    </div>
 
     <label class="field-label">Abbinamento cibo</label>
     <input type="text" id="abbinamento" placeholder="Brasato, formaggi, pesce...">

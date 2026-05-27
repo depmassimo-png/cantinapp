@@ -33,64 +33,64 @@ const AROMI = {
       agrumi: {
         label: 'Agrumi',
         compat: ['bianco', 'spumante', 'rosato', 'passito'],
-        sentori: ['limone', 'lime', 'pompelmo', 'pompelmo rosa', 'arancia', "scorza d'arancia", 'cedro', 'mandarino', 'bergamotto', 'agrumi canditi']
+        sentori: ['agrumi canditi', 'arancia', 'bergamotto', 'cedro', 'lime', 'limone', 'mandarino', 'pompelmo', 'pompelmo rosa', "scorza d'arancia"]
       },
       polpa_bianca: {
         label: 'Frutta a polpa bianca',
         compat: ['bianco', 'spumante', 'rosato'],
-        sentori: ['mela', 'mela verde', 'mela golden', 'pera', 'pera williams', 'pesca bianca', 'uva spina', 'cotogna', 'cotognata', 'fico bianco', 'kiwi']
+        sentori: ['cotogna', 'cotognata', 'fico bianco', 'kiwi', 'mela', 'mela golden', 'mela verde', 'pera', 'pera williams', 'pesca bianca', 'uva spina']
       },
       polpa_gialla: {
         label: 'Frutta a polpa gialla',
         compat: ['bianco', 'spumante', 'rosato', 'passito'],
-        sentori: ['pesca gialla', 'albicocca', 'susina gialla', 'nespola', 'melone', 'melone bianco']
+        sentori: ['albicocca', 'melone', 'melone bianco', 'nespola', 'pesca gialla', 'susina gialla']
       },
       frutti_tropicali: {
         label: 'Frutti tropicali',
         compat: ['bianco', 'spumante', 'passito'],
-        sentori: ['ananas', 'banana', 'mango', 'papaia', 'guaiava', 'frutto della passione', 'litchi', 'maracuja']
+        sentori: ['ananas', 'banana', 'frutto della passione', 'guaiava', 'litchi', 'mango', 'maracuja', 'papaia']
       },
       // ---- ROSSI / ROSATI / SPUMANTI ROSSI ----
       frutti_rossi: {
         label: 'Frutti rossi',
         compat: ['rosso', 'rosato', 'spumante'],
-        sentori: ['ciliegia', 'lampone', 'fragola', 'fragolina di bosco', 'ribes rosso', 'melograno', 'amarena']
+        sentori: ['amarena', 'ciliegia', 'fragola', 'fragolina di bosco', 'lampone', 'melograno', 'ribes rosso']
       },
       frutti_scuri: {
         label: 'Frutti scuri / Bacche nere',
         compat: ['rosso', 'rosato', 'spumante'],
-        sentori: ['mora', 'mora di rovo', 'ribes nero', 'cassis', 'mirtillo', 'mirtillo nero', 'sambuco', 'gelso nero']
+        sentori: ['cassis', 'gelso nero', 'mirtillo', 'mirtillo nero', 'mora', 'mora di rovo', 'ribes nero', 'sambuco']
       },
       drupacee_rosse: {
         label: 'Drupacee scure',
         compat: ['rosso', 'rosato', 'passito'],
-        sentori: ['prugna', 'prugna nera', 'marasca', 'visciola']
+        sentori: ['marasca', 'prugna', 'prugna nera', 'visciola']
       },
       // ---- STATI / EVOLUZIONI DEL FRUTTO ----
       frutta_matura: {
         label: 'Frutta matura',
         compat: ['rosso', 'bianco', 'rosato', 'passito', 'liquoroso'],
-        sentori: ['frutta matura', 'frutta surmatura', 'frutta a maturazione spinta']
+        sentori: ['frutta a maturazione spinta', 'frutta matura', 'frutta surmatura']
       },
       frutta_sotto_spirito: {
         label: 'Frutta sotto spirito',
         compat: ['rosso', 'passito', 'liquoroso'],
-        sentori: ['ciliegia sotto spirito', 'amarena sotto spirito', 'prugna sotto spirito', 'frutta sotto spirito']
+        sentori: ['amarena sotto spirito', 'ciliegia sotto spirito', 'frutta sotto spirito', 'prugna sotto spirito']
       },
       confetture: {
         label: 'Confetture',
         compat: ['rosso', 'passito', 'liquoroso', 'bianco'],
-        sentori: ['confettura di prugne', 'confettura di mirtilli', 'confettura di ciliegie', 'confettura di lamponi', 'marmellata di agrumi', 'marmellata di pesche']
+        sentori: ['confettura di ciliegie', 'confettura di lamponi', 'confettura di mirtilli', 'confettura di prugne', 'marmellata di agrumi', 'marmellata di pesche']
       },
       frutta_secca: {
         label: 'Frutta secca',
         compat: ['rosso', 'bianco', 'passito', 'liquoroso'],
-        sentori: ['fico secco', 'dattero', 'uva passa', 'prugna secca', 'albicocca secca', 'frutta candita']
+        sentori: ['albicocca secca', 'dattero', 'fico secco', 'frutta candita', 'prugna secca', 'uva passa']
       },
       frutta_liofilizzata: {
         label: 'Frutta liofilizzata',
         compat: ['passito', 'liquoroso'],
-        sentori: ['frutta liofilizzata', 'lampone liofilizzato', 'fragola liofilizzata']
+        sentori: ['fragola liofilizzata', 'frutta liofilizzata', 'lampone liofilizzato']
       },
       frutti_guscio: {
         label: 'Frutti col guscio',
@@ -107,22 +107,22 @@ const AROMI = {
       fiori_bianchi: {
         label: 'Fiori bianchi',
         compat: ['bianco', 'spumante', 'rosato', 'passito'],
-        sentori: ['iris bianco', 'giglio', 'gardenia', 'gelsomino', 'magnolia', 'biancospino', 'fiori di mandorlo', 'fiori di pesco', 'mughetto', 'sambuco']
+        sentori: ['biancospino', 'fiori di mandorlo', 'fiori di pesco', 'gardenia', 'gelsomino', 'giglio', 'iris bianco', 'magnolia', 'mughetto', 'sambuco']
       },
       fiori_gialli: {
         label: 'Fiori gialli',
         compat: ['bianco', 'spumante', 'rosato', 'passito'],
-        sentori: ['acacia', 'mimosa', 'ginestra', 'tiglio', 'camomilla', "fiori d'arancio", 'caprifoglio']
+        sentori: ['acacia', 'camomilla', 'caprifoglio', "fiori d'arancio", 'ginestra', 'mimosa', 'tiglio']
       },
       fiori_rossi: {
         label: 'Fiori rossi e rosa',
         compat: ['rosso', 'rosato', 'spumante'],
-        sentori: ['rosa', 'rosa rossa', 'violetta', 'peonia', 'ibisco', 'glicine', 'lavanda']
+        sentori: ['glicine', 'ibisco', 'lavanda', 'peonia', 'rosa', 'rosa rossa', 'violetta']
       },
       fiori_appassiti: {
         label: 'Fiori appassiti',
         compat: ['rosso', 'passito', 'liquoroso'],
-        sentori: ['rosa appassita', 'violetta appassita', 'fiori appassiti', 'potpourri']
+        sentori: ['fiori appassiti', 'potpourri', 'rosa appassita', 'violetta appassita']
       },
       fiori_campo: {
         label: 'Fiori di campo',
@@ -132,7 +132,7 @@ const AROMI = {
       miele: {
         label: 'Miele',
         compat: ['bianco', 'passito', 'liquoroso'],
-        sentori: ['miele di acacia', 'miele millefiori', 'miele di castagno', 'miele', 'cera d\'api']
+        sentori: ["cera d'api", 'miele', 'miele di acacia', 'miele di castagno', 'miele millefiori']
       }
     }
   },
@@ -144,22 +144,22 @@ const AROMI = {
       vegetale_positivo: {
         label: 'Vegetali positivi',
         compat: ['rosso', 'bianco', 'rosato', 'spumante'],
-        sentori: ['fieno', 'paglia', 'sottobosco', 'muschio', 'felce', 'foglia di tè', 'tè verde', 'tè nero']
+        sentori: ['felce', 'fieno', 'foglia di tè', 'muschio', 'paglia', 'sottobosco', 'tè nero', 'tè verde']
       },
       vegetale_negativo: {
         label: 'Vegetali da scarsa maturità',
         compat: ['rosso', 'bianco', 'rosato', 'spumante'],
-        sentori: ['peperone verde', 'erba tagliata', 'pomodoro fresco', 'foglia di pomodoro', 'foglia di ribes nero', 'melanzana', 'foglia di violetta']
+        sentori: ['erba tagliata', 'foglia di pomodoro', 'foglia di ribes nero', 'foglia di violetta', 'melanzana', 'peperone verde', 'pomodoro fresco']
       },
       ortaggi: {
         label: 'Ortaggi',
         compat: ['bianco', 'rosato', 'spumante', 'rosso'],
-        sentori: ['asparago', 'carciofo', 'finocchio', 'piselli', 'cetriolo', 'passata di pomodoro']
+        sentori: ['asparago', 'carciofo', 'cetriolo', 'finocchio', 'passata di pomodoro', 'piselli']
       },
       sottobosco_evoluto: {
         label: 'Sottobosco evoluto',
         compat: ['rosso', 'passito', 'liquoroso'],
-        sentori: ['fungo', 'fungo porcino', 'tartufo', 'tartufo bianco', 'tartufo nero', 'humus', 'terra umida']
+        sentori: ['fungo', 'fungo porcino', 'humus', 'tartufo', 'tartufo bianco', 'tartufo nero', 'terra umida']
       },
       bosso: {
         label: 'Bosso e solforati varietali',
@@ -181,17 +181,17 @@ const AROMI = {
       pietre_terreni: {
         label: 'Pietre e terreni',
         compat: ['rosso', 'bianco', 'rosato', 'spumante', 'passito'],
-        sentori: ['pietra focaia', 'silice', 'gesso', 'grafite', 'pietra bagnata', 'pietra di fiume', 'ardesia', 'tufo']
+        sentori: ['ardesia', 'gesso', 'grafite', 'pietra bagnata', 'pietra di fiume', 'pietra focaia', 'silice', 'tufo']
       },
       ossidanti: {
         label: 'Note ossidanti',
         compat: ['rosso', 'bianco', 'rosato', 'spumante', 'passito'],
-        sentori: ['polvere da sparo', 'fumé', 'fumo di candela', 'idrocarburi', 'cherosene', 'nafta']
+        sentori: ['cherosene', 'fumo di candela', 'fumé', 'idrocarburi', 'nafta', 'polvere da sparo']
       },
       marini: {
         label: 'Note marine',
         compat: ['bianco', 'spumante', 'rosato'],
-        sentori: ['iodio', 'salmastro', 'salato', 'alga', 'conchiglia']
+        sentori: ['alga', 'conchiglia', 'iodio', 'salato', 'salmastro']
       }
     }
   },
@@ -203,12 +203,12 @@ const AROMI = {
       erbe_fresche: {
         label: 'Erbe fresche (terpenico-aromatiche)',
         compat: ['rosso', 'bianco', 'rosato', 'spumante'],
-        sentori: ['basilico', 'salvia', 'timo', 'rosmarino', 'maggiorana', 'origano fresco', 'menta', 'menta piperita', 'erba luigia', 'verbena']
+        sentori: ['basilico', 'erba luigia', 'maggiorana', 'menta', 'menta piperita', 'origano fresco', 'rosmarino', 'salvia', 'timo', 'verbena']
       },
       erbe_officinali: {
         label: 'Erbe officinali ed essiccate',
         compat: ['rosso', 'bianco', 'passito', 'liquoroso'],
-        sentori: ['alloro', 'origano secco', 'tè', 'erbe officinali', 'macchia mediterranea', 'erbe alpine']
+        sentori: ['alloro', 'erbe alpine', 'erbe officinali', 'macchia mediterranea', 'origano secco', 'tè']
       }
     }
   },
@@ -220,22 +220,22 @@ const AROMI = {
       spezie_dolci: {
         label: 'Spezie dolci (barrique)',
         compat: ['rosso', 'bianco', 'passito', 'spumante', 'liquoroso'],
-        sentori: ['vaniglia', 'cannella', 'chiodi di garofano', 'noce moscata', 'cardamomo', 'anice', 'anice stellato']
+        sentori: ['anice', 'anice stellato', 'cannella', 'cardamomo', 'chiodi di garofano', 'noce moscata', 'vaniglia']
       },
       spezie_legno_grande: {
         label: 'Spezie da legno grande',
         compat: ['rosso', 'bianco', 'passito', 'liquoroso'],
-        sentori: ['liquirizia', 'noce moscata', 'macis']
+        sentori: ['liquirizia', 'macis', 'noce moscata']
       },
       spezie_piccanti: {
         label: 'Spezie piccanti',
         compat: ['rosso', 'rosato', 'liquoroso', 'bianco'],
-        sentori: ['pepe nero', 'pepe bianco', 'pepe verde', 'pepe rosa', 'paprika', 'peperoncino', 'zenzero', 'ginepro']
+        sentori: ['ginepro', 'paprika', 'pepe bianco', 'pepe nero', 'pepe rosa', 'pepe verde', 'peperoncino', 'zenzero']
       },
       spezie_orientali: {
         label: 'Spezie orientali/colorate',
         compat: ['rosso', 'bianco', 'passito', 'liquoroso'],
-        sentori: ['curcuma', 'zafferano', 'curry', 'pimento']
+        sentori: ['curcuma', 'curry', 'pimento', 'zafferano']
       }
     }
   },
@@ -247,32 +247,32 @@ const AROMI = {
       tostature_barrique: {
         label: 'Tostature da barrique',
         compat: ['rosso', 'bianco', 'passito', 'liquoroso', 'spumante'],
-        sentori: ['vaniglia tostata', 'cioccolato', 'cioccolato fondente', 'cacao', 'caffè', 'caffè tostato', 'caramello', 'crème brûlée']
+        sentori: ['cacao', 'caffè', 'caffè tostato', 'caramello', 'cioccolato', 'cioccolato fondente', 'crème brûlée', 'vaniglia tostata']
       },
       affumicato: {
         label: 'Affumicati',
         compat: ['rosso', 'liquoroso', 'bianco'],
-        sentori: ['fumo', 'affumicato', 'fumo di legna', 'fumo di candela', 'arrosto']
+        sentori: ['affumicato', 'arrosto', 'fumo', 'fumo di candela', 'fumo di legna']
       },
       empireumatici: {
         label: 'Sentori empireumatici (legno tostato)',
         compat: ['rosso', 'passito', 'liquoroso'],
-        sentori: ['goudron', 'catrame', 'pece', 'creosoto', 'bitume', 'asfalto']
+        sentori: ['asfalto', 'bitume', 'catrame', 'creosoto', 'goudron', 'pece']
       },
       tabacco_cuoio: {
         label: 'Tabacco e cuoio',
         compat: ['rosso', 'passito', 'liquoroso'],
-        sentori: ['tabacco', 'tabacco dolce', 'tabacco da pipa', 'cuoio', 'cuoio conciato', 'pellame']
+        sentori: ['cuoio', 'cuoio conciato', 'pellame', 'tabacco', 'tabacco da pipa', 'tabacco dolce']
       },
       frutta_secca_tostata: {
         label: 'Frutta secca tostata',
         compat: ['rosso', 'bianco', 'passito', 'liquoroso', 'spumante'],
-        sentori: ['mandorla tostata', 'nocciola tostata', 'noce tostata', 'arachide tostata', 'pinolo tostato']
+        sentori: ['arachide tostata', 'mandorla tostata', 'nocciola tostata', 'noce tostata', 'pinolo tostato']
       },
       pane_lieviti: {
         label: 'Pane e lieviti (metodo classico)',
         compat: ['spumante', 'bianco'],
-        sentori: ['crosta di pane', 'pane tostato', 'lievito', 'pasticceria', 'burro', 'biscotto', 'pan brioche']
+        sentori: ['biscotto', 'burro', 'crosta di pane', 'lievito', 'pan brioche', 'pane tostato', 'pasticceria']
       }
     }
   },
@@ -284,12 +284,12 @@ const AROMI = {
       balsamici_giovani: {
         label: 'Balsamici (vini giovani)',
         compat: ['rosso', 'bianco', 'rosato', 'spumante'],
-        sentori: ['menta', 'menta piperita', 'eucalipto', 'eucalipto fresco']
+        sentori: ['eucalipto', 'eucalipto fresco', 'menta', 'menta piperita']
       },
       balsamici_evoluti: {
         label: 'Balsamici (evolutivi)',
         compat: ['rosso', 'passito', 'liquoroso'],
-        sentori: ['incenso', 'mirra', 'resina', 'pino', 'conifera', 'abete', 'ginepro']
+        sentori: ['abete', 'conifera', 'ginepro', 'incenso', 'mirra', 'pino', 'resina']
       }
     }
   },
@@ -301,17 +301,17 @@ const AROMI = {
       etereo_evolutivo: {
         label: 'Etereo evolutivo (positivi)',
         compat: ['rosso', 'bianco', 'passito', 'liquoroso', 'spumante'],
-        sentori: ['sapone', 'sapone di Marsiglia', 'cera', 'cera d\'api', 'gommalacca', 'ceralacca', 'legno antico', 'legno antiquario']
+        sentori: ['cera', "cera d'api", 'ceralacca', 'gommalacca', 'legno antico', 'legno antiquario', 'sapone', 'sapone di Marsiglia']
       },
       etereo_negativo: {
         label: 'Etereo da alcol poco integrato (negativi)',
         compat: ['rosso', 'bianco', 'rosato', 'spumante', 'passito', 'liquoroso'],
-        sentori: ['acetone', 'vernice', 'smalto', 'colla', 'solvente']
+        sentori: ['acetone', 'colla', 'smalto', 'solvente', 'vernice']
       },
       animali_selvaggina: {
         label: 'Animali / Selvaggina',
         compat: ['rosso', 'passito'],
-        sentori: ['gibier', 'selvaggina', 'sugo di carne', 'salumi', 'sangue', 'rustico']
+        sentori: ['gibier', 'rustico', 'salumi', 'sangue', 'selvaggina', 'sugo di carne']
       }
     }
   }

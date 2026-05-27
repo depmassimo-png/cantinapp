@@ -71,8 +71,9 @@ const D = {
     if (data) {
       bottigliaCorrente = data;
       D.bottiglia_id = data.id;
-      document.getElementById('wineId').textContent =
-        `${data.nome_vino} · ${data.produttore}${data.annata ? ' · ' + data.annata : ''}`;
+      const w = document.getElementById('wineId');
+      w.textContent = `${data.nome_vino} · ${data.produttore}${data.annata ? ' · ' + data.annata : ''}`;
+      w.classList.remove('cieca');
 
       // Mostra TUTTI i box (densità, tannino, perlage), gestiamo poi
       // l'abilitazione tramite applicaRegoleTipologia()
@@ -80,7 +81,9 @@ const D = {
       document.getElementById('boxPerlage').style.display = 'block';
     }
   } else {
-    document.getElementById('wineId').textContent = 'Degustazione alla cieca';
+    const w = document.getElementById('wineId');
+    w.textContent = 'Degustazione alla cieca';
+    w.classList.add('cieca');
     document.getElementById('boxVinoEsterno').style.display = 'block';
     document.getElementById('boxDensita').style.display = 'block';
     document.getElementById('boxPerlage').style.display = 'block';
@@ -120,6 +123,7 @@ const D = {
 function setupChips() {
   const config = [
     ['chipsOccasione', 'occasione'],
+    ['chipsCommensali', 'commensali'],
     ['chipsDecanter', 'decanter', v => v === 'true'],
     ['chipsColore', 'colore'],
     ['chipsRiflesso', 'riflesso'],
@@ -167,7 +171,6 @@ function setupChips() {
 
   // Input testuali e textarea
   bindInput('luogo');
-  bindInput('commensali');
   bindInput('abbinamento');
   bindInput('tempoApertura', 'tempo_apertura_min', v => v ? parseInt(v) : null);
   bindInput('olfattoNote');
@@ -1000,6 +1003,7 @@ function ripristinaUI() {
   // Chip (selezione singola)
   const chipConfig = [
     ['chipsOccasione', 'occasione'],
+    ['chipsCommensali', 'commensali'],
     ['chipsDecanter', 'decanter'],
     ['chipsColore', 'colore'],
     ['chipsRiflesso', 'riflesso'],
@@ -1033,7 +1037,6 @@ function ripristinaUI() {
   // Input testuali
   const inputs = {
     luogo: 'luogo',
-    commensali: 'commensali',
     abbinamento: 'abbinamento_cibo',
     tempoApertura: 'tempo_apertura_min',
     olfattoNote: 'olfatto_note',

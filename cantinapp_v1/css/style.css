@@ -286,8 +286,8 @@ input::placeholder, textarea::placeholder { color: var(--testo-3); }
   padding: 8px 16px;
   margin: 0 -20px 12px;       /* sborda padding del wizard-body (20px) per andare edge-to-edge */
   position: sticky;
-  top: 88px;                  /* sotto il wizard-header che è ~85-95px */
-  z-index: 50;                /* sopra il contenuto ma SOTTO bottom-bar fixed (z-index 100+) */
+  top: 100px;                 /* sotto il wizard-header che ora include logo + brand-row */
+  z-index: 50;
   background: var(--nero, #1a0608);
   border-bottom: 1px solid rgba(201,168,76,0.25);
   box-shadow: 0 2px 8px rgba(0,0,0,0.5);
