@@ -615,15 +615,114 @@ input::placeholder, textarea::placeholder { color: var(--testo-3); }
 .badge-anno    { background: var(--avorio-dk); color: var(--testo-2); }
 .badge-qty     { background: #f0e8ee; color: var(--bordeaux); }
 
+/* ---- WIZARD STEP: card-box per ogni categoria ----
+   Crea separazione visiva tra le sezioni della scheda (Colore, Riflesso,
+   Limpidezza, ecc.). Ogni field-label diventa l'header di una scatola
+   visivamente collegata al contenuto sotto tramite bordo dorato laterale. */
+
+/* Field-label come "intestazione" di categoria */
+body.dark .step > .field-label,
+body.dark .step > div:not(.step-icon):not(.step-title):not(.step-sub) > .field-label {
+  background: linear-gradient(135deg, rgba(201,168,76,0.10), rgba(139,38,53,0.08));
+  border-left: 3px solid var(--oro);
+  color: var(--oro);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 12px;
+  margin: 20px 0 0;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  letter-spacing: 0.8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+body.dark .step > .field-label:first-of-type {
+  margin-top: 0;
+}
+
+/* Contenuto subito DOPO un field-label diretto dello step:
+   sfondo sottile + bordo sinistro dorato per "continuità visiva" con l'header */
+body.dark .step > .field-label + .chips,
+body.dark .step > .field-label + .scale-row,
+body.dark .step > .field-label + .famiglie-grid,
+body.dark .step > .field-label + textarea,
+body.dark .step > .field-label + .stars,
+body.dark .step > .field-label + .yesno-row {
+  background: rgba(255,255,255,0.025);
+  border-left: 3px solid rgba(201,168,76,0.3);
+  padding: 12px;
+  margin-top: 0;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+/* Eccezione: .famiglie-grid in modalità sticky-row gestisce da sé layout/padding */
+body.dark .step > .field-label + .famiglie-grid.sticky-row {
+  background: var(--nero, #1a0608);
+  border-left: none;
+  padding: 8px 16px;
+  border-radius: 0;
+}
+
+/* Le scale-row hanno già il loro look (rounded buttons): manteniamo solo
+   il background della scatola, senza padding ulteriore che le schiaccia */
+body.dark .step > .field-label + .scale-row {
+  padding: 14px 12px;
+}
+
+/* Field-label dentro griglie a 2 colonne (annata+tipologia, denominazione+nazione…)
+   restano come prima, senza card */
+body.dark .step [style*="grid-template-columns"] .field-label {
+  background: transparent;
+  border-left: none;
+  padding: 0 0 6px;
+  margin: 0 0 4px;
+  border-radius: 0;
+  display: block;
+}
+
 /* ---- COLOR DOT (colori vino) ---- */
 .color-dot {
   width: 14px; height: 14px;
   border-radius: 50%;
   display: inline-block;
   vertical-align: middle;
-  margin-right: 5px;
-  border: 1px solid rgba(0,0,0,.1);
+  margin-right: 6px;
+  border: 1px solid rgba(0,0,0,.25);
   flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.15);
+}
+
+/* Chip "colore vino": layout flex per allineamento dot + nome,
+   border-color leggermente più visibile in dark theme */
+.chip-color {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding-left: 10px;
+}
+body.dark .chip-color {
+  border-color: rgba(255,255,255,0.22);
+}
+body.dark .chip-color.sel {
+  background: var(--bordeaux);
+  border-color: var(--oro);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(201,168,76,0.5);
+}
+body.dark .chip-color .color-dot {
+  border-color: rgba(255,255,255,0.4);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08);
+}
+
+/* Tutti gli altri chip della degustazione (riflesso, limpidezza, perlage, ecc):
+   visivamente distinti quando selezionati con bordo dorato + glow */
+body.dark .chip.sel {
+  background: var(--bordeaux);
+  border-color: var(--oro);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(201,168,76,0.4);
 }
 
 /* ---- DIVIDER ---- */
