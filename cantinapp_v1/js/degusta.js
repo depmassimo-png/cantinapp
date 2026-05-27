@@ -388,6 +388,17 @@ async function scegliBottigliaScelta(id) {
   }
 }
 
+// Escape HTML per evitare XSS quando inseriamo testo utente in innerHTML
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ==== SETUP CHIP (selezione singola) ====
 function setupChips() {
   const config = [
