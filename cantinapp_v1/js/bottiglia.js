@@ -534,11 +534,39 @@ function rimuoviEditFoto(e, lato) {
   document.getElementById(lato === 'fronte' ? 'heroSlotFronte' : 'heroSlotRetro').innerHTML = heroSlotInner(lato);
 }
 
+// Ridimensiona/comprime l'immagine nel browser prima dell'upload.
+// Riduce drasticamente il peso (e quindi il tempo di salvataggio),
+// mantenendo il lato lungo a maxDim per una buona leggibilità nello zoom.
+async function comprimiImmagine(file, maxDim = 1920, quality = 0.85) {
+  if (!file || !file.type || !file.type.startsWith('image/')) return file;
+  let bitmap;
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  } catch (_) {
+    try { bitmap = await createImageBitmap(file); } catch (_) { return file; }
+  }
+  let { width, height } = bitmap;
+  const scale = Math.min(1, maxDim / Math.max(width, height));
+  width = Math.round(width * scale);
+  height = Math.round(height * scale);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, width, height);
+  if (bitmap.close) bitmap.close();
+
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', quality));
+  if (!blob || blob.size >= file.size) return file; // se non aiuta, tieni l'originale
+  console.log('[comprimi]', Math.round(file.size / 1024), 'KB →', Math.round(blob.size / 1024), 'KB');
+  return new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' });
+}
+
 async function uploadEtichetta(file, lato) {
-  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const out = await comprimiImmagine(file);
+  const ext = (out.name.split('.').pop() || 'jpg').toLowerCase();
   const fileName = `${currentUser.id}/${Date.now()}_${lato}.${ext}`;
   const { error } = await sb.storage.from('etichette')
-    .upload(fileName, file, { upsert: false, contentType: file.type });
+    .upload(fileName, out, { upsert: false, contentType: out.type });
   if (error) throw error;
   const { data } = sb.storage.from('etichette').getPublicUrl(fileName);
   return data.publicUrl;
