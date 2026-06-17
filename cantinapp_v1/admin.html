@@ -55,6 +55,13 @@
     white-space: pre-wrap; word-break: break-word;
     background: rgba(255,255,255,0.03); border-radius: 8px; padding: 8px 10px;
   }
+  .risposta-input {
+    width: 100%; box-sizing: border-box; resize: vertical; min-height: 60px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px; color: #fff; font-family: inherit; font-size: 13px;
+    padding: 8px 10px; outline: none;
+  }
+  .risposta-input:focus { border-color: var(--oro, #C9A84C); }
   .stat-row {
     display: flex; justify-content: space-between; align-items: baseline;
     padding: 8px 0;
@@ -608,15 +615,17 @@ async function renderMessaggiAdmin() {
         ${m.oggetto ? `<div class="nome">${escapeHtml(m.oggetto)}</div>` : ''}
         <div class="meta">${chi}${mail} · ${dt}</div>
         <div class="msg-testo">${escapeHtml(m.testo)}</div>
-        <div class="pending-actions" style="justify-content:flex-end">
-          <button class="btn-mini approve" onclick="chiudiMessaggio('${m.id}')">✓ Segna chiusa</button>
+        <textarea id="risposta-${m.id}" class="risposta-input" placeholder="Scrivi una risposta…"></textarea>
+        <div class="pending-actions" style="justify-content:flex-end;gap:6px">
+          <button class="btn-mini reject" onclick="chiudiMessaggio('${m.id}')">Chiudi senza rispondere</button>
+          <button class="btn-mini approve" onclick="rispondiMessaggio('${m.id}')">✓ Rispondi e chiudi</button>
         </div>
       </div>`;
   }).join('');
 }
 
 async function chiudiMessaggio(id) {
-  if (!confirm('Segnare questa richiesta come chiusa?')) return;
+  if (!confirm('Segnare questa richiesta come chiusa senza rispondere?')) return;
 
   const { data: { session } } = await sb.auth.getSession();
   const { error } = await sb.from('messaggi_admin').update({
@@ -626,7 +635,29 @@ async function chiudiMessaggio(id) {
   }).eq('id', id);
 
   if (error) { alert('Errore: ' + error.message); return; }
+  rimuoviMessaggioRisolto(id);
+}
 
+async function rispondiMessaggio(id) {
+  const ta = document.getElementById('risposta-' + id);
+  const testo = (ta ? ta.value : '').trim();
+  if (!testo) { alert('Scrivi una risposta prima di inviare.'); return; }
+
+  const { data: { session } } = await sb.auth.getSession();
+  const { error } = await sb.from('messaggi_admin').update({
+    risposta: testo,
+    risposta_at: new Date().toISOString(),
+    stato: 'chiusa',
+    chiusa_at: new Date().toISOString(),
+    chiusa_by: session && session.user ? session.user.id : null,
+  }).eq('id', id);
+
+  if (error) { alert('Errore: ' + error.message); return; }
+  rimuoviMessaggioRisolto(id);
+}
+
+// Rimuove la richiesta dalla lista aperte e aggiorna il badge
+function rimuoviMessaggioRisolto(id) {
   const el = document.querySelector(`#messaggiList .pending-item[data-id="${id}"]`);
   if (el) el.remove();
 
