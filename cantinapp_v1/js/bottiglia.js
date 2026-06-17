@@ -5,6 +5,12 @@
 let bottiglia = null;
 let currentUser = null;
 
+// Stato modifica foto (edit inline)
+let editFotoFronte = null;     // nuovo File selezionato per il fronte
+let editFotoRetro  = null;     // nuovo File selezionato per il retro
+let editRimuoviFronte = false; // flag: elimina la foto fronte esistente
+let editRimuoviRetro  = false; // flag: elimina la foto retro esistente
+
 (async function init() {
   const session = await requireAuth();
   if (!session) return;
@@ -175,7 +181,10 @@ function render() {
   const fronte = b.etichetta_url;
   const retro = b.controetichetta_url;
 
-  if (fronte || retro) {
+  if (editing) {
+    // In modifica: riquadri di upload fronte/retro
+    hero.innerHTML = heroEditHtml();
+  } else if (fronte || retro) {
     const slides = [];
     if (fronte) slides.push(`<div class="hero-slide active"><img src="${fronte}" alt="Fronte"></div>`);
     if (retro) slides.push(`<div class="hero-slide"><img src="${retro}" alt="Retro"></div>`);
@@ -411,6 +420,10 @@ function iniziaDegustazione() {
 
 // ==== MODIFICA INLINE ====
 function entraInEdit() {
+  // Reset stato foto all'ingresso in modifica
+  editFotoFronte = null; editFotoRetro = null;
+  editRimuoviFronte = false; editRimuoviRetro = false;
+
   document.body.classList.add('editing');
   document.getElementById('btnEdit').style.display = 'none';
   document.getElementById('btnCancelEdit').style.display = 'inline-block';
@@ -423,6 +436,10 @@ function entraInEdit() {
 }
 
 function annullaEdit() {
+  // Reset stato foto all'uscita dalla modifica
+  editFotoFronte = null; editFotoRetro = null;
+  editRimuoviFronte = false; editRimuoviRetro = false;
+
   document.body.classList.remove('editing');
   document.getElementById('btnEdit').style.display = 'inline-flex';
   document.getElementById('btnCancelEdit').style.display = 'none';
@@ -453,6 +470,79 @@ function getRegioneInlineValue() {
     const i = document.getElementById('editRegioneInput');
     return i ? (i.value.trim() || null) : null;
   }
+}
+
+// ==== MODIFICA FOTO (edit inline) ====
+function heroEditHtml() {
+  return `<div class="hero-edit-grid">
+    <div class="hero-edit-slot" id="heroSlotFronte">${heroSlotInner('fronte')}</div>
+    <div class="hero-edit-slot" id="heroSlotRetro">${heroSlotInner('retro')}</div>
+  </div>`;
+}
+
+function heroSlotInner(lato) {
+  const isFronte = lato === 'fronte';
+  const file     = isFronte ? editFotoFronte : editFotoRetro;
+  const rimossa  = isFronte ? editRimuoviFronte : editRimuoviRetro;
+  const salvata  = isFronte ? bottiglia.etichetta_url : bottiglia.controetichetta_url;
+  const label    = isFronte ? 'Fronte' : 'Retro';
+  const sub      = isFronte ? 'Etichetta principale' : 'Controetichetta';
+
+  let src = null;
+  if (file) src = URL.createObjectURL(file);
+  else if (!rimossa && salvata) src = salvata;
+
+  if (src) {
+    return `<img src="${src}" class="hero-edit-img" alt="${label}">
+      <button type="button" class="preview-remove" onclick="rimuoviEditFoto(event,'${lato}')" aria-label="Rimuovi foto">
+        <i class="ti ti-x"></i>
+      </button>`;
+  }
+  return `<i class="ti ti-camera upload-icon" aria-hidden="true"></i>
+    <p style="font-size:13px">${label}</p>
+    <small>${sub}</small>
+    <input type="file" accept="image/*" onchange="handleEditPhotoSelect(event,'${lato}')">`;
+}
+
+function handleEditPhotoSelect(e, lato) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { showToast('Foto troppo grande (max 5MB)', true); return; }
+  if (lato === 'fronte') { editFotoFronte = file; editRimuoviFronte = false; }
+  else                   { editFotoRetro  = file; editRimuoviRetro  = false; }
+  document.getElementById(lato === 'fronte' ? 'heroSlotFronte' : 'heroSlotRetro').innerHTML = heroSlotInner(lato);
+}
+
+function rimuoviEditFoto(e, lato) {
+  e.stopPropagation(); e.preventDefault();
+  if (lato === 'fronte') { editFotoFronte = null; if (bottiglia.etichetta_url) editRimuoviFronte = true; }
+  else                   { editFotoRetro  = null; if (bottiglia.controetichetta_url) editRimuoviRetro = true; }
+  document.getElementById(lato === 'fronte' ? 'heroSlotFronte' : 'heroSlotRetro').innerHTML = heroSlotInner(lato);
+}
+
+async function uploadEtichetta(file, lato) {
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const fileName = `${currentUser.id}/${Date.now()}_${lato}.${ext}`;
+  const { error } = await sb.storage.from('etichette')
+    .upload(fileName, file, { upsert: false, contentType: file.type });
+  if (error) throw error;
+  const { data } = sb.storage.from('etichette').getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
+function storagePathFromUrl(url) {
+  if (!url) return null;
+  const marker = '/etichette/';
+  const i = url.indexOf(marker);
+  if (i === -1) return null;
+  return url.substring(i + marker.length).split('?')[0];
+}
+
+async function eliminaDalloStorage(url) {
+  const path = storagePathFromUrl(url);
+  if (!path) return;
+  const { error } = await sb.storage.from('etichette').remove([path]);
+  if (error) console.warn('[storage] rimozione fallita:', error.message);
 }
 
 async function salvaEdit() {
@@ -486,6 +576,29 @@ async function salvaEdit() {
 
   console.log('[salvaEdit] payload:', update);
 
+  // ---- FOTO: upload nuove + raccolta vecchie da eliminare ----
+  const daEliminare = [];
+  try {
+    if (editFotoFronte) {
+      update.etichetta_url = await uploadEtichetta(editFotoFronte, 'fronte');
+      if (bottiglia.etichetta_url) daEliminare.push(bottiglia.etichetta_url);
+    } else if (editRimuoviFronte) {
+      if (bottiglia.etichetta_url) daEliminare.push(bottiglia.etichetta_url);
+      update.etichetta_url = null;
+    }
+    if (editFotoRetro) {
+      update.controetichetta_url = await uploadEtichetta(editFotoRetro, 'retro');
+      if (bottiglia.controetichetta_url) daEliminare.push(bottiglia.controetichetta_url);
+    } else if (editRimuoviRetro) {
+      if (bottiglia.controetichetta_url) daEliminare.push(bottiglia.controetichetta_url);
+      update.controetichetta_url = null;
+    }
+  } catch (e) {
+    console.error('[salvaEdit] errore upload foto:', e);
+    showToast('Errore upload foto: ' + (e.message || ''), true);
+    return;
+  }
+
   const { error } = await sb.from('bottiglie').update(update).eq('id', bottiglia.id);
 
   if (error) {
@@ -493,6 +606,9 @@ async function salvaEdit() {
     showToast('Errore: ' + error.message, true);
     return;
   }
+
+  // Solo dopo l'update riuscito elimino i file vecchi dallo storage
+  for (const url of daEliminare) await eliminaDalloStorage(url);
 
   Object.assign(bottiglia, update);
   annullaEdit();
