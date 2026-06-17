@@ -159,8 +159,17 @@
 <script src="js/supabase.js"></script>
 <script src="js/auth.js"></script>
 <script>
-  // Redirect se già loggato
-  redirectIfLogged();
+  // Se un link di recupero password atterra qui (vecchie email o fallback
+  // al Site URL), inoltra alla pagina dedicata mantenendo il token.
+  // redirectIfLogged() parte solo se NON siamo in un flusso di recupero.
+  (function reindirizzaRecovery() {
+    const h = window.location.hash || '';
+    if (/type=recovery/.test(h)) {
+      window.location.replace('reset-password.html' + window.location.search + h);
+      return true;
+    }
+    return false;
+  })() || redirectIfLogged();
 
   function togglePwd(id, btn) {
     const input = document.getElementById(id);
@@ -182,7 +191,7 @@
     if (!email) { showToast('Inserisci la tua email', true); return; }
     setLoading(btn, true);
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/index.html'
+      redirectTo: new URL('reset-password.html', window.location.href).href
     });
     setLoading(btn, false);
     if (error) { showToast(error.message, true); return; }
