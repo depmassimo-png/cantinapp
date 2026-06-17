@@ -198,6 +198,81 @@
       color: var(--bordeaux);
       border: 1px solid var(--bordeaux);
     }
+
+    /* ===== Hero foto degustazione ===== */
+    .scheda-hero { margin-bottom: 16px; }
+    .hero-photo {
+      width: 100%; height: 240px; background: var(--nero);
+      border-radius: var(--radius-lg); overflow: hidden; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hero-slide { display: none; width: 100%; height: 100%; }
+    .hero-slide.active { display: block; }
+    .hero-slide img { width: 100%; height: 100%; object-fit: contain; }
+    .hero-zoomable { cursor: zoom-in; }
+    .hero-photo .no-photo { font-size: 52px; color: rgba(255,255,255,.18); }
+    .hero-photo .tip-tag { position: absolute; top: 12px; left: 12px; }
+    .hero-dots {
+      position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 8px; background: rgba(26,6,8,.5); padding: 6px 10px; border-radius: var(--radius-pill);
+    }
+    .hero-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.4); border: none; cursor: pointer; padding: 0; }
+    .hero-dot.active { background: var(--oro); }
+    .hero-side-tag {
+      position: absolute; top: 12px; right: 12px; background: rgba(26,6,8,.65);
+      color: #fff; font-size: 11px; padding: 4px 10px; border-radius: var(--radius-pill);
+    }
+
+    .hero-foto-actions { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+    .hero-foto-actions button {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; padding: 7px 14px; border-radius: var(--radius-pill); cursor: pointer; border: 1px solid;
+    }
+    .btn-foto-edit { background: transparent; color: var(--oro); border-color: var(--oro); }
+    .btn-foto-cancel { background: transparent; color: rgba(255,255,255,.6); border-color: rgba(255,255,255,.25); }
+    .btn-foto-save { background: var(--oro); color: var(--nero); border-color: var(--oro); }
+    .btn-foto-save:disabled { opacity: .6; }
+
+    /* riquadri upload in modifica */
+    .hero-edit-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      width: 100%; height: 100%; padding: 10px; box-sizing: border-box;
+    }
+    .hero-edit-slot {
+      position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+      border: 1.5px dashed rgba(255,255,255,.25); border-radius: 8px;
+      background: rgba(255,255,255,.04); color: #faf7f4; overflow: hidden; cursor: pointer;
+    }
+    .hero-edit-slot .upload-icon { font-size: 26px; opacity: .7; }
+    .hero-edit-slot p { margin: 4px 0 0; }
+    .hero-edit-slot small { opacity: .6; font-size: 11px; }
+    .hero-edit-slot input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .hero-edit-slot .hero-edit-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: var(--nero); }
+    .hero-edit-slot .preview-remove {
+      position: absolute; top: 6px; right: 6px; z-index: 2; width: 26px; height: 26px; border: none; border-radius: 50%;
+      background: rgba(26,6,8,.75); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+
+    /* visore zoom a tutto schermo */
+    .zoom-overlay {
+      display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.92);
+      align-items: center; justify-content: center; overflow: hidden; touch-action: none;
+    }
+    .zoom-overlay.show { display: flex; }
+    .zoom-stage { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: none; }
+    .zoom-img {
+      position: absolute; top: 0; left: 0; transform-origin: 0 0; will-change: transform;
+      user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none;
+    }
+    .zoom-close {
+      position: fixed; top: 14px; right: 14px; z-index: 1001; width: 40px; height: 40px; border: none; border-radius: 50%;
+      background: rgba(255,255,255,.15); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer;
+    }
+    .zoom-hint {
+      position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 1001;
+      color: rgba(255,255,255,.7); font-size: 12px; background: rgba(0,0,0,.4); padding: 5px 12px; border-radius: 999px;
+      pointer-events: none; white-space: nowrap;
+    }
   </style>
 </head>
 <body class="dark">
@@ -217,6 +292,21 @@
   </div>
 
   <div class="body">
+
+    <div class="scheda-hero" id="schedaHero">
+      <div class="hero-photo" id="heroPhoto"></div>
+      <div class="hero-foto-actions" id="heroFotoView">
+        <button class="btn-foto-edit" onclick="entraFotoEdit()">
+          <i class="ti ti-camera"></i> <span id="btnFotoEditLabel">Modifica foto</span>
+        </button>
+      </div>
+      <div class="hero-foto-actions" id="heroFotoEdit" style="display:none">
+        <button class="btn-foto-cancel" onclick="annullaFotoEdit()">Annulla</button>
+        <button class="btn-foto-save" id="btnFotoSave" onclick="salvaFoto()">
+          <i class="ti ti-check"></i> Salva foto
+        </button>
+      </div>
+    </div>
 
     <div class="wine-hero">
       <h1 id="wineName">—</h1>
@@ -288,6 +378,15 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Visore foto a tutto schermo con zoom -->
+<div class="zoom-overlay" id="zoomOverlay">
+  <button class="zoom-close" onclick="chiudiZoom()" aria-label="Chiudi"><i class="ti ti-x"></i></button>
+  <div class="zoom-stage" id="zoomStage">
+    <img id="zoomImg" class="zoom-img" alt="Foto etichetta" draggable="false">
+  </div>
+  <div class="zoom-hint">Doppio tap per zoomare · pizzica per ingrandire</div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase.js"></script>
