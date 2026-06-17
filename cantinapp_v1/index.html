@@ -73,19 +73,19 @@
 
     <!-- FORM LOGIN -->
     <form id="formLogin" onsubmit="handleLogin(event)">
-      <label class="field-label" for="email-l">Email</label>
-      <input type="email" id="email" name="email" placeholder="tuo@email.com" autocomplete="email" required>
+      <label class="field-label" for="loginEmail">Email</label>
+      <input type="email" id="loginEmail" placeholder="tuo@email.com" autocomplete="email" required>
 
-      <label class="field-label" for="password-l" style="margin-top:14px">Password</label>
+      <label class="field-label" for="loginPassword" style="margin-top:14px">Password</label>
       <div class="password-wrap">
-        <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
-        <button type="button" class="pwd-toggle" onclick="togglePwd('password',this)" aria-label="Mostra password">
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required>
+        <button type="button" class="pwd-toggle" onclick="togglePwd('loginPassword',this)" aria-label="Mostra password">
           <i class="ti ti-eye"></i>
         </button>
       </div>
 
       <div style="margin-top: 6px; text-align: right;">
-        <a href="#" style="font-size:13px; color:var(--bordeaux); text-decoration:none;" onclick="showForgot()">Password dimenticata?</a>
+        <a href="#" style="font-size:13px; color:var(--bordeaux); text-decoration:none;" onclick="showForgot(); return false;">Password dimenticata?</a>
       </div>
 
       <div style="margin-top: 20px;">
@@ -98,24 +98,24 @@
 
     <!-- FORM REGISTRAZIONE -->
     <form id="formRegister" style="display:none" onsubmit="handleRegister(event)">
-      <label class="field-label">Nome utente</label>
-      <input type="text" id="username" name="username" placeholder="Come vuoi essere chiamato" autocomplete="username" required>
+      <label class="field-label" for="regUsername">Nome utente</label>
+      <input type="text" id="regUsername" placeholder="Come vuoi essere chiamato" autocomplete="username" required>
 
-      <label class="field-label" style="margin-top:14px">Email</label>
-      <input type="email" id="email" name="email" placeholder="tuo@email.com" autocomplete="email" required>
+      <label class="field-label" for="regEmail" style="margin-top:14px">Email</label>
+      <input type="email" id="regEmail" placeholder="tuo@email.com" autocomplete="email" required>
 
-      <label class="field-label" style="margin-top:14px">Password</label>
+      <label class="field-label" for="regPassword" style="margin-top:14px">Password</label>
       <div class="password-wrap">
-        <input type="password" id="password" name="password" placeholder="Minimo 6 caratteri" autocomplete="new-password" required>
-        <button type="button" class="pwd-toggle" onclick="togglePwd('password',this)" aria-label="Mostra password">
+        <input type="password" id="regPassword" placeholder="Minimo 6 caratteri" autocomplete="new-password" required>
+        <button type="button" class="pwd-toggle" onclick="togglePwd('regPassword',this)" aria-label="Mostra password">
           <i class="ti ti-eye"></i>
         </button>
       </div>
 
-      <label class="field-label" style="margin-top:14px">Conferma password</label>
+      <label class="field-label" for="regConfirm" style="margin-top:14px">Conferma password</label>
       <div class="password-wrap">
-        <input type="password" id="confirm" name="confirm" placeholder="Ripeti la password" autocomplete="new-password" required>
-        <button type="button" class="pwd-toggle" onclick="togglePwd('confirm',this)" aria-label="Mostra password">
+        <input type="password" id="regConfirm" placeholder="Ripeti la password" autocomplete="new-password" required>
+        <button type="button" class="pwd-toggle" onclick="togglePwd('regConfirm',this)" aria-label="Mostra password">
           <i class="ti ti-eye"></i>
         </button>
       </div>
@@ -171,20 +171,60 @@
     return false;
   })() || redirectIfLogged();
 
+  // Mostra/nascondi password
   function togglePwd(id, btn) {
     const input = document.getElementById(id);
-    const isText = input.type === 'text';
-    input.type = isText ? 'password' : 'text';
-    btn.querySelector('i').className = isText ? 'ti ti-eye' : 'ti ti-eye-off';
+    const nascosta = input.type === 'password';
+    input.type = nascosta ? 'text' : 'password';
+    btn.querySelector('i').className = nascosta ? 'ti ti-eye-off' : 'ti ti-eye';
   }
 
-  async function showForgot() {
-    document.getElementById('formLogin').style.display = 'none';
-    document.getElementById('formRegister').style.display = 'none';
-    document.getElementById('formForgot').style.display = 'block';
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab-active'));
+  // Navigazione tra i tre pannelli: login / registrazione / recupero
+  function mostraPannello(quale) {
+    document.getElementById('formLogin').style.display    = quale === 'login'    ? 'block' : 'none';
+    document.getElementById('formRegister').style.display = quale === 'register' ? 'block' : 'none';
+    document.getElementById('formForgot').style.display   = quale === 'forgot'   ? 'block' : 'none';
+    document.getElementById('tabLogin').classList.toggle('tab-active', quale === 'login');
+    document.getElementById('tabRegister').classList.toggle('tab-active', quale === 'register');
+  }
+  function showLogin()    { mostraPannello('login'); }
+  function showRegister() { mostraPannello('register'); }
+  function showForgot()   { mostraPannello('forgot'); }
+
+  // Login
+  async function handleLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnLogin');
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { showToast('Compila tutti i campi', true); return; }
+    setLoading(btn, true);
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    setLoading(btn, false);
+    if (error) { showToast(error.message, true); return; }
+    window.location.href = 'cantina.html';
   }
 
+  // Registrazione
+  async function handleRegister(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnRegister');
+    const username = document.getElementById('regUsername').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const confirm = document.getElementById('regConfirm').value;
+    if (!username || !email || !password || !confirm) { showToast('Compila tutti i campi', true); return; }
+    if (password !== confirm) { showToast('Le password non coincidono', true); return; }
+    if (password.length < 6) { showToast('Password di almeno 6 caratteri', true); return; }
+    setLoading(btn, true);
+    const { error } = await sb.auth.signUp({ email, password, options: { data: { username } } });
+    setLoading(btn, false);
+    if (error) { showToast(error.message, true); return; }
+    showToast('Account creato! Controlla la tua email per confermare.');
+    setTimeout(showLogin, 2500);
+  }
+
+  // Recupero password
   async function handleForgot() {
     const btn = document.getElementById('btnForgot');
     const email = document.getElementById('emailForgot').value.trim();
@@ -196,45 +236,7 @@
     setLoading(btn, false);
     if (error) { showToast(error.message, true); return; }
     showToast('Link inviato! Controlla la tua email.');
-    setTimeout(() => showLogin(), 2500);
-  }
-
-  // Gestione id duplicati nei form (email/password appaiono in entrambi)
-  // Workaround: leggiamo dal form attivo
-  document.getElementById('formLogin').addEventListener('submit', handleLogin);
-  document.getElementById('formRegister').addEventListener('submit', handleRegister);
-
-  function handleLogin(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btnLogin');
-    const email = e.target.querySelector('[name=email]').value.trim();
-    const password = e.target.querySelector('[name=password]').value;
-    if (!email || !password) { showToast('Compila tutti i campi', true); return; }
-    setLoading(btn, true);
-    sb.auth.signInWithPassword({ email, password }).then(({ error }) => {
-      setLoading(btn, false);
-      if (error) { showToast(error.message, true); return; }
-      window.location.href = 'cantina.html';
-    });
-  }
-
-  function handleRegister(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btnRegister');
-    const username = e.target.querySelector('[name=username]').value.trim();
-    const email = e.target.querySelector('[name=email]').value.trim();
-    const password = e.target.querySelector('[name=password]').value;
-    const confirm = e.target.querySelector('[name=confirm]').value;
-    if (!username || !email || !password || !confirm) { showToast('Compila tutti i campi', true); return; }
-    if (password !== confirm) { showToast('Le password non coincidono', true); return; }
-    if (password.length < 6) { showToast('Password di almeno 6 caratteri', true); return; }
-    setLoading(btn, true);
-    sb.auth.signUp({ email, password, options: { data: { username } } }).then(({ error }) => {
-      setLoading(btn, false);
-      if (error) { showToast(error.message, true); return; }
-      showToast('Account creato! Controlla la tua email per confermare.');
-      setTimeout(() => showLogin(), 2500);
-    });
+    setTimeout(showLogin, 2500);
   }
 </script>
 </body>
