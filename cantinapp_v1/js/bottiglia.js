@@ -11,10 +11,20 @@ let editFotoRetro  = null;     // nuovo File selezionato per il retro
 let editRimuoviFronte = false; // flag: elimina la foto fronte esistente
 let editRimuoviRetro  = false; // flag: elimina la foto retro esistente
 
+// Stato visore zoom (visualizzazione)
+const ZOOM_MIN = 1, ZOOM_MAX = 5;
+let zScale = 1, zTx = 0, zTy = 0;     // trasformazione corrente
+let zDW = 0, zDH = 0, zSW = 0, zSH = 0; // dimensioni immagine "fit" e stage
+let zPointers = new Map();             // pointerId -> {x,y}
+let zPanLast = null, zLastDist = 0, zLastMid = null;
+let zMoved = false, zDownTarget = null, zLastTap = 0;
+
 (async function init() {
   const session = await requireAuth();
   if (!session) return;
   currentUser = session.user;
+
+  setupZoom();
 
   const id = new URLSearchParams(window.location.search).get('id');
   if (!id) {
@@ -186,8 +196,8 @@ function render() {
     hero.innerHTML = heroEditHtml();
   } else if (fronte || retro) {
     const slides = [];
-    if (fronte) slides.push(`<div class="hero-slide active"><img src="${fronte}" alt="Fronte"></div>`);
-    if (retro) slides.push(`<div class="hero-slide"><img src="${retro}" alt="Retro"></div>`);
+    if (fronte) slides.push(`<div class="hero-slide active"><img src="${fronte}" alt="Fronte" class="hero-zoomable" onclick="apriZoom('${fronte}')"></div>`);
+    if (retro) slides.push(`<div class="hero-slide"><img src="${retro}" alt="Retro" class="hero-zoomable" onclick="apriZoom('${retro}')"></div>`);
     const dots = (fronte && retro) ? `
       <div class="hero-dots">
         <button class="hero-dot active" onclick="showSlide(0)" aria-label="Fronte"></button>
@@ -613,6 +623,158 @@ async function salvaEdit() {
   Object.assign(bottiglia, update);
   annullaEdit();
   showToast('Modifiche salvate');
+}
+
+
+// ==== VISORE FOTO CON ZOOM (visualizzazione) ====
+function apriZoom(src) {
+  const ov = document.getElementById('zoomOverlay');
+  const img = document.getElementById('zoomImg');
+  ov.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  img.onload = initZoomSize;
+  img.src = src;
+  if (img.complete && img.naturalWidth) initZoomSize();
+}
+
+function chiudiZoom() {
+  document.getElementById('zoomOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+  zPointers.clear();
+  zPanLast = null; zLastDist = 0; zLastMid = null; zMoved = false;
+}
+
+function initZoomSize() {
+  const stage = document.getElementById('zoomStage');
+  const img = document.getElementById('zoomImg');
+  zSW = stage.clientWidth; zSH = stage.clientHeight;
+  const iw = img.naturalWidth || zSW, ih = img.naturalHeight || zSH;
+  const f = Math.min(zSW / iw, zSH / ih);   // scala "contain"
+  zDW = iw * f; zDH = ih * f;
+  img.style.width = zDW + 'px';
+  img.style.height = zDH + 'px';
+  zScale = 1; clampZoom(); applyZoom(false);
+}
+
+function applyZoom(animate) {
+  const img = document.getElementById('zoomImg');
+  img.style.transition = animate ? 'transform .18s ease' : 'none';
+  img.style.transform = `translate(${zTx}px, ${zTy}px) scale(${zScale})`;
+  img.style.cursor = zScale > 1.01 ? 'grab' : 'zoom-in';
+}
+
+function clampZoom() {
+  const scaledW = zDW * zScale, scaledH = zDH * zScale;
+  if (scaledW <= zSW) zTx = (zSW - scaledW) / 2;
+  else zTx = Math.min(0, Math.max(zSW - scaledW, zTx));
+  if (scaledH <= zSH) zTy = (zSH - scaledH) / 2;
+  else zTy = Math.min(0, Math.max(zSH - scaledH, zTy));
+}
+
+function zoomAt(cx, cy, newScale, animate) {
+  newScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, newScale));
+  const ix = (cx - zTx) / zScale, iy = (cy - zTy) / zScale;
+  zTx = cx - ix * newScale;
+  zTy = cy - iy * newScale;
+  zScale = newScale;
+  clampZoom();
+  applyZoom(!!animate);
+}
+
+function resetZoom() { zScale = 1; clampZoom(); applyZoom(true); }
+
+function toggleZoomPunto(cx, cy) {
+  if (zScale > 1.01) resetZoom();
+  else zoomAt(cx, cy, 2.5, true);
+}
+
+function zRel(e) {
+  const r = document.getElementById('zoomStage').getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+function setupZoom() {
+  const stage = document.getElementById('zoomStage');
+  if (!stage) return;
+  stage.addEventListener('pointerdown', zPointerDown);
+  stage.addEventListener('pointermove', zPointerMove);
+  stage.addEventListener('pointerup', zPointerUp);
+  stage.addEventListener('pointercancel', zPointerUp);
+  stage.addEventListener('wheel', zWheel, { passive: false });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('zoomOverlay').classList.contains('show')) chiudiZoom();
+  });
+}
+
+function zPointerDown(e) {
+  const stage = document.getElementById('zoomStage');
+  e.preventDefault();
+  stage.setPointerCapture(e.pointerId);
+  zPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  zDownTarget = e.target;
+  zMoved = false;
+  if (zPointers.size === 1) {
+    zPanLast = { x: e.clientX, y: e.clientY };
+  } else if (zPointers.size === 2) {
+    const [p1, p2] = [...zPointers.values()];
+    const r = stage.getBoundingClientRect();
+    zLastDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+    zLastMid = { x: (p1.x + p2.x) / 2 - r.left, y: (p1.y + p2.y) / 2 - r.top };
+  }
+}
+
+function zPointerMove(e) {
+  if (!zPointers.has(e.pointerId)) return;
+  zPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const r = document.getElementById('zoomStage').getBoundingClientRect();
+
+  if (zPointers.size === 2) {
+    const [p1, p2] = [...zPointers.values()];
+    const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+    const mid = { x: (p1.x + p2.x) / 2 - r.left, y: (p1.y + p2.y) / 2 - r.top };
+    if (zLastDist > 0) {
+      zTx += mid.x - zLastMid.x;   // segue le dita
+      zTy += mid.y - zLastMid.y;
+      zoomAt(mid.x, mid.y, zScale * (dist / zLastDist), false);
+    }
+    zLastDist = dist; zLastMid = mid; zMoved = true;
+  } else if (zPointers.size === 1 && zPanLast) {
+    const dx = e.clientX - zPanLast.x, dy = e.clientY - zPanLast.y;
+    if (Math.abs(dx) + Math.abs(dy) > 4) zMoved = true;
+    if (zScale > 1.01) { zTx += dx; zTy += dy; clampZoom(); applyZoom(false); }
+    zPanLast = { x: e.clientX, y: e.clientY };
+  }
+}
+
+function zPointerUp(e) {
+  const stage = document.getElementById('zoomStage');
+  try { stage.releasePointerCapture(e.pointerId); } catch (_) {}
+  const wasSize = zPointers.size;
+  zPointers.delete(e.pointerId);
+
+  if (zPointers.size === 1) {
+    const p = [...zPointers.values()][0];
+    zPanLast = { x: p.x, y: p.y };
+    zLastDist = 0;
+  } else if (zPointers.size === 0) {
+    zPanLast = null; zLastDist = 0; zLastMid = null;
+    if (!zMoved && wasSize === 1) {
+      if (zDownTarget && zDownTarget.id === 'zoomImg') {
+        const now = Date.now();
+        if (now - zLastTap < 300) { const rel = zRel(e); toggleZoomPunto(rel.x, rel.y); zLastTap = 0; }
+        else zLastTap = now;
+      } else {
+        chiudiZoom(); // tap sullo sfondo
+      }
+    }
+  }
+}
+
+function zWheel(e) {
+  e.preventDefault();
+  const r = document.getElementById('zoomStage').getBoundingClientRect();
+  const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+  zoomAt(e.clientX - r.left, e.clientY - r.top, zScale * factor, false);
 }
 
 
