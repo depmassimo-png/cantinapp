@@ -3,7 +3,7 @@
 // ============================================================
 
 // Versione corrente dell'app (mostrata in piccolo nel footer)
-const APP_VERSION = 'v1.15';
+const APP_VERSION = 'v1.16';
 
 const SUPABASE_URL = 'https://cihnssnqlqydnckwispb.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpaG5zc25xbHF5ZG5ja3dpc3BiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NDM3NjksImV4cCI6MjA5NTAxOTc2OX0.ptxM667Y1d8fOqpVwD4HhX87zsHzo-oAh45M8MP2Bwc';
@@ -104,8 +104,13 @@ async function setupNavRuolo() {
       const isActive = path.endsWith('contatta.html');
       a.href = 'contatta.html';
       a.className = 'nav-item nav-ruolo nav-contatta' + (isActive ? ' active' : '');
-      a.innerHTML = '<i class="ti ti-lifebuoy" aria-hidden="true"></i>Contatta';
+      a.innerHTML =
+        '<span class="nav-ruolo-icon">' +
+          '<i class="ti ti-lifebuoy" aria-hidden="true"></i>' +
+          '<span class="nav-badge" data-nav-badge-risposte style="display:none">0</span>' +
+        '</span>Contatta';
       nav.appendChild(a);
+      aggiornaBadgeRisposteNav();
       console.log('[nav-ruolo] Voce Contatta aggiunta');
     }
   } catch (e) {
@@ -131,6 +136,30 @@ async function aggiornaBadgeMessaggiNav() {
     }
   } catch (e) {
     // Tabella messaggi_admin non ancora creata: nessun badge
+    badge.style.display = 'none';
+  }
+}
+
+// Aggiorna il badge sull'icona Contatta col numero di risposte non ancora lette.
+// La RLS limita la SELECT alle righe dell'utente, quindi conta solo le sue.
+async function aggiornaBadgeRisposteNav() {
+  const badge = document.querySelector('[data-nav-badge-risposte]');
+  if (!badge) return;
+  try {
+    const { count } = await sb
+      .from('messaggi_admin')
+      .select('id', { count: 'exact', head: true })
+      .not('risposta', 'is', null)
+      .eq('risposta_letta', false);
+    const n = count || 0;
+    if (n > 0) {
+      badge.textContent = n > 99 ? '99+' : String(n);
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch (e) {
+    // Colonna risposta_letta non ancora creata: nessun badge
     badge.style.display = 'none';
   }
 }

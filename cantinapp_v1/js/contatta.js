@@ -49,7 +49,7 @@ async function inviaMessaggio() {
 async function caricaMieRichieste() {
   const box = document.getElementById('miePrecedenti');
   const { data, error } = await sb.from('messaggi_admin')
-    .select('id, oggetto, testo, stato, created_at, risposta, risposta_at')
+    .select('id, oggetto, testo, stato, created_at, risposta, risposta_at, risposta_letta')
     .eq('user_id', currentUser.id)
     .order('created_at', { ascending: false })
     .limit(20);
@@ -82,6 +82,12 @@ async function caricaMieRichieste() {
         </div>
       </div>`;
   }).join('');
+
+  // Aprendo la pagina l'utente vede le risposte: le marchiamo come lette
+  // così il badge sull'icona "Contatta" si azzera.
+  if (data.some(m => m.risposta && !m.risposta_letta)) {
+    try { await sb.rpc('segna_risposte_lette'); } catch (e) { /* colonna/funzione non ancora create */ }
+  }
 }
 
 function esc(s) {
