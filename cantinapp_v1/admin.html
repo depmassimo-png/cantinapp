@@ -50,6 +50,11 @@
     letter-spacing: 0.3px;
   }
   .pending-badge.zero { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); }
+  .msg-testo {
+    font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.5;
+    white-space: pre-wrap; word-break: break-word;
+    background: rgba(255,255,255,0.03); border-radius: 8px; padding: 8px 10px;
+  }
   .stat-row {
     display: flex; justify-content: space-between; align-items: baseline;
     padding: 8px 0;
@@ -434,17 +439,19 @@
   }
 
   // Carica statistiche
-  const [pendCount, sentCount, famCount, subCount] = await Promise.all([
+  const [pendCount, sentCount, famCount, subCount, msgCount] = await Promise.all([
     sb.from('sentori').select('id', { count: 'exact', head: true }).eq('stato', 'pending'),
     sb.from('sentori').select('id', { count: 'exact', head: true }).eq('stato', 'attivo'),
     sb.from('famiglie_olfattive').select('id', { count: 'exact', head: true }),
     sb.from('sottocategorie_olfattive').select('id', { count: 'exact', head: true }),
+    sb.from('messaggi_admin').select('id', { count: 'exact', head: true }).eq('stato', 'aperta'),
   ]);
 
   const nPending = pendCount.count || 0;
   const nSentori = sentCount.count || 0;
   const nFamiglie = famCount.count || 0;
   const nSottoc = subCount.count || 0;
+  const nMessaggi = msgCount.count || 0;
 
   content.innerHTML = `
     <div class="admin-section">
@@ -456,6 +463,16 @@
         ? '<div class="placeholder-text">Voci candidate da approvare o rifiutare. Pannello completo in sviluppo.</div><div id="pendingList" class="pending-list"></div>'
         : '<div class="placeholder-text">Nessun candidato in attesa. Le voci personali inserite nelle "Note olfattive aggiuntive" dagli utenti appariranno qui per essere approvate.</div>'
       }
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">
+        <span><i class="ti ti-messages"></i> Richieste utenti</span>
+        <span class="pending-badge messaggi-badge ${nMessaggi === 0 ? 'zero' : ''}">${nMessaggi}</span>
+      </div>
+      <div id="messaggiList" class="pending-list">
+        <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.4);font-size:13px">Caricamento...</div>
+      </div>
     </div>
 
     <div class="admin-section">
@@ -512,6 +529,9 @@
     await renderPendingList();
   }
 
+  // Richieste utenti
+  await renderMessaggiAdmin();
+
   // Carica le nuove sezioni CRUD (sentori/sottocategorie/famiglie)
   await caricaTuttiDati();
   renderAlberoSentori();
@@ -551,6 +571,75 @@ async function renderPendingList() {
       </div>
     </div>
   `).join('');
+}
+
+// ---- Richieste utenti (messaggi_admin) ----
+async function renderMessaggiAdmin() {
+  const list = document.getElementById('messaggiList');
+  if (!list) return;
+
+  const { data: msgs, error } = await sb.from('messaggi_admin')
+    .select('id, username, email, oggetto, testo, created_at')
+    .eq('stato', 'aperta')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  const badge = document.querySelector('.messaggi-badge');
+
+  if (error) {
+    list.innerHTML = `<div style="text-align:center;padding:20px;color:#F85149;font-size:13px">Errore: ${escapeHtml(error.message)}</div>`;
+    return;
+  }
+
+  if (!msgs || msgs.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.4);font-size:13px">Nessuna richiesta aperta</div>';
+    if (badge) { badge.textContent = '0'; badge.classList.add('zero'); }
+    return;
+  }
+
+  if (badge) { badge.textContent = String(msgs.length); badge.classList.remove('zero'); }
+
+  list.innerHTML = msgs.map(m => {
+    const dt = new Date(m.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
+    const chi = escapeHtml(m.username || m.email || 'Utente');
+    const mail = m.email ? ` · ${escapeHtml(m.email)}` : '';
+    return `
+      <div class="pending-item" data-id="${m.id}" style="flex-direction:column;align-items:stretch;gap:8px">
+        ${m.oggetto ? `<div class="nome">${escapeHtml(m.oggetto)}</div>` : ''}
+        <div class="meta">${chi}${mail} · ${dt}</div>
+        <div class="msg-testo">${escapeHtml(m.testo)}</div>
+        <div class="pending-actions" style="justify-content:flex-end">
+          <button class="btn-mini approve" onclick="chiudiMessaggio('${m.id}')">✓ Segna chiusa</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function chiudiMessaggio(id) {
+  if (!confirm('Segnare questa richiesta come chiusa?')) return;
+
+  const { data: { session } } = await sb.auth.getSession();
+  const { error } = await sb.from('messaggi_admin').update({
+    stato: 'chiusa',
+    chiusa_at: new Date().toISOString(),
+    chiusa_by: session && session.user ? session.user.id : null,
+  }).eq('id', id);
+
+  if (error) { alert('Errore: ' + error.message); return; }
+
+  const el = document.querySelector(`#messaggiList .pending-item[data-id="${id}"]`);
+  if (el) el.remove();
+
+  const badge = document.querySelector('.messaggi-badge');
+  if (badge) {
+    const n = Math.max(0, (parseInt(badge.textContent, 10) || 0) - 1);
+    badge.textContent = String(n);
+    if (n === 0) {
+      badge.classList.add('zero');
+      const list = document.getElementById('messaggiList');
+      if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.4);font-size:13px">Nessuna richiesta aperta</div>';
+    }
+  }
 }
 
 // Cache famiglie/sottocategorie per il form

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1a0608">
+  <title>CantinApp — Contatta l'amministratore</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CantinApp">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    html { background: #0F0405; min-height: 100vh; }
+    body {
+      background: var(--nero, #1a0608); color: var(--avorio, #faf7f4);
+      min-height: 100vh; max-width: 480px; margin: 0 auto; position: relative;
+      box-shadow: 0 0 60px rgba(0,0,0,0.5);
+    }
+    .header-sub {
+      background: var(--nero, #1a0608); padding: 14px 16px; position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .header-sub a { color: var(--oro, #C9A84C); font-size: 22px; text-decoration: none; display: flex; align-items: center; }
+    .header-sub h1 { font-size: 16px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .header-sub h1 i { color: var(--oro, #C9A84C); }
+
+    .body { padding: 16px; padding-bottom: 100px; }
+    .intro { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.5; margin: 0 0 4px; }
+    .field-label { display: block; font-size: 13px; color: rgba(255,255,255,0.7); margin: 16px 0 6px; }
+    .inp, .ta {
+      width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05); color: #fff; font-size: 14px; font-family: inherit; box-sizing: border-box; outline: none;
+    }
+    .inp:focus, .ta:focus { border-color: var(--oro, #C9A84C); }
+    .ta { resize: vertical; min-height: 120px; line-height: 1.5; }
+    .btn-send {
+      width: 100%; margin-top: 18px; padding: 13px; border: none; border-radius: 10px;
+      background: var(--oro, #C9A84C); color: var(--nero, #1a0608); font-weight: 700; font-size: 15px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-send:disabled { opacity: 0.6; }
+
+    .miei-titolo {
+      font-size: 11px; font-weight: 600; color: var(--bordeaux, #8B2635);
+      text-transform: uppercase; letter-spacing: .5px; margin: 28px 0 10px;
+    }
+    .msg-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 12px; margin-bottom: 8px;
+    }
+    .msg-card .ogg { font-size: 14px; font-weight: 600; color: #fff; }
+    .msg-card .txt { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.5; margin-top: 4px; white-space: pre-wrap; word-break: break-word; }
+    .msg-card .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; }
+    .msg-card .data { font-size: 11px; color: rgba(255,255,255,0.4); }
+    .stato-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .3px; flex-shrink: 0; }
+    .stato-aperta { background: rgba(201,168,76,0.18); color: var(--oro, #C9A84C); }
+    .stato-chiusa { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); }
+    .muted { font-size: 13px; color: rgba(255,255,255,0.4); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div class="header-sub">
+  <a href="cantina.html" aria-label="Indietro"><i class="ti ti-arrow-left"></i></a>
+  <h1><i class="ti ti-lifebuoy"></i> Contatta l'amministratore</h1>
+</div>
+
+<div class="body">
+  <p class="intro">Hai trovato un errore, un sentore mancante o vuoi suggerire qualcosa? Scrivi qui: il messaggio arriverà all'amministratore.</p>
+
+  <label class="field-label">Oggetto (facoltativo)</label>
+  <input type="text" id="oggetto" class="inp" placeholder="es. Sentore mancante" maxlength="120">
+
+  <label class="field-label">Messaggio</label>
+  <textarea id="testo" class="ta" placeholder="Scrivi qui la tua richiesta..." maxlength="2000"></textarea>
+
+  <button class="btn-send" id="btnInvia" onclick="inviaMessaggio()">
+    <i class="ti ti-send"></i> Invia richiesta
+  </button>
+
+  <div class="miei-titolo">Le tue richieste</div>
+  <div id="miePrecedenti"><div class="muted">Caricamento...</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/contatta.js"></script>
+</body>
+</html>
