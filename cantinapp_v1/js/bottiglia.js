@@ -195,10 +195,14 @@ function render() {
     // In modifica: riquadri di upload fronte/retro
     hero.innerHTML = heroEditHtml();
   } else if (fronte || retro) {
-    const slides = [];
-    if (fronte) slides.push(`<div class="hero-slide active"><img src="${fronte}" alt="Fronte" class="hero-zoomable" onclick="apriZoom('${fronte}')"></div>`);
-    if (retro) slides.push(`<div class="hero-slide"><img src="${retro}" alt="Retro" class="hero-zoomable" onclick="apriZoom('${retro}')"></div>`);
-    const dots = (fronte && retro) ? `
+    const photos = [];
+    if (fronte) photos.push({ url: fronte, label: 'Fronte' });
+    if (retro) photos.push({ url: retro, label: 'Retro' });
+    // La PRIMA foto disponibile è sempre quella attiva (anche se è solo il retro)
+    const slides = photos.map((p, i) =>
+      `<div class="hero-slide${i === 0 ? ' active' : ''}"><img src="${p.url}" alt="${p.label}" class="hero-zoomable" onclick="apriZoom('${p.url}')"></div>`
+    );
+    const dots = photos.length > 1 ? `
       <div class="hero-dots">
         <button class="hero-dot active" onclick="showSlide(0)" aria-label="Fronte"></button>
         <button class="hero-dot" onclick="showSlide(1)" aria-label="Retro"></button>
