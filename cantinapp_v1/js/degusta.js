@@ -926,17 +926,18 @@ function stemIt(s) {
   return s.replace(/[aeiou]$/i, '');
 }
 
-// Cerca un sentore esistente in AROMI; ritorna il nome ESATTO memorizzato, o null
+// Cerca un sentore esistente in AROMI; ritorna {nome, famKey, famLabel, subKey} o null
 function trovaSentoreEsistente(termine) {
   const norm = normalizzaTermine(termine);
   if (!norm || typeof AROMI === 'undefined') return null;
   const stem = stemIt(norm);
-  for (const fam of Object.values(AROMI)) {
-    for (const sub of Object.values(fam.subcategories || {})) {
+  for (const [famKey, fam] of Object.entries(AROMI)) {
+    for (const [subKey, sub] of Object.entries(fam.subcategories || {})) {
       for (const s of (sub.sentori || [])) {
         const sn = normalizzaTermine(s);
-        if (sn === norm) return s;
-        if (stem.length >= 4 && stemIt(sn) === stem) return s;
+        if (sn === norm || (stem.length >= 4 && stemIt(sn) === stem)) {
+          return { nome: s, famKey, famLabel: fam.label || famKey, subKey };
+        }
       }
     }
   }
@@ -946,21 +947,24 @@ function trovaSentoreEsistente(termine) {
 function aggiungiSentoreManuale() {
   const input = document.getElementById('nuovoSentoreInput');
   if (!input) return;
+  if (!Array.isArray(D.olfatto_nuovi)) D.olfatto_nuovi = [];
   const norm = normalizzaTermine(input.value);
+  console.log('[nuovo sentore] click, valore:', JSON.stringify(input.value), '→ norm:', JSON.stringify(norm));
   if (!norm || norm.length < 2) { showToast('Scrivi un sentore', true); return; }
 
-  // 1. Esiste gia' tra i sentori ufficiali? -> selezionalo
-  const esistente = trovaSentoreEsistente(norm);
-  if (esistente) {
+  // 1. Esiste già tra i sentori ufficiali? -> selezionalo nella SUA famiglia
+  const match = trovaSentoreEsistente(norm);
+  if (match) {
+    const esistente = match.nome;
     if (D.olfatto_sentori.includes(esistente)) {
-      showToast('"' + esistente + '" e\' gia\' tra i tuoi sentori');
+      showToast("«" + esistente + "» è già tra i tuoi sentori (" + match.famLabel + ")");
     } else {
       D.olfatto_sentori.push(esistente);
+      // Apri la famiglia REALE di appartenenza, così risulta selezionato nel posto giusto
+      D.olfatto_famiglie_aperte = [match.famKey];
       D.olfatto_descrittori = calcolaFamiglieDaSentori();
-      renderSentoriContainer();
-      renderSentoriRiepilogo();
-      aggiornaContatori();
-      showToast('"' + esistente + '" e\' gia\' presente: l\'ho aggiunto ai tuoi sentori');
+      renderFamiglieAromi();
+      showToast("«" + esistente + "» appartiene alla famiglia «" + match.famLabel + "»: l'ho aggiunto lì");
     }
     input.value = '';
     draftDirty = true;
