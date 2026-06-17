@@ -586,18 +586,25 @@ async function salvaEdit() {
 
   console.log('[salvaEdit] payload:', update);
 
+  const btn = document.getElementById('btnSaveEdit');
+  bloccaBtnSalva(btn);
+
   // ---- FOTO: upload nuove + raccolta vecchie da eliminare ----
   const daEliminare = [];
   try {
     if (editFotoFronte) {
+      console.log('[salvaEdit] upload fronte…', editFotoFronte.name, editFotoFronte.size);
       update.etichetta_url = await uploadEtichetta(editFotoFronte, 'fronte');
+      console.log('[salvaEdit] fronte OK:', update.etichetta_url);
       if (bottiglia.etichetta_url) daEliminare.push(bottiglia.etichetta_url);
     } else if (editRimuoviFronte) {
       if (bottiglia.etichetta_url) daEliminare.push(bottiglia.etichetta_url);
       update.etichetta_url = null;
     }
     if (editFotoRetro) {
+      console.log('[salvaEdit] upload retro…', editFotoRetro.name, editFotoRetro.size);
       update.controetichetta_url = await uploadEtichetta(editFotoRetro, 'retro');
+      console.log('[salvaEdit] retro OK:', update.controetichetta_url);
       if (bottiglia.controetichetta_url) daEliminare.push(bottiglia.controetichetta_url);
     } else if (editRimuoviRetro) {
       if (bottiglia.controetichetta_url) daEliminare.push(bottiglia.controetichetta_url);
@@ -606,23 +613,55 @@ async function salvaEdit() {
   } catch (e) {
     console.error('[salvaEdit] errore upload foto:', e);
     showToast('Errore upload foto: ' + (e.message || ''), true);
+    sbloccaBtnSalva(btn);
     return;
   }
 
-  const { error } = await sb.from('bottiglie').update(update).eq('id', bottiglia.id);
+  // .select() per riavere la riga davvero scritta: se l'array è vuoto,
+  // l'update non ha toccato nulla (tipicamente RLS) pur senza errore.
+  const { data, error } = await sb
+    .from('bottiglie')
+    .update(update)
+    .eq('id', bottiglia.id)
+    .select();
 
   if (error) {
-    console.error('[salvaEdit] errore:', error);
+    console.error('[salvaEdit] errore update:', error);
     showToast('Errore: ' + error.message, true);
+    sbloccaBtnSalva(btn);
     return;
   }
 
-  // Solo dopo l'update riuscito elimino i file vecchi dallo storage
+  if (!data || data.length === 0) {
+    console.error('[salvaEdit] update di 0 righe — probabile policy RLS/permessi');
+    showToast('Salvataggio non riuscito: 0 righe aggiornate (permessi?)', true);
+    sbloccaBtnSalva(btn);
+    return;
+  }
+
+  console.log('[salvaEdit] riga salvata dal DB:', data[0]);
+
+  // Solo dopo l'update confermato elimino i file vecchi dallo storage
   for (const url of daEliminare) await eliminaDalloStorage(url);
 
-  Object.assign(bottiglia, update);
+  // Sincronizza lo stato in memoria con quello REALMENTE salvato nel DB
+  bottiglia = data[0];
+  sbloccaBtnSalva(btn);
   annullaEdit();
   showToast('Modifiche salvate');
+}
+
+function bloccaBtnSalva(btn) {
+  if (!btn) return;
+  btn.disabled = true;
+  if (!btn.dataset.label) btn.dataset.label = btn.innerHTML;
+  btn.innerHTML = '<i class="ti ti-loader"></i> Salvataggio…';
+}
+
+function sbloccaBtnSalva(btn) {
+  if (!btn) return;
+  btn.disabled = false;
+  if (btn.dataset.label) { btn.innerHTML = btn.dataset.label; delete btn.dataset.label; }
 }
 
 
