@@ -49,7 +49,7 @@ async function inviaMessaggio() {
 async function caricaMieRichieste() {
   const box = document.getElementById('miePrecedenti');
   const { data, error } = await sb.from('messaggi_admin')
-    .select('id, oggetto, testo, stato, created_at')
+    .select('id, oggetto, testo, stato, created_at, risposta, risposta_at')
     .eq('user_id', currentUser.id)
     .order('created_at', { ascending: false })
     .limit(20);
@@ -66,10 +66,16 @@ async function caricaMieRichieste() {
   box.innerHTML = data.map(m => {
     const dt = new Date(m.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
     const chiusa = m.stato === 'chiusa';
+    const risposta = m.risposta ? `
+        <div class="risposta-admin">
+          <div class="risposta-label"><i class="ti ti-message-reply"></i> Risposta dell'amministratore</div>
+          <div class="risposta-txt">${esc(m.risposta)}</div>
+        </div>` : '';
     return `
       <div class="msg-card">
         ${m.oggetto ? `<div class="ogg">${esc(m.oggetto)}</div>` : ''}
         <div class="txt">${esc(m.testo)}</div>
+        ${risposta}
         <div class="row">
           <span class="data">${dt}</span>
           <span class="stato-pill ${chiusa ? 'stato-chiusa' : 'stato-aperta'}">${chiusa ? 'Chiusa' : 'Aperta'}</span>
