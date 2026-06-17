@@ -37,6 +37,7 @@ const D = {
   // olfatto
   olfatto_descrittori: [],
   olfatto_sentori: [],          // sentori specifici dalla ruota aromi (es. 'ciliegia', 'rosa')
+  olfatto_nuovi: [],            // termini NON in elenco da proporre all'admin (pending)
   olfatto_famiglie_aperte: [],  // famiglie attualmente espanse nell'UI (es. 'fruttato_vino_rosso')
   olfatto_note: '',
   olfatto_complessita_label: null, olfatto_complessita_punti: null,
@@ -885,11 +886,12 @@ async function salvaDegustazione() {
     return;
   }
 
-  // Cattura candidati pending da "Note olfattive aggiuntive" (richiesta admin)
+  // Inserisci come pending SOLO i nuovi sentori inseriti esplicitamente dall'utente
+  // (campo "Aggiungi un sentore"), col termine esatto. Niente più estrazione dalla prosa.
   // Fire-and-forget: se fallisce non blocca il salvataggio
-  if (D.olfatto_note && D.olfatto_note.trim()) {
-    catturaSentoriCandidati(D.olfatto_note, D.olfatto_sentori || []).catch(e => {
-      console.warn('[pending] Cattura candidati fallita:', e);
+  if (D.olfatto_nuovi && D.olfatto_nuovi.length) {
+    inserisciNuoviSentoriPending(D.olfatto_nuovi, D.olfatto_note).catch(e => {
+      console.warn('[pending] Inserimento nuovi sentori fallito:', e);
     });
   }
 
@@ -902,110 +904,131 @@ async function salvaDegustazione() {
 }
 
 // ============================================================
-// CATTURA VOCI PENDING dalle note olfattive aggiuntive
+// NUOVI SENTORI: filtro a monte (campo "Aggiungi un sentore")
 // ============================================================
-// Estrae termini candidati dal testo libero e li inserisce in
-// tabella `sentori` con stato='pending' per la review dell'admin.
-// Filtri:
-//   - termini di 3+ caratteri
-//   - esclude stopwords italiane
-//   - esclude sentori già presenti in AROMI (qualsiasi famiglia)
-//   - esclude sentori già selezionati nella scheda
+// - Se il termine esiste gia' tra i sentori ufficiali (AROMI) lo
+//   seleziona automaticamente nella scheda (nessun pending).
+// - Se e' nuovo, lo mette in D.olfatto_nuovi: al salvataggio viene
+//   inserito come pending col termine ESATTO, per la review admin.
 // ============================================================
 
-const STOPWORDS_IT = new Set([
-  'il','lo','la','le','gli','un','una','uno','di','del','della','dello','dei','degli','delle',
-  'da','dal','dalla','dallo','dai','dagli','dalle','in','nel','nella','nello','nei','negli','nelle',
-  'con','col','collo','colla','coi','cogli','colle','su','sul','sulla','sullo','sui','sugli','sulle',
-  'per','tra','fra','e','ed','o','od','ma','se','che','chi','cui','non','si','ne',
-  'mi','ti','ci','vi','lo','la','li','le','gli','ne',
-  'al','allo','alla','ai','agli','alle','più','meno','molto','poco','tanto','quanto','come','anche',
-  'questo','questa','questi','queste','quel','quella','quello','quegli','quei','quelle',
-  'è','sono','sei','sia','era','erano','essere','stato','stata','stati','state','ha','hai','hanno',
-  'ho','c','d','l','n','s','t','no','già','vino','vini','sentore','sentori','nota','note','vede',
-  'profumo','profumi','aroma','aromi','olfatto','naso','bocca','molto','bene','poco',
-]);
+function normalizzaTermine(s) {
+  return (s || '')
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[^a-z0-9àèéìòù '\-]/gi, '');
+}
 
-async function catturaSentoriCandidati(noteText, sentoriGiaScelti) {
-  if (!currentUser) return;
-  if (typeof AROMI === 'undefined') return;
+// Toglie la vocale finale, per tollerare singolare/plurale (ciliegia/ciliegie)
+function stemIt(s) {
+  return s.replace(/[aeiou]$/i, '');
+}
 
-  // 1. Raccolgo tutti i sentori già esistenti (qualsiasi famiglia) per esclusione
-  const sentoriEsistenti = new Set();
+// Cerca un sentore esistente in AROMI; ritorna il nome ESATTO memorizzato, o null
+function trovaSentoreEsistente(termine) {
+  const norm = normalizzaTermine(termine);
+  if (!norm || typeof AROMI === 'undefined') return null;
+  const stem = stemIt(norm);
   for (const fam of Object.values(AROMI)) {
     for (const sub of Object.values(fam.subcategories || {})) {
       for (const s of (sub.sentori || [])) {
-        sentoriEsistenti.add(s.toLowerCase().trim());
+        const sn = normalizzaTermine(s);
+        if (sn === norm) return s;
+        if (stem.length >= 4 && stemIt(sn) === stem) return s;
       }
     }
   }
-  // Aggiungi anche quelli già selezionati in questa scheda
-  for (const s of sentoriGiaScelti) {
-    sentoriEsistenti.add(String(s).toLowerCase().trim());
-  }
+  return null;
+}
 
-  // 2. Estrai candidati dal testo
-  // Spezza per virgole, punti e virgole, "e", "ed", "di", e simili separatori comuni
-  const candidati = new Set();
-  const segments = noteText
-    .toLowerCase()
-    .replace(/[.;:!?\n]/g, ',')
-    .split(/[,]/);
+function aggiungiSentoreManuale() {
+  const input = document.getElementById('nuovoSentoreInput');
+  if (!input) return;
+  const norm = normalizzaTermine(input.value);
+  if (!norm || norm.length < 2) { showToast('Scrivi un sentore', true); return; }
 
-  for (const seg of segments) {
-    const cleaned = seg.trim();
-    if (!cleaned) continue;
-    // Considero il segmento intero come candidato se è breve (1-4 parole)
-    // così catturo cose come "frutti di bosco" o "tabacco biondo"
-    const parole = cleaned.split(/\s+/).filter(p => p.length >= 3 && !STOPWORDS_IT.has(p));
-    if (parole.length === 0) continue;
-    if (parole.length <= 4) {
-      // Frase corta: usala intera come candidato
-      const frase = parole.join(' ').trim();
-      if (frase && frase.length >= 3 && !sentoriEsistenti.has(frase)) {
-        candidati.add(frase);
-      }
+  // 1. Esiste gia' tra i sentori ufficiali? -> selezionalo
+  const esistente = trovaSentoreEsistente(norm);
+  if (esistente) {
+    if (D.olfatto_sentori.includes(esistente)) {
+      showToast('"' + esistente + '" e\' gia\' tra i tuoi sentori');
+    } else {
+      D.olfatto_sentori.push(esistente);
+      D.olfatto_descrittori = calcolaFamiglieDaSentori();
+      renderSentoriContainer();
+      renderSentoriRiepilogo();
+      aggiornaContatori();
+      showToast('"' + esistente + '" e\' gia\' presente: l\'ho aggiunto ai tuoi sentori');
     }
-    // Comunque aggiungi anche parole singole significative
-    for (const p of parole) {
-      if (p.length >= 4 && !sentoriEsistenti.has(p)) {
-        candidati.add(p);
-      }
-    }
-  }
-
-  if (candidati.size === 0) {
-    console.log('[pending] Nessun candidato estratto');
+    input.value = '';
+    draftDirty = true;
     return;
   }
 
-  // 3. Inserisci in DB come pending (senza assegnare a sottocategoria, sarà l'admin a deciderlo)
-  // Recupero la sottocategoria "_pending" se esiste, altrimenti uso la prima disponibile come placeholder
+  // 2. Gia' tra i nuovi proposti?
+  if (D.olfatto_nuovi.some(t => normalizzaTermine(t) === norm)) {
+    showToast('"' + norm + '" e\' gia\' nella lista da proporre');
+    input.value = '';
+    return;
+  }
+
+  // 3. Nuovo termine -> proposto all'admin
+  D.olfatto_nuovi.push(norm);
+  renderNuoviSentori();
+  input.value = '';
+  draftDirty = true;
+  if (typeof salvaDraft === 'function') salvaDraft();
+  showToast('"' + norm + '" non e\' in elenco: sara\' proposto all\'admin');
+}
+
+function rimuoviNuovoSentore(t) {
+  D.olfatto_nuovi = D.olfatto_nuovi.filter(x => x !== t);
+  renderNuoviSentori();
+  draftDirty = true;
+  if (typeof salvaDraft === 'function') salvaDraft();
+}
+
+function renderNuoviSentori() {
+  const box = document.getElementById('nuoviSentoriBox');
+  if (!box) return;
+  if (!D.olfatto_nuovi || !D.olfatto_nuovi.length) { box.innerHTML = ''; return; }
+  box.innerHTML = D.olfatto_nuovi.map(t =>
+    `<span class="sentore-tag nuovo">${t} <i class="ti ti-x" data-rm="${t}"></i></span>`
+  ).join('');
+  box.querySelectorAll('i[data-rm]').forEach(ic =>
+    ic.addEventListener('click', () => rimuoviNuovoSentore(ic.dataset.rm))
+  );
+}
+
+// Inserisce i nuovi termini come pending (termine esatto, niente parsing della prosa)
+async function inserisciNuoviSentoriPending(termini, noteText) {
+  if (!currentUser || !termini || !termini.length) return;
+
   const { data: subDefault } = await sb.from('sottocategorie_olfattive')
     .select('id').limit(1).maybeSingle();
   if (!subDefault) {
-    console.warn('[pending] Nessuna sottocategoria default, skip cattura');
+    console.warn('[pending] Nessuna sottocategoria default, skip inserimento');
     return;
   }
 
-  const rows = Array.from(candidati).map(nome => ({
+  const rows = termini.map(nome => ({
     sottocategoria_id: subDefault.id,
     nome: nome,
     stato: 'pending',
     created_by: currentUser.id,
-    note_origine: noteText.substring(0, 500),
+    note_origine: (noteText && noteText.trim()) ? noteText.trim().substring(0, 500) : null,
   }));
 
-  const { error: insErr } = await sb.from('sentori').insert(rows);
-  if (insErr) {
-    // ON CONFLICT silently ignored per duplicati: solo errori veri loggati
-    if (insErr.code !== '23505') {
-      console.warn('[pending] Insert candidati error:', insErr);
-    }
+  const { error } = await sb.from('sentori').insert(rows);
+  if (error) {
+    if (error.code !== '23505') console.warn('[pending] Insert nuovi sentori error:', error);
   } else {
-    console.log(`[pending] ${rows.length} candidati inseriti per review admin`);
+    console.log(`[pending] ${rows.length} nuovi sentori proposti per review admin`);
   }
 }
+
 
 // ====== FOTO ESTERNE (degustazione cieca/libera) ======
 function handleExtPhotoSelect(e, lato) {
@@ -1532,6 +1555,7 @@ function ripristinaUI() {
   // Sentori olfatto: re-render della ruota aromi tiene conto di D.olfatto_sentori
   if (typeof renderFamiglieAromi === 'function') renderFamiglieAromi();
   if (typeof aggiornaCounterSentori === 'function') aggiornaCounterSentori();
+  if (typeof renderNuoviSentori === 'function') renderNuoviSentori();
 
   // Stelle voto piacere
   if (D.voto_piacere_personale) {
