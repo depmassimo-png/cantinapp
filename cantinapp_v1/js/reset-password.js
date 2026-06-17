@@ -1,10 +1,13 @@
 // ============================================================
 // CantinApp — Reimposta password (landing del link di recupero)
+// Supporta tre flussi:
+//   1) token_hash + verifyOtp()  -> consigliato, immune al prefetch dei link
+//   2) PKCE (?code=...)          -> exchangeCodeForSession
+//   3) implicito (#access_token) -> detectSessionInUrl + PASSWORD_RECOVERY
 // ============================================================
 
 let recoveryPronto = false;
 
-// Mostra il form della nuova password
 function abilitaForm() {
   if (recoveryPronto) return;
   recoveryPronto = true;
@@ -14,7 +17,7 @@ function abilitaForm() {
 }
 
 function mostraErrore(msg) {
-  if (recoveryPronto) return; // se il form è già attivo, non sovrascrivere
+  if (recoveryPronto) return; // form già attivo: non sovrascrivere
   document.getElementById('statoVerifica').style.display = 'none';
   document.getElementById('formReset').style.display = 'none';
   const box = document.getElementById('statoErrore');
@@ -22,37 +25,49 @@ function mostraErrore(msg) {
   box.style.display = 'block';
 }
 
-// Supabase, con detectSessionInUrl attivo, elabora il token e
-// (in flusso implicito) emette l'evento PASSWORD_RECOVERY.
+// Flusso implicito: detectSessionInUrl elabora l'hash ed emette PASSWORD_RECOVERY
 sb.auth.onAuthStateChange((event) => {
-  if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
-    abilitaForm();
-  }
+  if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') abilitaForm();
 });
 
-// Verifica al caricamento (gestisce errori, sessione già pronta, flusso PKCE)
 (async function verifica() {
   const urlObj = new URL(window.location.href);
   const hash = window.location.hash || '';
 
-  // Errore esplicito nel link (es. otp_expired)
+  // 1) Errore esplicito nell'URL (es. otp_expired dal flusso verify)
   const errDesc = urlObj.searchParams.get('error_description') ||
                   new URLSearchParams(hash.replace(/^#/, '')).get('error_description');
   if (errDesc) { mostraErrore(decodeURIComponent(errDesc.replace(/\+/g, ' '))); return; }
 
+  // 2) Flusso token_hash (consigliato): ?token_hash=...&type=recovery
+  const tokenHash = urlObj.searchParams.get('token_hash');
+  const tipo = urlObj.searchParams.get('type') || 'recovery';
+  if (tokenHash) {
+    const { error } = await sb.auth.verifyOtp({ type: tipo, token_hash: tokenHash });
+    if (error) {
+      mostraErrore('Link non valido o scaduto. Richiedine uno nuovo dalla pagina di login.');
+      return;
+    }
+    abilitaForm();
+    return;
+  }
+
   const haContestoRecovery = /type=recovery/.test(hash) || urlObj.searchParams.has('code');
 
-  // Diamo un attimo a detectSessionInUrl di processare l'hash
+  // Diamo un attimo a detectSessionInUrl di processare l'hash (flusso implicito)
   await new Promise(r => setTimeout(r, 400));
 
   let { data: { session } } = await sb.auth.getSession();
 
-  // Flusso PKCE: scambio del code se non c'è ancora sessione
+  // 3) Flusso PKCE: scambio del code se non c'è ancora sessione
   if (!session) {
     const code = urlObj.searchParams.get('code');
     if (code) {
       const { error } = await sb.auth.exchangeCodeForSession(code);
-      if (error) { mostraErrore('Link non valido o scaduto. Richiedi un nuovo reset.'); return; }
+      if (error) {
+        mostraErrore('Link non valido o scaduto. Richiedine uno nuovo dalla pagina di login.');
+        return;
+      }
       ({ data: { session } } = await sb.auth.getSession());
     }
   }
@@ -60,10 +75,9 @@ sb.auth.onAuthStateChange((event) => {
   if (session && haContestoRecovery) {
     abilitaForm();
   } else if (session && !haContestoRecovery) {
-    // sessione presente ma pagina aperta senza link di recupero
     mostraErrore('Apri questa pagina dal link ricevuto via email per reimpostare la password.');
   } else if (!recoveryPronto) {
-    mostraErrore('Link non valido o scaduto. Richiedi un nuovo reset.');
+    mostraErrore('Link non valido o scaduto. Richiedine uno nuovo dalla pagina di login.');
   }
 })();
 
@@ -83,7 +97,6 @@ async function aggiornaPassword() {
   if (error) { showToast(error.message, true); return; }
 
   showToast('Password aggiornata! Ora puoi accedere.');
-  // Chiudo la sessione di recupero e torno al login pulito
   await sb.auth.signOut();
   setTimeout(() => { window.location.href = 'index.html'; }, 1500);
 }
