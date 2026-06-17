@@ -1,0 +1,56 @@
+# .github/workflows/backup-db.yml
+# Backup notturno del database CantinApp (Supabase free tier).
+# Il dump viene cifrato e conservato come artifact su GitHub, fuori da Supabase.
+
+name: Backup database CantinApp
+
+on:
+  schedule:
+    - cron: '0 3 * * *'   # ogni notte alle 03:00 UTC
+  workflow_dispatch: {}    # esecuzione manuale (utile prima di una migrazione rischiosa)
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Installa pg_dump 17 (client recente: può dumpare server più vecchi)
+        run: |
+          sudo apt-get update
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
+          echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+
+      - name: Dump + compressione + cifratura
+        env:
+          # Stringa di connessione "Session pooler" (porta 5432, host aws-0-...pooler.supabase.com)
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          # Passphrase per cifrare il dump (AES256). CONSERVALA AL SICURO E SEPARATA:
+          # senza di essa il backup NON è ripristinabile.
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          STAMP=$(date +%Y-%m-%d_%H%M)
+          FILE="cantinapp_${STAMP}.sql"
+
+          # Dump dello schema applicativo: tabelle, dati, policy RLS, funzioni
+          pg_dump "$SUPABASE_DB_URL" \
+            --no-owner --no-privileges \
+            --schema public \
+            -f "$FILE"
+
+          gzip "$FILE"                                  # -> cantinapp_*.sql.gz
+          gpg --batch --yes --passphrase "$BACKUP_PASSPHRASE" \
+              --symmetric --cipher-algo AES256 \
+              -o "${FILE}.gz.gpg" "${FILE}.gz"          # -> cantinapp_*.sql.gz.gpg
+          rm -f "${FILE}.gz"
+          echo "BACKUP_FILE=${FILE}.gz.gpg" >> "$GITHUB_ENV"
+          ls -lh "${FILE}.gz.gpg"
+
+      - name: Carica il backup come artifact (90 giorni di conservazione)
+        uses: actions/upload-artifact@v4
+        with:
+          name: cantinapp-db-backup
+          path: ${{ env.BACKUP_FILE }}
+          retention-days: 90
