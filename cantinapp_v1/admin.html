@@ -375,6 +375,69 @@
     word-break: break-all;
   }
 
+  /* === Statistiche utenti === */
+  .stats-utenti-summary {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .su-card {
+    flex: 1;
+    min-width: 90px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .su-card .v {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--oro);
+    display: block;
+  }
+  .su-card .l {
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .su-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .su-table th {
+    text-align: left;
+    color: rgba(201,168,76,0.7);
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(201,168,76,0.15);
+  }
+  .su-table td {
+    padding: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: #fff;
+    vertical-align: top;
+  }
+  .su-table tr:last-child td { border-bottom: none; }
+  .su-table td .mail {
+    font-size: 10px;
+    color: rgba(255,255,255,0.45);
+    word-break: break-all;
+    margin-top: 2px;
+  }
+  .su-num { text-align: center; font-variant-numeric: tabular-nums; }
+  .su-badge-off {
+    color: rgba(248,81,73,0.85);
+    font-size: 10px;
+    white-space: nowrap;
+  }
+  .su-table-wrap { overflow-x: auto; }
+
 </style>
 </head>
 <body class="dark">
@@ -484,6 +547,16 @@
 
     <div class="admin-section">
       <div class="admin-section-title">
+        <span><i class="ti ti-users"></i> Utenti registrati</span>
+      </div>
+      <div id="statsUtentiSummary" class="stats-utenti-summary">
+        <div class="placeholder-text">Caricamento utenti…</div>
+      </div>
+      <div id="statsUtentiTabella" class="su-table-wrap"></div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">
         <span><i class="ti ti-chart-pie"></i> Stato sentori</span>
       </div>
       <div class="stat-row">
@@ -539,10 +612,79 @@
   // Richieste utenti
   await renderMessaggiAdmin();
 
+  // Statistiche utenti registrati
+  caricaStatsUtenti();
+
   // Carica le nuove sezioni CRUD (sentori/sottocategorie/famiglie)
   await caricaTuttiDati();
   renderAlberoSentori();
 })();
+
+// ============================================================
+// STATISTICHE UTENTI REGISTRATI
+// ============================================================
+
+async function caricaStatsUtenti() {
+  const summary = document.getElementById('statsUtentiSummary');
+  const tabella = document.getElementById('statsUtentiTabella');
+  if (!summary) return;
+
+  const { data, error } = await sb.rpc('admin_stats_utenti');
+  if (error) {
+    summary.innerHTML = `<div class="placeholder-text">Errore: ${error.message}</div>`;
+    if (tabella) tabella.innerHTML = '';
+    return;
+  }
+
+  const fmt = (ts) => {
+    if (!ts) return '—';
+    return new Date(ts).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  };
+
+  const ora = Date.now();
+  const giorni7 = 7 * 24 * 60 * 60 * 1000;
+  const attivi7 = data.filter(u => u.ultimo_accesso && (ora - new Date(u.ultimo_accesso).getTime()) < giorni7).length;
+  const confermati = data.filter(u => u.email_confermata).length;
+
+  summary.innerHTML = `
+    <div class="su-card"><span class="v">${data.length}</span><span class="l">Totali</span></div>
+    <div class="su-card"><span class="v">${confermati}</span><span class="l">Confermati</span></div>
+    <div class="su-card"><span class="v">${attivi7}</span><span class="l">Attivi 7gg</span></div>`;
+
+  if (!tabella) return;
+  if (data.length === 0) {
+    tabella.innerHTML = '<div class="placeholder-text">Nessun utente registrato.</div>';
+    return;
+  }
+
+  const escapeHtml = (s) => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  tabella.innerHTML = `
+    <table class="su-table">
+      <thead>
+        <tr>
+          <th>Utente</th><th>Iscritto</th><th>Ultimo acc.</th>
+          <th class="su-num">Cantina</th><th class="su-num">Deg.</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(u => `
+          <tr>
+            <td>
+              ${u.username ? escapeHtml(u.username) : '<i>(nessun nome)</i>'}
+              ${u.email_confermata ? '' : '<span class="su-badge-off"> ⚠ non conf.</span>'}
+              <div class="mail">${escapeHtml(u.email)}</div>
+            </td>
+            <td>${fmt(u.registrato_il)}</td>
+            <td>${fmt(u.ultimo_accesso)}</td>
+            <td class="su-num">${u.bottiglie_cantina}</td>
+            <td class="su-num">${u.degustazioni}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
 
 async function renderPendingList() {
   const { data: pendList } = await sb.from('sentori')
