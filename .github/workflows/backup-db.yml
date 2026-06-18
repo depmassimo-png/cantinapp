@@ -34,8 +34,9 @@ jobs:
           STAMP=$(date +%Y-%m-%d_%H%M)
           FILE="cantinapp_${STAMP}.sql"
 
-          # Dump dello schema applicativo: tabelle, dati, policy RLS, funzioni
-          pg_dump "$SUPABASE_DB_URL" \
+          # Uso il binario v17 esplicito: sul runner c'è anche una pg_dump 16
+          # preinstallata, e "pg_dump" generico pescherebbe quella (mismatch col server 17).
+          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" \
             --no-owner --no-privileges \
             --schema public \
             -f "$FILE"
