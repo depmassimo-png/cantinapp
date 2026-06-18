@@ -13,7 +13,7 @@ jobs:
   dump:
     runs-on: ubuntu-latest
     steps:
-      - name: Installa pg_dump 17 (client recente: può dumpare server più vecchi)
+      - name: Installa pg_dump 17 (client recente, compatibile con server precedenti)
         run: |
           sudo apt-get update
           curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
