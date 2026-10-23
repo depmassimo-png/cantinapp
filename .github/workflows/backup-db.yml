@@ -1,6 +1,7 @@
 # .github/workflows/backup-db.yml
 # Backup notturno del database CantinApp (Supabase free tier).
 # Il dump viene cifrato e conservato come artifact su GitHub, fuori da Supabase.
+# Fa anche da keep-alive: evita che Supabase metta in pausa il progetto per inattività.
 
 name: Backup database CantinApp
 
@@ -12,6 +13,9 @@ on:
 jobs:
   dump:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write        # serve allo step "Keep workflow alive" per riabilitare il workflow
     steps:
       - name: Installa pg_dump 17 (client recente, compatibile con server precedenti)
         run: |
@@ -55,3 +59,15 @@ jobs:
           name: cantinapp-db-backup
           path: ${{ env.BACKUP_FILE }}
           retention-days: 90
+
+      # GitHub disattiva i workflow schedulati dopo 60 giorni senza commit nel repo.
+      # Riabilitarlo a ogni esecuzione azzera il contatore, senza commit finti.
+      # "if: always()" = gira anche se il dump fallisce, così il workflow non si spegne mai.
+      - name: Keep workflow alive
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -X PUT \
+            "repos/${{ github.repository }}/actions/workflows/backup-db.yml/enable"
+          echo "Workflow riabilitato: contatore inattività azzerato."
